@@ -29,6 +29,7 @@ const MIME_TYPES = {
 };
 
 /**
+ * Safely join a base path with a target path.
  * @param {string} base
  * @param {string} target
  * @returns {string | null}
@@ -42,6 +43,7 @@ function safeJoin(base, target) {
 }
 
 /**
+ * Send a JSON response with status.
  * @param {import("http").ServerResponse} res
  * @param {number} status
  * @param {unknown} payload
@@ -54,6 +56,7 @@ function sendJson(res, status, payload) {
 }
 
 /**
+ * Read and parse JSON from the request body.
  * @param {import("http").IncomingMessage} req
  * @returns {Promise<any>}
  */
@@ -82,6 +85,7 @@ function readJson(req) {
 }
 
 /**
+ * Extract text output from the OpenAI response.
  * @param {any} response
  * @returns {string}
  */
@@ -111,6 +115,7 @@ function extractOutputText(response) {
 }
 
 /**
+ * Parse JSON from raw text or fenced blocks.
  * @param {string} text
  * @returns {any}
  */
@@ -136,6 +141,7 @@ function parseJsonFromText(text) {
 }
 
 /**
+ * Check whether a value looks like a stop.
  * @param {any} entry
  * @returns {boolean}
  */
@@ -151,6 +157,7 @@ function isStopLike(entry) {
 }
 
 /**
+ * Normalize a stop line by stripping bullets and numbers.
  * @param {string} line
  * @returns {string}
  */
@@ -162,6 +169,7 @@ function cleanStopLine(line) {
 }
 
 /**
+ * Parse a stop string into structured stops.
  * @param {string} value
  * @returns {Array<{ name: string, address: string }>}
  */
@@ -193,6 +201,7 @@ function parseStopString(value) {
 }
 
 /**
+ * Normalize raw stop data into an array.
  * @param {any} rawStops
  * @returns {any[]}
  */
@@ -218,6 +227,7 @@ function normalizeStops(rawStops) {
 }
 
 /**
+ * Extract stops from a result payload.
  * @param {any} result
  * @returns {any[]}
  */
@@ -266,6 +276,7 @@ function extractStopsFromResult(result) {
 }
 
 /**
+ * Scan text for an embedded JSON value.
  * @param {string} text
  * @returns {any}
  */
@@ -293,6 +304,7 @@ function findJsonInText(text) {
 }
 
 /**
+ * Find the matching closing bracket index.
  * @param {string} text
  * @param {number} startIndex
  * @returns {number}
@@ -331,6 +343,7 @@ function findMatchingBracket(text, startIndex) {
 }
 
 /**
+ * Extract the prefecture portion of a region.
  * @param {string} region
  * @returns {string}
  */
@@ -346,6 +359,7 @@ function extractPrefecture(region) {
 }
 
 /**
+ * Call the OpenAI API with the given payload.
  * @param {any} payload
  * @returns {Promise<any>}
  */

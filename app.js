@@ -196,6 +196,7 @@ let areaAnchorCache = "";
 let areaAnchorSelection = "";
 
 /**
+ * Update the status label and state indicator.
  * @param {string} label
  * @param {string} state
  */
@@ -205,6 +206,7 @@ function setStatus(label, state) {
 }
 
 /**
+ * Show or hide the overlay message.
  * @param {string} message
  * @param {boolean} visible
  */
@@ -214,6 +216,7 @@ function setOverlay(message, visible) {
 }
 
 /**
+ * Format a LatLng for display.
  * @param {any} latLng
  * @returns {string}
  */
@@ -243,6 +246,7 @@ function updateRouteHint() {
 }
 
 /**
+ * Update the origin region hint text.
  * @param {string} message
  */
 function setOriginRegionHint(message) {
@@ -272,6 +276,7 @@ function updateRegionControls() {
 }
 
 /**
+ * Update the route status message.
  * @param {string} message
  */
 function setRouteStatus(message) {
@@ -321,6 +326,7 @@ function updateRouteLinks() {
 }
 
 /**
+ * Build a region label from address components.
  * @param {any} components
  * @returns {string | null}
  */
@@ -340,6 +346,7 @@ function extractRegionFromComponents(components) {
 }
 
 /**
+ * Normalize a region filter to a list.
  * @param {any} region
  * @returns {string[]}
  */
@@ -360,6 +367,7 @@ function normalizeRegionFilter(region) {
 }
 
 /**
+ * Check whether a region matches the filter context.
  * @param {string} regionName
  * @param {any} context
  * @returns {boolean}
@@ -380,6 +388,7 @@ function isRegionMatch(regionName, context) {
 }
 
 /**
+ * Resolve origin coordinates and test against region filters.
  * @param {any} latLng
  * @param {any} context
  * @returns {Promise<boolean>}
@@ -399,6 +408,7 @@ async function resolveIsOriginInRegion(latLng, context) {
 }
 
 /**
+ * Pick a random item from a list.
  * @param {any[]} list
  * @returns {string}
  */
@@ -411,6 +421,7 @@ function pickRandomItem(list) {
 }
 
 /**
+ * Resolve the anchor label for the selected area.
  * @param {string} areaValue
  * @param {boolean} refreshAnchor
  * @returns {string}
@@ -432,6 +443,7 @@ function getAreaAnchor(areaValue, refreshAnchor) {
 }
 
 /**
+ * Build the region context from the selection UI.
  * @param {{ refreshAnchor?: boolean }} [options]
  * @returns {any}
  */
@@ -458,6 +470,7 @@ function getSelectedRegionContext(options = {}) {
 }
 
 /**
+ * Format a region context for prompting.
  * @param {any} context
  * @returns {string}
  */
@@ -469,6 +482,7 @@ function formatRegionForPrompt(context) {
 }
 
 /**
+ * Reverse geocode the origin to a region label.
  * @param {any} latLng
  * @returns {Promise<string | null>}
  */
@@ -515,6 +529,7 @@ function updateLimitHint() {
 }
 
 /**
+ * Update the recommendation hint text.
  * @param {string} message
  */
 function setRecommendHint(message) {
@@ -522,6 +537,7 @@ function setRecommendHint(message) {
 }
 
 /**
+ * Toggle recommendation UI loading state.
  * @param {boolean} loading
  */
 function setRecommendLoading(loading) {
@@ -545,6 +561,7 @@ function clearRecommendResult() {
 }
 
 /**
+ * Render the stop list in the recommendation panel.
  * @param {any} stops
  */
 function renderStops(stops) {
@@ -583,6 +600,7 @@ function renderStops(stops) {
 }
 
 /**
+ * Render source links in the recommendation panel.
  * @param {any} sources
  */
 function renderSources(sources) {
@@ -615,6 +633,7 @@ function renderSources(sources) {
 }
 
 /**
+ * Build a Google Maps search URL.
  * @param {string} query
  * @returns {string}
  */
@@ -625,6 +644,7 @@ function buildMapsLink(query) {
 }
 
 /**
+ * Format a LatLng value for URL parameters.
  * @param {any} latLng
  * @returns {string}
  */
@@ -642,6 +662,7 @@ function formatLatLngForUrl(latLng) {
 }
 
 /**
+ * Format a duration in seconds to a label.
  * @param {number} totalSeconds
  * @returns {string}
  */
@@ -662,6 +683,7 @@ function formatDurationText(totalSeconds) {
 }
 
 /**
+ * Aggregate duration from route legs.
  * @param {any[]} legs
  * @returns {{ text: string, seconds: number | null }}
  */
@@ -686,6 +708,7 @@ function getRouteDurationFromLegs(legs) {
 }
 
 /**
+ * Normalize a LatLng into a literal object.
  * @param {any} latLng
  * @returns {{ lat: number, lng: number } | null}
  */
@@ -703,6 +726,7 @@ function getLatLngLiteral(latLng) {
 }
 
 /**
+ * Compute distance between two points in meters.
  * @param {any} a
  * @param {any} b
  * @returns {number | null}
@@ -757,6 +781,7 @@ function buildDirectionsLink(
 const GENERIC_POINT_LABELS = new Set(["出発地", "目的地", "未選択", "不明"]);
 
 /**
+ * Normalize point labels by trimming and filtering defaults.
  * @param {any} label
  * @returns {string}
  */
@@ -801,6 +826,7 @@ function getDestinationDisplayLabel() {
 }
 
 /**
+ * Extract transit departure/arrival stops from a route.
  * @param {any} result
  * @returns {any}
  */
@@ -890,6 +916,7 @@ function clearRouteBreakdown() {
 }
 
 /**
+ * Render the route segment breakdown list.
  * @param {any} segments
  */
 function renderRouteBreakdown(segments) {
@@ -1033,6 +1060,7 @@ function updateRouteBreakdown(
 }
 
 /**
+ * Check if a result is a station.
  * @param {any} result
  * @returns {boolean}
  */
@@ -1045,6 +1073,7 @@ function isStationResult(result) {
 }
 
 /**
+ * Check if a result belongs to the specified region.
  * @param {any} result
  * @param {any} region
  * @returns {boolean}
@@ -1068,6 +1097,7 @@ function isResultInRegion(result, region) {
 }
 
 /**
+ * Extract a station label from a result.
  * @param {any} result
  * @returns {string}
  */
@@ -1084,6 +1114,7 @@ function extractStationLabel(result) {
 }
 
 /**
+ * Remove suffixes from a region label.
  * @param {string} region
  * @returns {string}
  */
@@ -1102,6 +1133,7 @@ function stripRegionSuffix(region) {
 }
 
 /**
+ * Normalize a region value to a string label.
  * @param {string} region
  * @returns {string}
  */
@@ -1116,6 +1148,7 @@ function getRegionLabel(region) {
 }
 
 /**
+ * Build station search queries for a region.
  * @param {string} region
  * @returns {string[]}
  */
@@ -1145,6 +1178,7 @@ function buildRegionStationQueries(region) {
 }
 
 /**
+ * Check if a result mentions stations.
  * @param {any} result
  * @returns {boolean}
  */
@@ -1163,6 +1197,7 @@ function resultHasStationKeyword(result) {
 }
 
 /**
+ * Extract locality names from address components.
  * @param {any} components
  * @returns {string[]}
  */
@@ -1190,6 +1225,7 @@ function extractLocalityCandidates(components) {
 }
 
 /**
+ * Reverse geocode locality candidates for a location.
  * @param {any} latLng
  * @returns {Promise<string[]>}
  */
@@ -1213,6 +1249,7 @@ function resolveLocalityCandidates(latLng) {
 }
 
 /**
+ * Build station search queries for the start area.
  * @returns {string[]}
  */
 function buildStartStationQueries(
@@ -1253,6 +1290,7 @@ function buildStartStationQueries(
 }
 
 /**
+ * Geocode an address string to results.
  * @param {string} address
  * @returns {Promise<any[]>}
  */
@@ -1276,6 +1314,7 @@ function geocodeByAddress(address) {
 }
 
 /**
+ * Filter geocode results to station candidates.
  * @param {any} results
  * @param {any} region
  * @returns {any[]}
@@ -1308,6 +1347,7 @@ function filterStationResults(results, region) {
 }
 
 /**
+ * Select the best station result for a region.
  * @param {any} results
  * @param {any} region
  * @returns {any}
@@ -1318,6 +1358,7 @@ function selectStationResult(results, region) {
 }
 
 /**
+ * Find a station within the given region.
  * @param {string} region
  * @returns {Promise<any>}
  */
@@ -1341,6 +1382,7 @@ async function findStationInRegion(region) {
 }
 
 /**
+ * Derive a station name from a result.
  * @param {any} result
  * @returns {string}
  */
@@ -1357,6 +1399,7 @@ function getStationNameFromResult(result) {
 }
 
 /**
+ * Resolve a region label to a location.
  * @param {string} region
  * @returns {Promise<any>}
  */
@@ -1505,6 +1548,7 @@ async function handleOriginRegionStart() {
 }
 
 /**
+ * Adjust target minutes based on actual duration.
  * @param {number | null} targetMinutes
  * @param {number | null} durationMinutes
  * @returns {number | null}
@@ -1670,6 +1714,7 @@ async function runWalkRouteSearch(
 }
 
 /**
+ * Populate the recommendation result UI.
  * @param {any} place
  */
 function showRecommendResult(place) {
@@ -1768,6 +1813,7 @@ async function requestRecommendation(
 }
 
 /**
+ * Resolve an address string to a location.
  * @param {string} address
  * @returns {Promise<any>}
  */
@@ -1791,6 +1837,7 @@ function geocodeAddress(address) {
 }
 
 /**
+ * Resolve a place into a destination location.
  * @param {any} place
  * @returns {Promise<any>}
  */
@@ -1800,6 +1847,7 @@ function geocodeDestination(place) {
 }
 
 /**
+ * Normalize a stop input into a stop object.
  * @param {any} stop
  * @returns {any}
  */
@@ -1819,6 +1867,7 @@ function normalizeStop(stop) {
 }
 
 /**
+ * Build a display label for a stop.
  * @param {any} stop
  * @returns {string}
  */
@@ -1831,6 +1880,7 @@ function getStopLabel(stop) {
 }
 
 /**
+ * Geocode stop list into coordinates.
  * @param {any} stops
  * @returns {Promise<any[]>}
  */
@@ -1867,6 +1917,7 @@ async function geocodeStops(stops) {
 }
 
 /**
+ * Handle recommendation form submission.
  * @param {Event} event
  * @returns {Promise<void>}
  */
@@ -1957,6 +2008,7 @@ function clearWalkRouteState() {
 }
 
 /**
+ * Clear the destination and reset related state.
  * @param {string} message
  */
 function clearDestination(message) {
@@ -2008,6 +2060,7 @@ function resetRoute() {
 }
 
 /**
+ * Set the origin location and marker.
  * @param {any} latLng
  * @param {string | null} [regionOverride]
  * @param {{ preserveWalkState?: boolean }} [options]
@@ -2036,6 +2089,7 @@ function setOrigin(latLng, regionOverride, options = {}) {
 }
 
 /**
+ * Set the destination location and marker.
  * @param {any} latLng
  * @param {string} source
  * @param {{ label?: string }} [options]
@@ -2060,6 +2114,7 @@ function setDestination(latLng, source, options = {}) {
 }
 
 /**
+ * Detect high-speed trains in a route.
  * @param {any} route
  * @returns {boolean}
  */
@@ -2083,6 +2138,7 @@ function routeHasHighSpeedTrain(route) {
 }
 
 /**
+ * Pick a rail route that avoids high-speed trains.
  * @param {any} result
  * @returns {{ route: any, reason: string | null }}
  */
@@ -2100,6 +2156,7 @@ function selectLocalRailRoute(result) {
 }
 
 /**
+ * Handle route API results and update UI state.
  * @param {string} type
  * @param {any} result
  * @param {any} status
@@ -2452,6 +2509,7 @@ function calculateRoutes() {
 }
 
 /**
+ * Load the Google Maps script with the API key.
  * @param {string} apiKey
  */
 function loadGoogleMaps(apiKey) {
