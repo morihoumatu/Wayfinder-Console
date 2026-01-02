@@ -3,18 +3,19 @@ const https = require("https");
 const fs = require("fs");
 const path = require("path");
 
-const PORT = Number.parseInt(process.env.PORT || "3000", 10);
+const PORT = Number.parseInt(process.env["PORT"] || "3000", 10);
 const ROOT = __dirname;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env["OPENAI_API_KEY"];
 const OPENAI_API_URL =
-  process.env.OPENAI_API_URL || "https://api.openai.com/v1/responses";
-const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  process.env["OPENAI_API_URL"] || "https://api.openai.com/v1/responses";
+const OPENAI_MODEL = process.env["OPENAI_MODEL"] || "gpt-4o-mini";
 const WEB_SEARCH_TOOL =
-  process.env.OPENAI_WEB_SEARCH_TOOL === undefined
+  process.env["OPENAI_WEB_SEARCH_TOOL"] === undefined
     ? "web_search"
-    : process.env.OPENAI_WEB_SEARCH_TOOL;
+    : process.env["OPENAI_WEB_SEARCH_TOOL"];
 const DEFAULT_WALK_TARGET_MINUTES = 60;
 
+/** @type {Record<string, string>} */
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -27,6 +28,11 @@ const MIME_TYPES = {
   ".ico": "image/x-icon",
 };
 
+/**
+ * @param {string} base
+ * @param {string} target
+ * @returns {string | null}
+ */
 function safeJoin(base, target) {
   const targetPath = path.normalize(path.join(base, target));
   if (!targetPath.startsWith(base)) {
@@ -35,6 +41,11 @@ function safeJoin(base, target) {
   return targetPath;
 }
 
+/**
+ * @param {import("http").ServerResponse} res
+ * @param {number} status
+ * @param {unknown} payload
+ */
 function sendJson(res, status, payload) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -42,10 +53,14 @@ function sendJson(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
+/**
+ * @param {import("http").IncomingMessage} req
+ * @returns {Promise<any>}
+ */
 function readJson(req) {
   return new Promise((resolve, reject) => {
     let body = "";
-    req.on("data", (chunk) => {
+    req.on("data", /** @param {Buffer | string} chunk */ (chunk) => {
       body += chunk;
       if (body.length > 1_000_000) {
         reject(new Error("Request body too large."));
@@ -66,6 +81,10 @@ function readJson(req) {
   });
 }
 
+/**
+ * @param {any} response
+ * @returns {string}
+ */
 function extractOutputText(response) {
   if (typeof response.output_text === "string") {
     return response.output_text;
@@ -73,12 +92,13 @@ function extractOutputText(response) {
   if (!Array.isArray(response.output)) {
     return "";
   }
+  /** @type {string[]} */
   const textChunks = [];
-  response.output.forEach((item) => {
+  response.output.forEach((/** @type {any} */ item) => {
     if (!Array.isArray(item.content)) {
       return;
     }
-    item.content.forEach((content) => {
+    item.content.forEach((/** @type {any} */ content) => {
       if (
         (content.type === "output_text" || content.type === "text") &&
         content.text
@@ -90,6 +110,10 @@ function extractOutputText(response) {
   return textChunks.join("\n").trim();
 }
 
+/**
+ * @param {string} text
+ * @returns {any}
+ */
 function parseJsonFromText(text) {
   if (!text) {
     return null;
@@ -100,7 +124,7 @@ function parseJsonFromText(text) {
   } catch (error) {
     // Try fenced JSON blocks first.
     const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-    if (fencedMatch) {
+    if (fencedMatch && typeof fencedMatch[1] === "string") {
       try {
         return JSON.parse(fencedMatch[1].trim());
       } catch (innerError) {
@@ -111,6 +135,10 @@ function parseJsonFromText(text) {
   }
 }
 
+/**
+ * @param {any} entry
+ * @returns {boolean}
+ */
 function isStopLike(entry) {
   if (!entry || typeof entry !== "object") {
     return false;
@@ -122,6 +150,10 @@ function isStopLike(entry) {
   );
 }
 
+/**
+ * @param {string} line
+ * @returns {string}
+ */
 function cleanStopLine(line) {
   if (!line) {
     return "";
@@ -129,6 +161,10 @@ function cleanStopLine(line) {
   return line.replace(/^[\s*・\-–—•\d+.、)]+/, "").trim();
 }
 
+/**
+ * @param {string} value
+ * @returns {Array<{ name: string, address: string }>}
+ */
 function parseStopString(value) {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -150,9 +186,16 @@ function parseStopString(value) {
       .map(cleanStopLine)
       .filter(Boolean);
   }
-  return parts.map((part) => ({ name: part, address: "" }));
+  return parts.map((/** @type {string} */ part) => ({
+    name: part,
+    address: "",
+  }));
 }
 
+/**
+ * @param {any} rawStops
+ * @returns {any[]}
+ */
 function normalizeStops(rawStops) {
   if (!rawStops) {
     return [];
@@ -174,6 +217,10 @@ function normalizeStops(rawStops) {
   return [];
 }
 
+/**
+ * @param {any} result
+ * @returns {any[]}
+ */
 function extractStopsFromResult(result) {
   if (!result) {
     return [];
@@ -218,6 +265,10 @@ function extractStopsFromResult(result) {
   return [];
 }
 
+/**
+ * @param {string} text
+ * @returns {any}
+ */
 function findJsonInText(text) {
   if (!text) {
     return null;
@@ -241,6 +292,11 @@ function findJsonInText(text) {
   return null;
 }
 
+/**
+ * @param {string} text
+ * @param {number} startIndex
+ * @returns {number}
+ */
 function findMatchingBracket(text, startIndex) {
   const openChar = text[startIndex];
   const closeChar = openChar === "{" ? "}" : "]";
@@ -274,14 +330,25 @@ function findMatchingBracket(text, startIndex) {
   return -1;
 }
 
+/**
+ * @param {string} region
+ * @returns {string}
+ */
 function extractPrefecture(region) {
   if (!region) {
     return "";
   }
   const match = region.match(/^(.+?[都道府県])/);
-  return match ? match[1] : region;
+  if (match && typeof match[1] === "string") {
+    return match[1];
+  }
+  return region;
 }
 
+/**
+ * @param {any} payload
+ * @returns {Promise<any>}
+ */
 function callOpenAI(payload) {
   return new Promise((resolve, reject) => {
     const url = new URL(OPENAI_API_URL);
@@ -297,28 +364,31 @@ function callOpenAI(payload) {
       },
     };
 
-    const request = https.request(options, (response) => {
-      let body = "";
-      response.on("data", (chunk) => {
-        body += chunk;
-      });
-      response.on("end", () => {
-        let parsed;
-        try {
-          parsed = JSON.parse(body);
-        } catch (error) {
-          reject(new Error("OpenAI response parse error."));
-          return;
-        }
-        if (response.statusCode && response.statusCode >= 400) {
-          const message =
-            parsed?.error?.message || "OpenAI API request failed.";
-          reject(new Error(message));
-          return;
-        }
-        resolve(parsed);
-      });
-    });
+    const request = https.request(
+      options,
+      /** @param {import("http").IncomingMessage} response */ (response) => {
+        let body = "";
+        response.on("data", /** @param {Buffer | string} chunk */ (chunk) => {
+          body += chunk;
+        });
+        response.on("end", () => {
+          let parsed;
+          try {
+            parsed = JSON.parse(body);
+          } catch (error) {
+            reject(new Error("OpenAI response parse error."));
+            return;
+          }
+          if (response.statusCode && response.statusCode >= 400) {
+            const message =
+              parsed?.error?.message || "OpenAI API request failed.";
+            reject(new Error(message));
+            return;
+          }
+          resolve(parsed);
+        });
+      }
+    );
 
     request.on("error", () => {
       reject(new Error("OpenAI API connection failed."));
@@ -330,7 +400,8 @@ function callOpenAI(payload) {
 }
 
 const server = http.createServer((req, res) => {
-  const requestPath = decodeURIComponent(req.url.split("?")[0] || "/");
+  const requestUrl = req.url || "/";
+  const requestPath = decodeURIComponent(requestUrl.split("?")[0] || "/");
   if (requestPath === "/api/recommend") {
     if (req.method === "OPTIONS") {
       res.writeHead(204);
@@ -422,15 +493,18 @@ const server = http.createServer((req, res) => {
           typeof payload?.originAreaLabel === "string"
             ? payload.originAreaLabel.trim()
             : "";
+        /** @type {string[]} */
         const originPrefectures = Array.isArray(payload?.originPrefectures)
-          ? payload.originPrefectures.filter((entry) => typeof entry === "string")
+          ? payload.originPrefectures.filter(
+              (/** @type {string} */ entry) => typeof entry === "string"
+            )
           : [];
         const searchRegion =
           mode === "walk_route" && effectiveTargetMinutes >= 120
             ? extractPrefecture(originRegion) || originRegion
             : originRegion;
         const prefectureList = originPrefectures
-          .map((entry) => entry.trim())
+          .map((/** @type {string} */ entry) => entry.trim())
           .filter(Boolean);
         const prefectureHint = prefectureList.length
           ? `対象都道府県: ${prefectureList.join("・")}`
@@ -538,6 +612,7 @@ const server = http.createServer((req, res) => {
             ? [{ type: WEB_SEARCH_TOOL }]
             : undefined;
 
+        /** @type {{ model: string, input: any[], tools: any[] | undefined, temperature: number, text?: { format: { type: string } } }} */
         const requestPayload = {
           model: OPENAI_MODEL,
           input,

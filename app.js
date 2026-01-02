@@ -1,47 +1,117 @@
-const MAPS_API_KEY = "AIzaSyAvB1sNfAZg5Gc_1cp2CLWL_iGDFASrD9I";
+const MAPS_API_KEY =
+  /** @type {string} */ ("AIzaSyAvB1sNfAZg5Gc_1cp2CLWL_iGDFASrD9I");
 const DEFAULT_CENTER = { lat: 35.681236, lng: 139.767125 };
 const DEFAULT_ZOOM = 13;
 
-const statusCard = document.getElementById("statusCard");
-const keyStatus = document.getElementById("keyStatus");
-const overlay = document.getElementById("mapOverlay");
-const mapElement = document.getElementById("map");
-const originLabel = document.getElementById("originLabel");
-const destinationLabel = document.getElementById("destinationLabel");
-const walkingValue = document.getElementById("walkingValue");
-const railValue = document.getElementById("railValue");
-const routeHint = document.getElementById("routeHint");
-const routeStatus = document.getElementById("routeStatus");
-const routeLinks = document.getElementById("routeLinks");
-const walkingRouteLink = document.getElementById("walkingRouteLink");
-const railRouteLink = document.getElementById("railRouteLink");
-const routeBreakdown = document.getElementById("routeBreakdown");
-const routeBreakdownList = document.getElementById("routeBreakdownList");
-const resetButton = document.getElementById("resetRoute");
-const recommendForm = document.getElementById("recommendForm");
-const recommendQuery = document.getElementById("recommendQuery");
-const maxTimeInput = document.getElementById("maxTimeInput");
-const limitHint = document.getElementById("limitHint");
-const recommendHint = document.getElementById("recommendHint");
-const recommendResult = document.getElementById("recommendResult");
-const recommendTitle = document.getElementById("recommendTitle");
-const recommendAddress = document.getElementById("recommendAddress");
-const recommendReason = document.getElementById("recommendReason");
-const recommendMapLink = document.getElementById("recommendMapLink");
-const recommendStopsSection = document.getElementById("recommendStopsSection");
-const recommendStops = document.getElementById("recommendStops");
-const recommendSources = document.getElementById("recommendSources");
-const recommendButton = document.getElementById("recommendButton");
-const recommendButtonLabel = recommendButton.textContent;
-const originAreaSelect = document.getElementById("originAreaSelect");
-const originRegionSelect = document.getElementById("originRegionSelect");
-const originRegionButton = document.getElementById("originRegionButton");
-const originRegionHint = document.getElementById("originRegionHint");
+const statusCard = /** @type {HTMLDivElement} */ (
+  document.getElementById("statusCard")
+);
+const keyStatus = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("keyStatus")
+);
+const overlay = /** @type {HTMLDivElement} */ (
+  document.getElementById("mapOverlay")
+);
+const mapElement = /** @type {HTMLDivElement} */ (
+  document.getElementById("map")
+);
+const originLabel = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("originLabel")
+);
+const destinationLabel = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("destinationLabel")
+);
+const walkingValue = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("walkingValue")
+);
+const railValue = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("railValue")
+);
+const routeHint = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("routeHint")
+);
+const routeStatus = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("routeStatus")
+);
+const routeLinks = /** @type {HTMLDivElement} */ (
+  document.getElementById("routeLinks")
+);
+const walkingRouteLink = /** @type {HTMLAnchorElement} */ (
+  document.getElementById("walkingRouteLink")
+);
+const railRouteLink = /** @type {HTMLAnchorElement} */ (
+  document.getElementById("railRouteLink")
+);
+const routeBreakdown = /** @type {HTMLDivElement} */ (
+  document.getElementById("routeBreakdown")
+);
+const routeBreakdownList = /** @type {HTMLOListElement} */ (
+  document.getElementById("routeBreakdownList")
+);
+const resetButton = /** @type {HTMLButtonElement} */ (
+  document.getElementById("resetRoute")
+);
+const recommendForm = /** @type {HTMLFormElement} */ (
+  document.getElementById("recommendForm")
+);
+const recommendQuery = /** @type {HTMLInputElement} */ (
+  document.getElementById("recommendQuery")
+);
+const maxTimeInput = /** @type {HTMLInputElement} */ (
+  document.getElementById("maxTimeInput")
+);
+const limitHint = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("limitHint")
+);
+const recommendHint = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("recommendHint")
+);
+const recommendResult = /** @type {HTMLDivElement} */ (
+  document.getElementById("recommendResult")
+);
+const recommendTitle = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("recommendTitle")
+);
+const recommendAddress = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("recommendAddress")
+);
+const recommendReason = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("recommendReason")
+);
+const recommendMapLink = /** @type {HTMLAnchorElement} */ (
+  document.getElementById("recommendMapLink")
+);
+const recommendStopsSection = /** @type {HTMLDivElement} */ (
+  document.getElementById("recommendStopsSection")
+);
+const recommendStops = /** @type {HTMLOListElement} */ (
+  document.getElementById("recommendStops")
+);
+const recommendSources = /** @type {HTMLUListElement} */ (
+  document.getElementById("recommendSources")
+);
+const recommendButton = /** @type {HTMLButtonElement} */ (
+  document.getElementById("recommendButton")
+);
+const recommendButtonLabel = recommendButton.textContent || "";
+const originAreaSelect = /** @type {HTMLSelectElement} */ (
+  document.getElementById("originAreaSelect")
+);
+const originRegionSelect = /** @type {HTMLSelectElement} */ (
+  document.getElementById("originRegionSelect")
+);
+const originRegionButton = /** @type {HTMLButtonElement} */ (
+  document.getElementById("originRegionButton")
+);
+const originRegionHint = /** @type {HTMLParagraphElement} */ (
+  document.getElementById("originRegionHint")
+);
 
 const DEFAULT_WALK_TARGET_MINUTES = 60;
 const WALK_ROUTE_MAX_RETRIES = 4;
 const DEFAULT_ORIGIN_REGION_HINT =
   "地方または都道府県を選択して開始できます。";
+/** @type {Record<string, { prefectures: string[], anchor: string }>} */
 const REGION_GROUPS = {
   北海道地方: { prefectures: ["北海道"], anchor: "札幌" },
   東北地方: {
@@ -81,44 +151,72 @@ const STATION_TYPES = new Set([
   "light_rail_station",
 ]);
 const REGION_STATION_QUERIES = ["駅", "JR駅", "主要駅", "中心駅", "代表駅"];
+/** @type {Record<string, string>} */
 const REGION_QUERY_EXCEPTIONS = {
   北海道: "札幌",
   沖縄県: "那覇",
 };
 const MAX_STATION_QUERIES = 12;
 
-let map;
-let directionsService;
-let walkingRenderer;
-let railRenderer;
-let originMarker;
-let destinationMarker;
-let originLatLng;
-let destinationLatLng;
+/** @type {any} */
+let map = null;
+/** @type {any} */
+let directionsService = null;
+/** @type {any} */
+let walkingRenderer = null;
+/** @type {any} */
+let railRenderer = null;
+/** @type {any} */
+let originMarker = null;
+/** @type {any} */
+let destinationMarker = null;
+/** @type {any} */
+let originLatLng = null;
+/** @type {any} */
+let destinationLatLng = null;
 let destinationName = "";
 let requestId = 0;
-let geocoder;
+/** @type {any} */
+let geocoder = null;
+/** @type {string | null} */
 let destinationSource = null;
+/** @type {string | null} */
 let originRegion = null;
+/** @type {Array<any> | null} */
 let walkingWaypoints = null;
+/** @type {number | null} */
 let walkRouteTargetMinutes = null;
 let walkRouteRetryCount = 0;
 let lastWalkQuery = "";
+/** @type {number | null} */
 let desiredWalkTargetMinutes = null;
+/** @type {string | null} */
 let walkRoutePreferredMode = null;
 let areaAnchorCache = "";
 let areaAnchorSelection = "";
 
+/**
+ * @param {string} label
+ * @param {string} state
+ */
 function setStatus(label, state) {
   keyStatus.textContent = label;
-  statusCard.dataset.state = state;
+  statusCard.dataset["state"] = state;
 }
 
+/**
+ * @param {string} message
+ * @param {boolean} visible
+ */
 function setOverlay(message, visible) {
   overlay.textContent = message;
   overlay.classList.toggle("visible", visible);
 }
 
+/**
+ * @param {any} latLng
+ * @returns {string}
+ */
 function formatLatLng(latLng) {
   return `${latLng.lat().toFixed(5)}, ${latLng.lng().toFixed(5)}`;
 }
@@ -144,6 +242,9 @@ function updateRouteHint() {
   routeHint.textContent = "2点が選択されています。必要ならリセットで再選択できます。";
 }
 
+/**
+ * @param {string} message
+ */
 function setOriginRegionHint(message) {
   if (originRegionHint) {
     originRegionHint.textContent = message;
@@ -170,6 +271,9 @@ function updateRegionControls() {
   }
 }
 
+/**
+ * @param {string} message
+ */
 function setRouteStatus(message) {
   routeStatus.textContent = message;
 }
@@ -216,12 +320,18 @@ function updateRouteLinks() {
   routeLinks.hidden = false;
 }
 
+/**
+ * @param {any} components
+ * @returns {string | null}
+ */
 function extractRegionFromComponents(components) {
   if (!Array.isArray(components)) {
     return null;
   }
-  const findPart = (type) =>
-    components.find((component) => component.types?.includes(type))?.long_name;
+  const findPart = (/** @type {string} */ type) =>
+    components.find((/** @type {any} */ component) =>
+      component.types?.includes(type)
+    )?.long_name;
   const prefecture = findPart("administrative_area_level_1");
   const locality = findPart("locality") || findPart("sublocality_level_1");
   const sublocality = findPart("sublocality_level_2");
@@ -229,6 +339,10 @@ function extractRegionFromComponents(components) {
   return parts.length ? parts.join("") : null;
 }
 
+/**
+ * @param {any} region
+ * @returns {string[]}
+ */
 function normalizeRegionFilter(region) {
   if (!region) {
     return [];
@@ -245,6 +359,11 @@ function normalizeRegionFilter(region) {
   return [];
 }
 
+/**
+ * @param {string} regionName
+ * @param {any} context
+ * @returns {boolean}
+ */
 function isRegionMatch(regionName, context) {
   if (!regionName || !context) {
     return true;
@@ -260,6 +379,11 @@ function isRegionMatch(regionName, context) {
   return filters.some((filter) => regionName.includes(filter));
 }
 
+/**
+ * @param {any} latLng
+ * @param {any} context
+ * @returns {Promise<boolean>}
+ */
 async function resolveIsOriginInRegion(latLng, context) {
   if (!latLng || !context) {
     return true;
@@ -274,6 +398,10 @@ async function resolveIsOriginInRegion(latLng, context) {
   return false;
 }
 
+/**
+ * @param {any[]} list
+ * @returns {string}
+ */
 function pickRandomItem(list) {
   if (!Array.isArray(list) || list.length === 0) {
     return "";
@@ -282,6 +410,11 @@ function pickRandomItem(list) {
   return list[index];
 }
 
+/**
+ * @param {string} areaValue
+ * @param {boolean} refreshAnchor
+ * @returns {string}
+ */
 function getAreaAnchor(areaValue, refreshAnchor) {
   if (!areaValue || !REGION_GROUPS[areaValue]) {
     return "";
@@ -298,6 +431,10 @@ function getAreaAnchor(areaValue, refreshAnchor) {
   return areaAnchorCache;
 }
 
+/**
+ * @param {{ refreshAnchor?: boolean }} [options]
+ * @returns {any}
+ */
 function getSelectedRegionContext(options = {}) {
   const refreshAnchor = Boolean(options.refreshAnchor);
   const areaValue = originAreaSelect?.value?.trim();
@@ -320,6 +457,10 @@ function getSelectedRegionContext(options = {}) {
   return null;
 }
 
+/**
+ * @param {any} context
+ * @returns {string}
+ */
 function formatRegionForPrompt(context) {
   if (!context) {
     return "";
@@ -327,13 +468,19 @@ function formatRegionForPrompt(context) {
   return context.label;
 }
 
+/**
+ * @param {any} latLng
+ * @returns {Promise<string | null>}
+ */
 function resolveOriginRegion(latLng) {
   return new Promise((resolve) => {
     if (!geocoder || !latLng) {
       resolve(null);
       return;
     }
-    geocoder.geocode({ location: latLng }, (results, status) => {
+    geocoder.geocode(
+      { location: latLng },
+      (/** @type {any} */ results, /** @type {any} */ status) => {
       if (status !== "OK" || !results?.[0]) {
         resolve(null);
         return;
@@ -343,7 +490,8 @@ function resolveOriginRegion(latLng) {
         results[0].formatted_address ||
         null;
       resolve(region);
-    });
+      }
+    );
   });
 }
 
@@ -366,10 +514,16 @@ function updateLimitHint() {
     : `未入力なら制限なし（空欄検索は${DEFAULT_WALK_TARGET_MINUTES}分目安）`;
 }
 
+/**
+ * @param {string} message
+ */
 function setRecommendHint(message) {
   recommendHint.textContent = message;
 }
 
+/**
+ * @param {boolean} loading
+ */
 function setRecommendLoading(loading) {
   recommendButton.disabled = loading;
   recommendQuery.disabled = loading;
@@ -390,6 +544,9 @@ function clearRecommendResult() {
   recommendResult.hidden = true;
 }
 
+/**
+ * @param {any} stops
+ */
 function renderStops(stops) {
   recommendStops.textContent = "";
   if (!Array.isArray(stops) || stops.length === 0) {
@@ -425,6 +582,9 @@ function renderStops(stops) {
   recommendStopsSection.hidden = false;
 }
 
+/**
+ * @param {any} sources
+ */
 function renderSources(sources) {
   recommendSources.textContent = "";
   if (!Array.isArray(sources) || sources.length === 0) {
@@ -454,12 +614,20 @@ function renderSources(sources) {
   });
 }
 
+/**
+ * @param {string} query
+ * @returns {string}
+ */
 function buildMapsLink(query) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     query
   )}`;
 }
 
+/**
+ * @param {any} latLng
+ * @returns {string}
+ */
 function formatLatLngForUrl(latLng) {
   if (!latLng) {
     return "";
@@ -473,6 +641,10 @@ function formatLatLngForUrl(latLng) {
   return `${latLng.lat().toFixed(6)},${latLng.lng().toFixed(6)}`;
 }
 
+/**
+ * @param {number} totalSeconds
+ * @returns {string}
+ */
 function formatDurationText(totalSeconds) {
   if (!Number.isFinite(totalSeconds)) {
     return "不明";
@@ -489,6 +661,10 @@ function formatDurationText(totalSeconds) {
   return `${hours}時間${minutes}分`;
 }
 
+/**
+ * @param {any[]} legs
+ * @returns {{ text: string, seconds: number | null }}
+ */
 function getRouteDurationFromLegs(legs) {
   if (!Array.isArray(legs) || legs.length === 0) {
     return { text: "不明", seconds: null };
@@ -509,6 +685,10 @@ function getRouteDurationFromLegs(legs) {
   return { text: fallbackText || "不明", seconds: null };
 }
 
+/**
+ * @param {any} latLng
+ * @returns {{ lat: number, lng: number } | null}
+ */
 function getLatLngLiteral(latLng) {
   if (!latLng) {
     return null;
@@ -522,11 +702,16 @@ function getLatLngLiteral(latLng) {
   return null;
 }
 
+/**
+ * @param {any} a
+ * @param {any} b
+ * @returns {number | null}
+ */
 function computeDistanceMeters(a, b) {
   if (!a || !b) {
     return null;
   }
-  const toRadians = (value) => (value * Math.PI) / 180;
+  const toRadians = (/** @type {number} */ value) => (value * Math.PI) / 180;
   const lat1 = toRadians(a.lat);
   const lat2 = toRadians(b.lat);
   const deltaLat = lat2 - lat1;
@@ -539,7 +724,10 @@ function computeDistanceMeters(a, b) {
   return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-function buildDirectionsLink({ origin, destination, travelMode, waypoints, transitMode }) {
+function buildDirectionsLink(
+  /** @type {{ origin: any, destination: any, travelMode?: any, waypoints?: any, transitMode?: any }} */
+  { origin, destination, travelMode, waypoints, transitMode }
+) {
   const params = new URLSearchParams({ api: "1" });
   const originValue = formatLatLngForUrl(origin);
   const destinationValue = formatLatLngForUrl(destination);
@@ -568,6 +756,10 @@ function buildDirectionsLink({ origin, destination, travelMode, waypoints, trans
 
 const GENERIC_POINT_LABELS = new Set(["出発地", "目的地", "未選択", "不明"]);
 
+/**
+ * @param {any} label
+ * @returns {string}
+ */
 function normalizePointLabel(label) {
   if (typeof label !== "string") {
     return "";
@@ -579,7 +771,10 @@ function normalizePointLabel(label) {
   return trimmed;
 }
 
-function buildSegmentSearchQuery({ fromLabel, toLabel, from, to }) {
+function buildSegmentSearchQuery(
+  /** @type {{ fromLabel?: any, toLabel?: any, from?: any, to?: any }} */
+  { fromLabel, toLabel, from, to }
+) {
   const labels = [normalizePointLabel(fromLabel), normalizePointLabel(toLabel)].filter(
     Boolean
   );
@@ -605,20 +800,25 @@ function getDestinationDisplayLabel() {
   return destinationLatLng ? "目的地" : "";
 }
 
+/**
+ * @param {any} result
+ * @returns {any}
+ */
 function extractTransitStops(result) {
   const route = result?.routes?.[0];
   if (!route) {
     return null;
   }
+  /** @type {any[]} */
   const transitSteps = [];
   const transitMode =
-    (globalThis.google &&
+    (typeof google !== "undefined" &&
       google.maps &&
       google.maps.TravelMode &&
       google.maps.TravelMode.TRANSIT) ||
     "TRANSIT";
-  (route.legs || []).forEach((leg) => {
-    (leg.steps || []).forEach((step) => {
+  (route.legs || []).forEach((/** @type {any} */ leg) => {
+    (leg.steps || []).forEach((/** @type {any} */ step) => {
       if (step.travel_mode === transitMode || step.travel_mode === "TRANSIT") {
         transitSteps.push(step);
       }
@@ -637,7 +837,10 @@ function extractTransitStops(result) {
   return { departure, arrival };
 }
 
-function buildWalkSegment({ origin, destination, fromLabel, toLabel, waypoints }) {
+function buildWalkSegment(
+  /** @type {{ origin: any, destination: any, fromLabel?: any, toLabel?: any, waypoints?: any }} */
+  { origin, destination, fromLabel, toLabel, waypoints }
+) {
   if (!origin || !destination) {
     return null;
   }
@@ -656,7 +859,10 @@ function buildWalkSegment({ origin, destination, fromLabel, toLabel, waypoints }
   };
 }
 
-function buildRailSegment({ origin, destination, fromLabel, toLabel }) {
+function buildRailSegment(
+  /** @type {{ origin: any, destination: any, fromLabel?: any, toLabel?: any }} */
+  { origin, destination, fromLabel, toLabel }
+) {
   if (!origin || !destination) {
     return null;
   }
@@ -683,6 +889,9 @@ function clearRouteBreakdown() {
   routeBreakdown.hidden = true;
 }
 
+/**
+ * @param {any} segments
+ */
 function renderRouteBreakdown(segments) {
   if (!routeBreakdown || !routeBreakdownList) {
     return;
@@ -762,7 +971,9 @@ function renderRouteBreakdown(segments) {
   routeBreakdown.hidden = false;
 }
 
-function buildRouteBreakdownSegments({ mode, railResult }) {
+function buildRouteBreakdownSegments(
+  /** @type {{ mode?: any, railResult?: any }} */ { mode, railResult }
+) {
   if (!originLatLng || !destinationLatLng) {
     return [];
   }
@@ -810,7 +1021,9 @@ function buildRouteBreakdownSegments({ mode, railResult }) {
   return walkSegment ? [walkSegment] : [];
 }
 
-function updateRouteBreakdown({ mode, railResult }) {
+function updateRouteBreakdown(
+  /** @type {{ mode?: any, railResult?: any }} */ { mode, railResult }
+) {
   const segments = buildRouteBreakdownSegments({ mode, railResult });
   if (!segments.length) {
     clearRouteBreakdown();
@@ -819,6 +1032,10 @@ function updateRouteBreakdown({ mode, railResult }) {
   renderRouteBreakdown(segments);
 }
 
+/**
+ * @param {any} result
+ * @returns {boolean}
+ */
 function isStationResult(result) {
   const types = result?.types;
   if (!Array.isArray(types)) {
@@ -827,6 +1044,11 @@ function isStationResult(result) {
   return types.some((type) => STATION_TYPES.has(type));
 }
 
+/**
+ * @param {any} result
+ * @param {any} region
+ * @returns {boolean}
+ */
 function isResultInRegion(result, region) {
   const regionFilters = normalizeRegionFilter(region);
   if (!regionFilters.length) {
@@ -845,10 +1067,14 @@ function isResultInRegion(result, region) {
   return regionFilters.some((filter) => formatted.includes(filter));
 }
 
+/**
+ * @param {any} result
+ * @returns {string}
+ */
 function extractStationLabel(result) {
   const components = result?.address_components || [];
-  const labelComponent = components.find((component) =>
-    component.types?.some((type) =>
+  const labelComponent = components.find((/** @type {any} */ component) =>
+    component.types?.some((/** @type {string} */ type) =>
       ["transit_station", "point_of_interest", "establishment", "premise"].includes(
         type
       )
@@ -857,6 +1083,10 @@ function extractStationLabel(result) {
   return labelComponent?.long_name || "";
 }
 
+/**
+ * @param {string} region
+ * @returns {string}
+ */
 function stripRegionSuffix(region) {
   if (!region) {
     return "";
@@ -871,6 +1101,10 @@ function stripRegionSuffix(region) {
   return value.replace(/[都府県]$/, "");
 }
 
+/**
+ * @param {string} region
+ * @returns {string}
+ */
 function getRegionLabel(region) {
   if (!region) {
     return "";
@@ -881,6 +1115,10 @@ function getRegionLabel(region) {
   return typeof region === "string" ? region : "";
 }
 
+/**
+ * @param {string} region
+ * @returns {string[]}
+ */
 function buildRegionStationQueries(region) {
   const trimmed = region.trim();
   if (!trimmed) {
@@ -895,6 +1133,7 @@ function buildRegionStationQueries(region) {
   if (stripped && stripped !== trimmed) {
     variants.push(stripped);
   }
+  /** @type {string[]} */
   const queries = [];
   variants.forEach((variant) => {
     REGION_STATION_QUERIES.forEach((suffix) => {
@@ -905,6 +1144,10 @@ function buildRegionStationQueries(region) {
   return [...new Set(queries)];
 }
 
+/**
+ * @param {any} result
+ * @returns {boolean}
+ */
 function resultHasStationKeyword(result) {
   const label = extractStationLabel(result);
   if (label && label.includes("駅")) {
@@ -914,9 +1157,15 @@ function resultHasStationKeyword(result) {
     return true;
   }
   const components = result?.address_components || [];
-  return components.some((component) => component.long_name?.includes("駅"));
+  return components.some(
+    (/** @type {any} */ component) => component.long_name?.includes("駅")
+  );
 }
 
+/**
+ * @param {any} components
+ * @returns {string[]}
+ */
 function extractLocalityCandidates(components) {
   if (!Array.isArray(components)) {
     return [];
@@ -927,9 +1176,10 @@ function extractLocalityCandidates(components) {
     "sublocality_level_1",
     "sublocality_level_2",
   ];
+  /** @type {string[]} */
   const names = [];
   types.forEach((type) => {
-    const name = components.find((component) =>
+    const name = components.find((/** @type {any} */ component) =>
       component.types?.includes(type)
     )?.long_name;
     if (name) {
@@ -939,25 +1189,39 @@ function extractLocalityCandidates(components) {
   return [...new Set(names)];
 }
 
+/**
+ * @param {any} latLng
+ * @returns {Promise<string[]>}
+ */
 function resolveLocalityCandidates(latLng) {
   return new Promise((resolve) => {
     if (!geocoder || !latLng) {
       resolve([]);
       return;
     }
-    geocoder.geocode({ location: latLng }, (results, status) => {
+    geocoder.geocode(
+      { location: latLng },
+      (/** @type {any} */ results, /** @type {any} */ status) => {
       if (status !== "OK" || !results?.[0]) {
         resolve([]);
         return;
       }
       resolve(extractLocalityCandidates(results[0].address_components));
-    });
+      }
+    );
   });
 }
 
-function buildStartStationQueries({ region, stopName, localities }) {
+/**
+ * @returns {string[]}
+ */
+function buildStartStationQueries(
+  /** @type {{ region?: any, stopName?: any, localities?: any }} */
+  { region, stopName, localities }
+) {
+  /** @type {Set<string>} */
   const queries = new Set();
-  const addStationQuery = (value) => {
+  const addStationQuery = (/** @type {string} */ value) => {
     if (!value) {
       return;
     }
@@ -968,6 +1232,7 @@ function buildStartStationQueries({ region, stopName, localities }) {
     addStationQuery(stopName);
     queries.add(`${stopName} 最寄り駅`);
   }
+  /** @type {string[]} */
   const localityList = Array.isArray(localities) ? localities : [];
   localityList.forEach(addStationQuery);
   const regionLabel = getRegionLabel(region);
@@ -987,22 +1252,34 @@ function buildStartStationQueries({ region, stopName, localities }) {
   return [...queries];
 }
 
+/**
+ * @param {string} address
+ * @returns {Promise<any[]>}
+ */
 function geocodeByAddress(address) {
   return new Promise((resolve) => {
     if (!geocoder || !address) {
       resolve([]);
       return;
     }
-    geocoder.geocode({ address }, (results, status) => {
+    geocoder.geocode(
+      { address },
+      (/** @type {any} */ results, /** @type {any} */ status) => {
       if (status === "OK" && Array.isArray(results)) {
         resolve(results);
         return;
       }
       resolve([]);
-    });
+      }
+    );
   });
 }
 
+/**
+ * @param {any} results
+ * @param {any} region
+ * @returns {any[]}
+ */
 function filterStationResults(results, region) {
   const list = Array.isArray(results) ? results : [];
   if (!list.length) {
@@ -1030,11 +1307,20 @@ function filterStationResults(results, region) {
   return hasRegionFilter ? [] : keywordResults;
 }
 
+/**
+ * @param {any} results
+ * @param {any} region
+ * @returns {any}
+ */
 function selectStationResult(results, region) {
   const filtered = filterStationResults(results, region);
   return filtered[0] || null;
 }
 
+/**
+ * @param {string} region
+ * @returns {Promise<any>}
+ */
 async function findStationInRegion(region) {
   if (!geocoder || !region) {
     return null;
@@ -1054,6 +1340,10 @@ async function findStationInRegion(region) {
   return null;
 }
 
+/**
+ * @param {any} result
+ * @returns {string}
+ */
 function getStationNameFromResult(result) {
   if (!result) {
     return "";
@@ -1066,6 +1356,10 @@ function getStationNameFromResult(result) {
   );
 }
 
+/**
+ * @param {string} region
+ * @returns {Promise<any>}
+ */
 async function resolveRegionAnchor(region) {
   if (!region) {
     return null;
@@ -1077,7 +1371,10 @@ async function resolveRegionAnchor(region) {
   }
 }
 
-async function findNearestStationToLocation({ startLocation, stopName, region }) {
+async function findNearestStationToLocation(
+  /** @type {{ startLocation?: any, stopName?: any, region?: any }} */
+  { startLocation, stopName, region }
+) {
   if (!geocoder || !startLocation) {
     return null;
   }
@@ -1095,6 +1392,7 @@ async function findNearestStationToLocation({ startLocation, stopName, region })
     return null;
   }
 
+  /** @type {Array<{ result: any, distance: number }>} */
   const candidates = [];
   for (const query of queries) {
     const results = await geocodeByAddress(query);
@@ -1116,15 +1414,20 @@ async function findNearestStationToLocation({ startLocation, stopName, region })
     return null;
   }
   candidates.sort((a, b) => a.distance - b.distance);
-  const best = candidates[0].result;
+  const best = candidates[0];
+  if (!best) {
+    return null;
+  }
   return {
-    location: best.geometry?.location || null,
-    name: getStationNameFromResult(best),
-    address: best.formatted_address || "",
+    location: best.result?.geometry?.location || null,
+    name: getStationNameFromResult(best.result),
+    address: best.result?.formatted_address || "",
   };
 }
 
-async function ensureOriginFromRegion({ source } = {}) {
+async function ensureOriginFromRegion(
+  /** @type {{ source?: string }} */ { source } = {}
+) {
   if (originLatLng) {
     return true;
   }
@@ -1201,6 +1504,11 @@ async function handleOriginRegionStart() {
   await ensureOriginFromRegion({ source: "manual" });
 }
 
+/**
+ * @param {number | null} targetMinutes
+ * @param {number | null} durationMinutes
+ * @returns {number | null}
+ */
 function getAdjustedTargetMinutes(targetMinutes, durationMinutes) {
   if (!targetMinutes || !durationMinutes) {
     return targetMinutes;
@@ -1216,14 +1524,17 @@ function getAdjustedTargetMinutes(targetMinutes, durationMinutes) {
   return Math.max(20, targetMinutes - Math.max(15, Math.round(diff * 0.6)));
 }
 
-async function runWalkRouteSearch({
-  query,
-  requestTargetMinutes,
-  desiredTargetMinutes,
-  adjustment,
-  actualMinutes,
-  auto,
-}) {
+async function runWalkRouteSearch(
+  /** @type {{ query?: any, requestTargetMinutes?: any, desiredTargetMinutes?: any, adjustment?: any, actualMinutes?: any, auto?: boolean }} */
+  {
+    query,
+    requestTargetMinutes,
+    desiredTargetMinutes,
+    adjustment,
+    actualMinutes,
+    auto,
+  }
+) {
   setRecommendLoading(true);
   setRecommendHint(auto ? "時間調整のため再検索中..." : "散歩ルートを作成中...");
   clearRecommendResult();
@@ -1351,12 +1662,16 @@ async function runWalkRouteSearch({
       auto ? "散歩ルートを調整しました。" : "おすすめの散歩ルートを表示しました。"
     );
   } catch (error) {
-    setRecommendHint(error.message || "おすすめ地点の取得に失敗しました。");
+    const message = error instanceof Error ? error.message : String(error);
+    setRecommendHint(message || "おすすめ地点の取得に失敗しました。");
   } finally {
     setRecommendLoading(false);
   }
 }
 
+/**
+ * @param {any} place
+ */
 function showRecommendResult(place) {
   const isWalkRoute =
     place?.route_type === "walk_multi" || Array.isArray(place?.stops);
@@ -1380,17 +1695,20 @@ function showRecommendResult(place) {
   recommendResult.hidden = false;
 }
 
-async function requestRecommendation({
-  query,
-  mode,
-  targetMinutes,
-  adjustment,
-  actualMinutes,
-  originOverride,
-  originRegionOverride,
-  originPrefectures,
-  originAreaLabel,
-}) {
+async function requestRecommendation(
+  /** @type {{ query?: any, mode?: any, targetMinutes?: any, adjustment?: any, actualMinutes?: any, originOverride?: any, originRegionOverride?: any, originPrefectures?: any, originAreaLabel?: any }} */
+  {
+    query,
+    mode,
+    targetMinutes,
+    adjustment,
+    actualMinutes,
+    originOverride,
+    originRegionOverride,
+    originPrefectures,
+    originAreaLabel,
+  }
+) {
   const maxMinutes = getMaxMinutes();
   const originSource = originOverride || originLatLng;
   const originLiteral = getLatLngLiteral(originSource);
@@ -1402,7 +1720,7 @@ async function requestRecommendation({
       ? originRegionOverride.trim()
       : "";
   if (!region) {
-    region = originRegion || (await resolveOriginRegion(originSource)) || null;
+    region = originRegion || (await resolveOriginRegion(originSource)) || "";
   }
   const context = getSelectedRegionContext();
   const selectedPrefectures =
@@ -1449,27 +1767,42 @@ async function requestRecommendation({
   return data;
 }
 
+/**
+ * @param {string} address
+ * @returns {Promise<any>}
+ */
 function geocodeAddress(address) {
   return new Promise((resolve, reject) => {
     if (!geocoder || !address) {
       reject(new Error("住所の位置特定に失敗しました。"));
       return;
     }
-    geocoder.geocode({ address }, (results, status) => {
+    geocoder.geocode(
+      { address },
+      (/** @type {any} */ results, /** @type {any} */ status) => {
       if (status === "OK" && results?.[0]) {
         resolve(results[0].geometry.location);
         return;
       }
       reject(new Error("住所の位置特定に失敗しました。"));
-    });
+      }
+    );
   });
 }
 
+/**
+ * @param {any} place
+ * @returns {Promise<any>}
+ */
 function geocodeDestination(place) {
   const address = [place?.name, place?.address].filter(Boolean).join(" ");
   return geocodeAddress(address);
 }
 
+/**
+ * @param {any} stop
+ * @returns {any}
+ */
 function normalizeStop(stop) {
   if (typeof stop === "string") {
     return { name: stop, address: "" };
@@ -1485,6 +1818,10 @@ function normalizeStop(stop) {
   };
 }
 
+/**
+ * @param {any} stop
+ * @returns {string}
+ */
 function getStopLabel(stop) {
   const normalized = normalizeStop(stop);
   if (!normalized) {
@@ -1493,10 +1830,15 @@ function getStopLabel(stop) {
   return [normalized.name, normalized.address].filter(Boolean).join(" ");
 }
 
+/**
+ * @param {any} stops
+ * @returns {Promise<any[]>}
+ */
 async function geocodeStops(stops) {
   if (!Array.isArray(stops)) {
     return [];
   }
+  /** @type {any[]} */
   const locations = [];
   const limit = Math.min(stops.length, 6);
   for (let i = 0; i < limit; i += 1) {
@@ -1524,6 +1866,10 @@ async function geocodeStops(stops) {
   return locations;
 }
 
+/**
+ * @param {Event} event
+ * @returns {Promise<void>}
+ */
 async function handleRecommendSubmit(event) {
   event.preventDefault();
 
@@ -1580,7 +1926,8 @@ async function handleRecommendSubmit(event) {
     calculateRoutes();
     setRecommendHint("おすすめ地点を目的地に設定しました。");
   } catch (error) {
-    setRecommendHint(error.message || "おすすめ地点の取得に失敗しました。");
+    const message = error instanceof Error ? error.message : String(error);
+    setRecommendHint(message || "おすすめ地点の取得に失敗しました。");
   } finally {
     setRecommendLoading(false);
   }
@@ -1609,6 +1956,9 @@ function clearWalkRouteState() {
   walkRoutePreferredMode = null;
 }
 
+/**
+ * @param {string} message
+ */
 function clearDestination(message) {
   destinationLatLng = null;
   destinationSource = null;
@@ -1657,6 +2007,11 @@ function resetRoute() {
   updateRegionControls();
 }
 
+/**
+ * @param {any} latLng
+ * @param {string | null} [regionOverride]
+ * @param {{ preserveWalkState?: boolean }} [options]
+ */
 function setOrigin(latLng, regionOverride, options = {}) {
   originLatLng = latLng;
   originRegion = regionOverride || null;
@@ -1680,6 +2035,11 @@ function setOrigin(latLng, regionOverride, options = {}) {
   updateRegionControls();
 }
 
+/**
+ * @param {any} latLng
+ * @param {string} source
+ * @param {{ label?: string }} [options]
+ */
 function setDestination(latLng, source, options = {}) {
   destinationLatLng = latLng;
   destinationSource = source || "manual";
@@ -1699,12 +2059,16 @@ function setDestination(latLng, source, options = {}) {
   updateRouteLinks();
 }
 
+/**
+ * @param {any} route
+ * @returns {boolean}
+ */
 function routeHasHighSpeedTrain(route) {
   const legs = route?.legs || [];
   const highSpeedType =
     google.maps.TransitVehicleType?.HIGH_SPEED_TRAIN || "HIGH_SPEED_TRAIN";
-  return legs.some((leg) =>
-    leg.steps?.some((step) => {
+  return legs.some((/** @type {any} */ leg) =>
+    leg.steps?.some((/** @type {any} */ step) => {
       const travelMode = step.travel_mode;
       if (
         travelMode !== google.maps.TravelMode.TRANSIT &&
@@ -1718,6 +2082,10 @@ function routeHasHighSpeedTrain(route) {
   );
 }
 
+/**
+ * @param {any} result
+ * @returns {{ route: any, reason: string | null }}
+ */
 function selectLocalRailRoute(result) {
   const routes = result?.routes || [];
   if (!routes.length) {
@@ -1731,6 +2099,14 @@ function selectLocalRailRoute(result) {
   return { route: null, reason: "high_speed" };
 }
 
+/**
+ * @param {string} type
+ * @param {any} result
+ * @param {any} status
+ * @param {any} bounds
+ * @param {any} flags
+ * @param {number} currentRequest
+ */
 function handleRouteResult(type, result, status, bounds, flags, currentRequest) {
   if (currentRequest !== requestId) {
     return;
@@ -1819,17 +2195,19 @@ function handleRouteResult(type, result, status, bounds, flags, currentRequest) 
         walkMinutes !== null ? Math.abs(walkMinutes - targetMinutes) : null;
       const railDiff =
         railMinutes !== null ? Math.abs(railMinutes - targetMinutes) : null;
+      const safeWalkDiff = walkDiff ?? Number.POSITIVE_INFINITY;
+      const safeRailDiff = railDiff ?? Number.POSITIVE_INFINITY;
 
       let selectedMode = null;
-      if (walkMinutes !== null && walkDiff <= tolerance) {
+      if (walkMinutes !== null && safeWalkDiff <= tolerance) {
         selectedMode = "walk";
-      } else if (railMinutes !== null && railDiff <= tolerance) {
+      } else if (railMinutes !== null && safeRailDiff <= tolerance) {
         selectedMode = "rail";
       } else if (walkMinutes !== null && railMinutes !== null) {
         if (walkMinutes < targetMinutes - tolerance && flags.railOk) {
           selectedMode = "rail";
         } else {
-          selectedMode = walkDiff <= railDiff ? "walk" : "rail";
+          selectedMode = safeWalkDiff <= safeRailDiff ? "walk" : "rail";
         }
       } else if (walkMinutes !== null) {
         selectedMode = "walk";
@@ -2026,6 +2404,7 @@ function calculateRoutes() {
   clearRouteBreakdown();
   updateRouteLinks();
 
+  /** @type {any} */
   const walkingRequest = {
     origin: originLatLng,
     destination: destinationLatLng,
@@ -2038,11 +2417,12 @@ function calculateRoutes() {
 
   directionsService.route(
     walkingRequest,
-    (result, status) =>
+    (/** @type {any} */ result, /** @type {any} */ status) =>
       handleRouteResult("walk", result, status, bounds, flags, currentRequest)
   );
 
   if (includeTransit) {
+    /** @type {any} */
     const transitRequest = {
       origin: originLatLng,
       destination: destinationLatLng,
@@ -2063,7 +2443,7 @@ function calculateRoutes() {
     }
     directionsService.route(
       transitRequest,
-      (result, status) =>
+      (/** @type {any} */ result, /** @type {any} */ status) =>
         handleRouteResult("rail", result, status, bounds, flags, currentRequest)
     );
   } else if (railRenderer) {
@@ -2071,6 +2451,9 @@ function calculateRoutes() {
   }
 }
 
+/**
+ * @param {string} apiKey
+ */
 function loadGoogleMaps(apiKey) {
   const existingScript = document.querySelector(
     'script[src^="https://maps.googleapis.com/maps/api/js"]'
@@ -2179,7 +2562,7 @@ window.initMap = function initMap() {
   maxTimeInput.addEventListener("input", updateLimitHint);
   updateLimitHint();
 
-  map.addListener("click", (event) => {
+  map.addListener("click", (/** @type {any} */ event) => {
     if (!originLatLng) {
       setOrigin(event.latLng);
       updateRouteLabels();
