@@ -632,7 +632,15 @@ const server = http.createServer((req, res) => {
             ? [{ type: WEB_SEARCH_TOOL }]
             : undefined;
 
-        /** @type {{ model: string, input: any[], tools: any[] | undefined, temperature: number, text?: { format: { type: string } } }} */
+        /**
+         * @type {{
+         *   model: string,
+         *   input: any[],
+         *   tools: any[] | undefined,
+         *   temperature: number,
+         *   text?: { format: { type: string } }
+         * }}
+         */
         const requestPayload = {
           model: OPENAI_MODEL,
           input,

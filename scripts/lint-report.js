@@ -221,7 +221,13 @@ function normalizeSeverity(severityValue) {
 
 /**
  * メッセージ情報を組み立てる。
- * @param {{ lineValue: number | null, columnValue: number | null, severityValue: string, ruleValue: string, text: string }} entry メッセージ入力。
+ * @param {{
+ *   lineValue: number | null,
+ *   columnValue: number | null,
+ *   severityValue: string,
+ *   ruleValue: string,
+ *   text: string
+ * }} entry メッセージ入力。
  * @returns {any} メッセージオブジェクト。
  */
 function buildMessage(entry) {

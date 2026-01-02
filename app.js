@@ -1650,11 +1650,27 @@ function getAdjustedTargetMinutes(targetMinutes, durationMinutes) {
 
 /**
  * 散歩ルート検索を実行する。
- * @param {{ query?: any, requestTargetMinutes?: any, desiredTargetMinutes?: any, adjustment?: any, actualMinutes?: any, auto?: boolean }} options 検索オプション。
+ * @param {{
+ *   query?: any,
+ *   requestTargetMinutes?: any,
+ *   desiredTargetMinutes?: any,
+ *   adjustment?: any,
+ *   actualMinutes?: any,
+ *   auto?: boolean
+ * }} options 検索オプション。
  * @returns {Promise<void>} 処理完了のPromise。
  */
 async function runWalkRouteSearch(
-  /** @type {{ query?: any, requestTargetMinutes?: any, desiredTargetMinutes?: any, adjustment?: any, actualMinutes?: any, auto?: boolean }} */
+  /**
+   * @type {{
+   *   query?: any,
+   *   requestTargetMinutes?: any,
+   *   desiredTargetMinutes?: any,
+   *   adjustment?: any,
+   *   actualMinutes?: any,
+   *   auto?: boolean
+   * }}
+   */
   {
     query,
     requestTargetMinutes,
@@ -1827,11 +1843,33 @@ function showRecommendResult(place) {
 
 /**
  * おすすめ取得APIを呼び出す。
- * @param {{ query?: any, mode?: any, targetMinutes?: any, adjustment?: any, actualMinutes?: any, originOverride?: any, originRegionOverride?: any, originPrefectures?: any, originAreaLabel?: any }} options リクエストオプション。
+ * @param {{
+ *   query?: any,
+ *   mode?: any,
+ *   targetMinutes?: any,
+ *   adjustment?: any,
+ *   actualMinutes?: any,
+ *   originOverride?: any,
+ *   originRegionOverride?: any,
+ *   originPrefectures?: any,
+ *   originAreaLabel?: any
+ * }} options リクエストオプション。
  * @returns {Promise<any>} APIレスポンスのPromise。
  */
 async function requestRecommendation(
-  /** @type {{ query?: any, mode?: any, targetMinutes?: any, adjustment?: any, actualMinutes?: any, originOverride?: any, originRegionOverride?: any, originPrefectures?: any, originAreaLabel?: any }} */
+  /**
+   * @type {{
+   *   query?: any,
+   *   mode?: any,
+   *   targetMinutes?: any,
+   *   adjustment?: any,
+   *   actualMinutes?: any,
+   *   originOverride?: any,
+   *   originRegionOverride?: any,
+   *   originPrefectures?: any,
+   *   originAreaLabel?: any
+   * }}
+   */
   {
     query,
     mode,

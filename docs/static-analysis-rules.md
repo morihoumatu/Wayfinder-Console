@@ -54,6 +54,7 @@
 - `prefer-const`: 再代入のない変数は `const`
 - `prefer-template`: 文字列結合よりテンプレート文字列を推奨
 - `max-params: ["error", 4]`: 関数の引数は4つまで（5つ以上はエラー）
+- `max-len: ["error", { code: 120 }]`: 1行120文字超をエラー
 - `radix: ["error", "always"]`: `parseInt` の基数指定を必須化
 - `yoda`: ヨーダ条件を禁止
 
