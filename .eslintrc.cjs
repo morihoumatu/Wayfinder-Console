@@ -50,6 +50,7 @@ module.exports = {
     "jsdoc/require-description": "error",
     "jsdoc/require-param-description": "error",
     "jsdoc/require-returns-description": "error",
+    "max-params": ["error", 4],
     radix: ["error", "always"],
     yoda: "error",
   },

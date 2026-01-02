@@ -224,6 +224,9 @@ function formatLatLng(latLng) {
   return `${latLng.lat().toFixed(5)}, ${latLng.lng().toFixed(5)}`;
 }
 
+/**
+ * 出発地と目的地のラベルを更新する。
+ */
 function updateRouteLabels() {
   originLabel.textContent = originLatLng ? formatLatLng(originLatLng) : "未選択";
   destinationLabel.textContent = destinationLatLng
@@ -231,6 +234,9 @@ function updateRouteLabels() {
     : "未選択";
 }
 
+/**
+ * ルート選択のヒントを更新する。
+ */
 function updateRouteHint() {
   if (!originLatLng) {
     routeHint.textContent = "マップをクリックして出発地を選択してください。";
@@ -255,6 +261,9 @@ function setOriginRegionHint(message) {
   }
 }
 
+/**
+ * 地域選択UIの状態を更新する。
+ */
 function updateRegionControls() {
   if (!originRegionButton || !originRegionHint) {
     return;
@@ -283,6 +292,9 @@ function setRouteStatus(message) {
   routeStatus.textContent = message;
 }
 
+/**
+ * ルートリンクを更新する。
+ */
 function updateRouteLinks() {
   if (!originLatLng || !destinationLatLng) {
     routeLinks.hidden = true;
@@ -509,6 +521,10 @@ function resolveOriginRegion(latLng) {
   });
 }
 
+/**
+ * 所要時間の上限を取得する。
+ * @returns {number | null} 上限分数またはnull。
+ */
 function getMaxMinutes() {
   const value = Number.parseInt(maxTimeInput.value, 10);
   if (!Number.isFinite(value) || value <= 0) {
@@ -517,10 +533,17 @@ function getMaxMinutes() {
   return value;
 }
 
+/**
+ * 目標所要時間を取得する。
+ * @returns {number} 目標分数。
+ */
 function getTargetMinutes() {
   return getMaxMinutes() || DEFAULT_WALK_TARGET_MINUTES;
 }
 
+/**
+ * 所要時間上限のヒントを更新する。
+ */
 function updateLimitHint() {
   const maxMinutes = getMaxMinutes();
   limitHint.textContent = maxMinutes
@@ -548,6 +571,9 @@ function setRecommendLoading(loading) {
     : recommendButtonLabel;
 }
 
+/**
+ * おすすめ表示を初期化する。
+ */
 function clearRecommendResult() {
   recommendTitle.textContent = "-";
   recommendAddress.textContent = "-";
@@ -748,6 +774,11 @@ function computeDistanceMeters(a, b) {
   return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
+/**
+ * Google Mapsの経路URLを生成する。
+ * @param {{ origin: any, destination: any, travelMode?: any, waypoints?: any, transitMode?: any }} options 生成オプション。
+ * @returns {string} 経路URL。
+ */
 function buildDirectionsLink(
   /** @type {{ origin: any, destination: any, travelMode?: any, waypoints?: any, transitMode?: any }} */
   { origin, destination, travelMode, waypoints, transitMode }
@@ -796,6 +827,11 @@ function normalizePointLabel(label) {
   return trimmed;
 }
 
+/**
+ * 区間検索用のクエリを生成する。
+ * @param {{ fromLabel?: any, toLabel?: any, from?: any, to?: any }} options 生成オプション。
+ * @returns {string} 検索クエリ。
+ */
 function buildSegmentSearchQuery(
   /** @type {{ fromLabel?: any, toLabel?: any, from?: any, to?: any }} */
   { fromLabel, toLabel, from, to }
@@ -811,6 +847,10 @@ function buildSegmentSearchQuery(
   return [fromValue, toValue].filter(Boolean).join(" ");
 }
 
+/**
+ * 出発地の表示ラベルを取得する。
+ * @returns {string} 表示ラベル。
+ */
 function getOriginDisplayLabel() {
   if (originRegion) {
     return originRegion;
@@ -818,6 +858,10 @@ function getOriginDisplayLabel() {
   return "出発地";
 }
 
+/**
+ * 目的地の表示ラベルを取得する。
+ * @returns {string} 表示ラベル。
+ */
 function getDestinationDisplayLabel() {
   if (destinationName) {
     return destinationName;
@@ -863,6 +907,11 @@ function extractTransitStops(result) {
   return { departure, arrival };
 }
 
+/**
+ * 徒歩区間の情報を作成する。
+ * @param {{ origin: any, destination: any, fromLabel?: any, toLabel?: any, waypoints?: any }} options 区間オプション。
+ * @returns {any | null} 区間情報またはnull。
+ */
 function buildWalkSegment(
   /** @type {{ origin: any, destination: any, fromLabel?: any, toLabel?: any, waypoints?: any }} */
   { origin, destination, fromLabel, toLabel, waypoints }
@@ -885,6 +934,11 @@ function buildWalkSegment(
   };
 }
 
+/**
+ * 在来線区間の情報を作成する。
+ * @param {{ origin: any, destination: any, fromLabel?: any, toLabel?: any }} options 区間オプション。
+ * @returns {any | null} 区間情報またはnull。
+ */
 function buildRailSegment(
   /** @type {{ origin: any, destination: any, fromLabel?: any, toLabel?: any }} */
   { origin, destination, fromLabel, toLabel }
@@ -907,6 +961,9 @@ function buildRailSegment(
   };
 }
 
+/**
+ * ルート内訳表示をクリアする。
+ */
 function clearRouteBreakdown() {
   if (!routeBreakdown || !routeBreakdownList) {
     return;
@@ -998,6 +1055,11 @@ function renderRouteBreakdown(segments) {
   routeBreakdown.hidden = false;
 }
 
+/**
+ * ルート内訳の区間配列を組み立てる。
+ * @param {{ mode?: any, railResult?: any }} options 生成オプション。
+ * @returns {any[]} 区間配列。
+ */
 function buildRouteBreakdownSegments(
   /** @type {{ mode?: any, railResult?: any }} */ { mode, railResult }
 ) {
@@ -1048,6 +1110,10 @@ function buildRouteBreakdownSegments(
   return walkSegment ? [walkSegment] : [];
 }
 
+/**
+ * ルート内訳表示を更新する。
+ * @param {{ mode?: any, railResult?: any }} options 更新オプション。
+ */
 function updateRouteBreakdown(
   /** @type {{ mode?: any, railResult?: any }} */ { mode, railResult }
 ) {
@@ -1414,6 +1480,11 @@ async function resolveRegionAnchor(region) {
   }
 }
 
+/**
+ * 指定地点から最寄り駅候補を探す。
+ * @param {{ startLocation?: any, stopName?: any, region?: any }} options 検索オプション。
+ * @returns {Promise<any | null>} 駅候補またはnullのPromise。
+ */
 async function findNearestStationToLocation(
   /** @type {{ startLocation?: any, stopName?: any, region?: any }} */
   { startLocation, stopName, region }
@@ -1468,6 +1539,11 @@ async function findNearestStationToLocation(
   };
 }
 
+/**
+ * 地域指定から出発地を設定する。
+ * @param {{ source?: string }} [options] 設定オプション。
+ * @returns {Promise<boolean>} 設定可否のPromise。
+ */
 async function ensureOriginFromRegion(
   /** @type {{ source?: string }} */ { source } = {}
 ) {
@@ -1537,6 +1613,10 @@ async function ensureOriginFromRegion(
   return true;
 }
 
+/**
+ * 地域指定による出発地設定を実行する。
+ * @returns {Promise<void>} 処理完了のPromise。
+ */
 async function handleOriginRegionStart() {
   if (originLatLng) {
     setOriginRegionHint(
@@ -1568,6 +1648,11 @@ function getAdjustedTargetMinutes(targetMinutes, durationMinutes) {
   return Math.max(20, targetMinutes - Math.max(15, Math.round(diff * 0.6)));
 }
 
+/**
+ * 散歩ルート検索を実行する。
+ * @param {{ query?: any, requestTargetMinutes?: any, desiredTargetMinutes?: any, adjustment?: any, actualMinutes?: any, auto?: boolean }} options 検索オプション。
+ * @returns {Promise<void>} 処理完了のPromise。
+ */
 async function runWalkRouteSearch(
   /** @type {{ query?: any, requestTargetMinutes?: any, desiredTargetMinutes?: any, adjustment?: any, actualMinutes?: any, auto?: boolean }} */
   {
@@ -1740,6 +1825,11 @@ function showRecommendResult(place) {
   recommendResult.hidden = false;
 }
 
+/**
+ * おすすめ取得APIを呼び出す。
+ * @param {{ query?: any, mode?: any, targetMinutes?: any, adjustment?: any, actualMinutes?: any, originOverride?: any, originRegionOverride?: any, originPrefectures?: any, originAreaLabel?: any }} options リクエストオプション。
+ * @returns {Promise<any>} APIレスポンスのPromise。
+ */
 async function requestRecommendation(
   /** @type {{ query?: any, mode?: any, targetMinutes?: any, adjustment?: any, actualMinutes?: any, originOverride?: any, originRegionOverride?: any, originPrefectures?: any, originAreaLabel?: any }} */
   {
@@ -1984,6 +2074,9 @@ async function handleRecommendSubmit(event) {
   }
 }
 
+/**
+ * ルート表示をクリアする。
+ */
 function clearRoutes() {
   if (walkingRenderer) {
     walkingRenderer.set("directions", null);
@@ -1998,6 +2091,9 @@ function clearRoutes() {
   updateRouteLinks();
 }
 
+/**
+ * 散歩ルート状態を初期化する。
+ */
 function clearWalkRouteState() {
   walkingWaypoints = null;
   walkRouteTargetMinutes = null;
@@ -2035,6 +2131,9 @@ function clearDestination(message) {
   updateRouteHint();
 }
 
+/**
+ * ルート全体をリセットする。
+ */
 function resetRoute() {
   originLatLng = null;
   destinationLatLng = null;
@@ -2426,6 +2525,9 @@ function handleRouteResult(type, result, status, bounds, flags, currentRequest) 
   }
 }
 
+/**
+ * 徒歩/鉄道ルートを計算して表示する。
+ */
 function calculateRoutes() {
   if (!originLatLng || !destinationLatLng || !directionsService) {
     return;
@@ -2531,6 +2633,9 @@ function loadGoogleMaps(apiKey) {
   document.head.appendChild(script);
 }
 
+/**
+ * Google Mapsの初期化処理を行う。
+ */
 window.initMap = function initMap() {
   map = new google.maps.Map(mapElement, {
     center: DEFAULT_CENTER,

@@ -65,7 +65,7 @@ function readJson(req) {
     let body = "";
     req.on(
       "data",
-      /** @param {Buffer | string} chunk 受信チャンク。 */ (chunk) => {
+      (/** @type {Buffer | string} */ chunk) => {
         body += chunk;
         if (body.length > 1_000_000) {
           reject(new Error("Request body too large."));
@@ -383,13 +383,11 @@ function callOpenAI(payload) {
 
     const request = https.request(
       options,
-      /** @param {import("http").IncomingMessage} response レスポンス。 */ (
-        response
-      ) => {
+      (/** @type {import("http").IncomingMessage} */ response) => {
         let body = "";
         response.on(
           "data",
-          /** @param {Buffer | string} chunk 受信チャンク。 */ (chunk) => {
+          (/** @type {Buffer | string} */ chunk) => {
             body += chunk;
           }
         );

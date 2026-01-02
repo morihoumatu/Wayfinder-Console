@@ -21,6 +21,11 @@ const TSC_REGEX_COLON =
   /^(.*):(\d+):(\d+) - (error|warning) TS(\d+): (.*)$/;
 const TSC_REGEX_GLOBAL = /^(error|warning) TS(\d+): (.*)$/;
 
+/**
+ * コマンド実行パスを解決する。
+ * @param {string} command コマンド名。
+ * @returns {string} 解決したパス。
+ */
 function resolveBin(command) {
   const binPath = path.join(BIN_DIR, `${command}${BIN_EXT}`);
   if (fs.existsSync(binPath)) {
@@ -29,6 +34,12 @@ function resolveBin(command) {
   return command;
 }
 
+/**
+ * コマンドを同期実行する。
+ * @param {string} command コマンド名。
+ * @param {string[]} args 引数配列。
+ * @returns {any} 実行結果。
+ */
 function runCommand(command, args) {
   const resolvedCommand = resolveBin(command);
   const useShell = process.platform === "win32";
@@ -64,10 +75,21 @@ function runCommand(command, args) {
   };
 }
 
+/**
+ * 標準出力と標準エラーを結合する。
+ * @param {string} stdout 標準出力。
+ * @param {string} stderr 標準エラー。
+ * @returns {string} 結合文字列。
+ */
 function combineOutput(stdout, stderr) {
   return `${stdout}${stderr}`.trim();
 }
 
+/**
+ * 文字列からJSONを解析する。
+ * @param {string} text 入力文字列。
+ * @returns {any | null} 解析結果またはnull。
+ */
 function parseJsonOutput(text) {
   if (typeof text !== "string") {
     return null;
@@ -83,6 +105,12 @@ function parseJsonOutput(text) {
   }
 }
 
+/**
+ * 対応する閉じ括弧位置を探す。
+ * @param {string} text 対象テキスト。
+ * @param {number} startIndex 開始位置。
+ * @returns {number} 閉じ括弧位置。
+ */
 function findMatchingBracket(text, startIndex) {
   const openChar = text[startIndex];
   const closeChar = openChar === "{" ? "}" : "]";
@@ -116,6 +144,11 @@ function findMatchingBracket(text, startIndex) {
   return -1;
 }
 
+/**
+ * テキスト内のJSONを抽出して解析する。
+ * @param {string} text 入力テキスト。
+ * @returns {any | null} 解析結果またはnull。
+ */
 function parseJsonFromText(text) {
   if (typeof text !== "string") {
     return null;
@@ -146,6 +179,11 @@ function parseJsonFromText(text) {
   return null;
 }
 
+/**
+ * ファイルパスを相対パスに変換する。
+ * @param {string} filePathValue ファイルパス。
+ * @returns {string} 相対パス。
+ */
 function toRelativePath(filePathValue) {
   if (typeof filePathValue !== "string" || filePathValue.length === 0) {
     return "unknown";
@@ -160,10 +198,20 @@ function toRelativePath(filePathValue) {
   return relative;
 }
 
+/**
+ * 数値を正規化してnull許容にする。
+ * @param {any} value 入力値。
+ * @returns {number | null} 正規化数値。
+ */
 function normalizeNumber(value) {
   return Number.isFinite(value) ? value : null;
 }
 
+/**
+ * 重大度を正規化する。
+ * @param {string} severityValue 重大度文字列。
+ * @returns {string} 正規化重大度。
+ */
 function normalizeSeverity(severityValue) {
   if (severityValue === "warning") {
     return "warning";
@@ -171,6 +219,15 @@ function normalizeSeverity(severityValue) {
   return "error";
 }
 
+/**
+ * メッセージ情報を組み立てる。
+ * @param {number | null} lineValue 行番号。
+ * @param {number | null} columnValue 列番号。
+ * @param {string} severityValue 重大度。
+ * @param {string} ruleValue ルール名。
+ * @param {string} text メッセージ本文。
+ * @returns {any} メッセージオブジェクト。
+ */
 function buildMessage(lineValue, columnValue, severityValue, ruleValue, text) {
   return {
     line: normalizeNumber(lineValue),
@@ -181,6 +238,11 @@ function buildMessage(lineValue, columnValue, severityValue, ruleValue, text) {
   };
 }
 
+/**
+ * ESLintの出力を解析する。
+ * @param {any} result 実行結果。
+ * @returns {any} 解析済みレポート。
+ */
 function parseEslintOutput(result) {
   const rawOutput = combineOutput(result.stdout, result.stderr);
   if (result.hasError) {
@@ -249,6 +311,11 @@ function parseEslintOutput(result) {
   return { errors, warnings, files, toolError: null, rawOutput };
 }
 
+/**
+ * Stylelintの出力を解析する。
+ * @param {any} result 実行結果。
+ * @returns {any} 解析済みレポート。
+ */
 function parseStylelintOutput(result) {
   const rawOutput = combineOutput(result.stdout, result.stderr);
   if (result.hasError) {
@@ -368,6 +435,11 @@ function parseStylelintOutput(result) {
   return { errors, warnings, files, toolError: null, rawOutput };
 }
 
+/**
+ * HTMLHintの出力を解析する。
+ * @param {any} result 実行結果。
+ * @returns {any} 解析済みレポート。
+ */
 function parseHtmlhintOutput(result) {
   const rawOutput = combineOutput(result.stdout, result.stderr);
   if (result.hasError) {
@@ -441,6 +513,11 @@ function parseHtmlhintOutput(result) {
   return { errors, warnings, files, toolError: null, rawOutput };
 }
 
+/**
+ * TypeScriptのエラー行を解析する。
+ * @param {string} line 入力行。
+ * @returns {any | null} 診断情報またはnull。
+ */
 function parseTscLine(line) {
   const matchParen = line.match(TSC_REGEX_PAREN);
   if (matchParen) {
@@ -481,6 +558,11 @@ function parseTscLine(line) {
   return null;
 }
 
+/**
+ * TypeScriptの出力を解析する。
+ * @param {any} result 実行結果。
+ * @returns {any} 解析済みレポート。
+ */
 function parseTscOutput(result) {
   const rawOutput = combineOutput(result.stdout, result.stderr);
   if (result.hasError) {
@@ -556,10 +638,23 @@ function parseTscOutput(result) {
   };
 }
 
+/**
+ * 実行コマンド文字列を組み立てる。
+ * @param {string} command コマンド名。
+ * @param {string[]} args 引数配列。
+ * @returns {string} 表示用コマンド。
+ */
 function formatCommand(command, args) {
   return [command].concat(args).join(" ");
 }
 
+/**
+ * ツール単位のレポートを作成する。
+ * @param {string} name ツール名。
+ * @param {any} result 実行結果。
+ * @param {(result: any) => any} parser 解析関数。
+ * @returns {any} ツールレポート。
+ */
 function buildToolReport(name, result, parser) {
   const parsed = parser(result);
   const status =
@@ -578,6 +673,11 @@ function buildToolReport(name, result, parser) {
   };
 }
 
+/**
+ * HTML特殊文字をエスケープする。
+ * @param {any} value 入力値。
+ * @returns {string} エスケープ済み文字列。
+ */
 function escapeHtml(value) {
   const text = String(value);
   return text
@@ -588,10 +688,20 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+/**
+ * 数値を表示用に整形する。
+ * @param {any} value 入力値。
+ * @returns {string} 表示文字列。
+ */
 function formatNumber(value) {
   return Number.isFinite(value) ? String(value) : "-";
 }
 
+/**
+ * メッセージ行のHTMLを生成する。
+ * @param {any[]} messages メッセージ配列。
+ * @returns {string} HTML文字列。
+ */
 function renderMessageRows(messages) {
   return messages
     .map((message) => {
@@ -608,6 +718,12 @@ function renderMessageRows(messages) {
     .join("");
 }
 
+/**
+ * ファイルセクションのHTMLを生成する。
+ * @param {any} fileEntry ファイル情報。
+ * @param {boolean} openByDefault 初期展開フラグ。
+ * @returns {string} HTML文字列。
+ */
 function renderFileSection(fileEntry, openByDefault) {
   const openAttr = openByDefault ? " open" : "";
   return `<details class="file-block"${openAttr}>
@@ -629,6 +745,11 @@ function renderFileSection(fileEntry, openByDefault) {
 </details>`;
 }
 
+/**
+ * ツールセクションのHTMLを生成する。
+ * @param {any} tool ツール情報。
+ * @returns {string} HTML文字列。
+ */
 function renderToolSection(tool) {
   const statusLabel = tool.status === "ok" ? "OK" : "FAIL";
   const statusClass = tool.status === "ok" ? "status-ok" : "status-fail";
@@ -676,6 +797,11 @@ ${fileSections}
 </section>`;
 }
 
+/**
+ * レポート全体のHTMLを生成する。
+ * @param {any} reportData レポートデータ。
+ * @returns {string} HTML文字列。
+ */
 function renderReport(reportData) {
   const summaryRows = reportData.tools
     .map((tool) => {
@@ -865,6 +991,9 @@ function renderReport(reportData) {
 </html>`;
 }
 
+/**
+ * 各ツールを実行してレポートを生成する。
+ */
 function main() {
   const eslintResult = runCommand("eslint", [
     "--ext",
