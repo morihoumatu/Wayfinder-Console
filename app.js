@@ -2256,14 +2256,10 @@ function selectLocalRailRoute(result) {
 
 /**
  * ルート検索結果を反映する。
- * @param {string} type ルート種別。
- * @param {any} result 検索結果。
- * @param {any} status ステータス。
- * @param {any} bounds 表示範囲。
- * @param {any} flags 結果フラグ。
- * @param {number} currentRequest リクエストID。
+ * @param {{ type: string, result: any, status: any, bounds: any, flags: any, currentRequest: number }} options 結果オプション。
  */
-function handleRouteResult(type, result, status, bounds, flags, currentRequest) {
+function handleRouteResult(options) {
+  const { type, result, status, bounds, flags, currentRequest } = options;
   if (currentRequest !== requestId) {
     return;
   }
@@ -2577,7 +2573,14 @@ function calculateRoutes() {
   directionsService.route(
     walkingRequest,
     (/** @type {any} */ result, /** @type {any} */ status) =>
-      handleRouteResult("walk", result, status, bounds, flags, currentRequest)
+      handleRouteResult({
+        type: "walk",
+        result,
+        status,
+        bounds,
+        flags,
+        currentRequest,
+      })
   );
 
   if (includeTransit) {
@@ -2603,7 +2606,14 @@ function calculateRoutes() {
     directionsService.route(
       transitRequest,
       (/** @type {any} */ result, /** @type {any} */ status) =>
-        handleRouteResult("rail", result, status, bounds, flags, currentRequest)
+        handleRouteResult({
+          type: "rail",
+          result,
+          status,
+          bounds,
+          flags,
+          currentRequest,
+        })
     );
   } else if (railRenderer) {
     railRenderer.set("directions", null);

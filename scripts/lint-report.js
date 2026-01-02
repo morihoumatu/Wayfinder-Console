@@ -221,14 +221,11 @@ function normalizeSeverity(severityValue) {
 
 /**
  * メッセージ情報を組み立てる。
- * @param {number | null} lineValue 行番号。
- * @param {number | null} columnValue 列番号。
- * @param {string} severityValue 重大度。
- * @param {string} ruleValue ルール名。
- * @param {string} text メッセージ本文。
+ * @param {{ lineValue: number | null, columnValue: number | null, severityValue: string, ruleValue: string, text: string }} entry メッセージ入力。
  * @returns {any} メッセージオブジェクト。
  */
-function buildMessage(lineValue, columnValue, severityValue, ruleValue, text) {
+function buildMessage(entry) {
+  const { lineValue, columnValue, severityValue, ruleValue, text } = entry;
   return {
     line: normalizeNumber(lineValue),
     column: normalizeNumber(columnValue),
@@ -294,13 +291,13 @@ function parseEslintOutput(result) {
       } else {
         warnings += 1;
       }
-      return buildMessage(
-        message.line,
-        message.column,
-        severity,
-        message.ruleId || "",
-        message.message || ""
-      );
+      return buildMessage({
+        lineValue: message.line,
+        columnValue: message.column,
+        severityValue: severity,
+        ruleValue: message.ruleId || "",
+        text: message.message || "",
+      });
     });
     files.push({
       path: toRelativePath(entry.filePath),
@@ -366,13 +363,13 @@ function parseStylelintOutput(result) {
         warnings += 1;
       }
       messages.push(
-        buildMessage(
-          warning.line,
-          warning.column,
-          severity,
-          warning.rule || "",
-          warning.text || ""
-        )
+        buildMessage({
+          lineValue: warning.line,
+          columnValue: warning.column,
+          severityValue: severity,
+          ruleValue: warning.rule || "",
+          text: warning.text || "",
+        })
       );
     });
 
@@ -382,13 +379,13 @@ function parseStylelintOutput(result) {
     parseErrors.forEach((parseError) => {
       errors += 1;
       messages.push(
-        buildMessage(
-          parseError.line,
-          parseError.column,
-          "error",
-          "parse-error",
-          parseError.text || "Parse error."
-        )
+        buildMessage({
+          lineValue: parseError.line,
+          columnValue: parseError.column,
+          severityValue: "error",
+          ruleValue: "parse-error",
+          text: parseError.text || "Parse error.",
+        })
       );
     });
 
@@ -398,13 +395,13 @@ function parseStylelintOutput(result) {
     invalidOptionWarnings.forEach((invalidOption) => {
       errors += 1;
       messages.push(
-        buildMessage(
-          null,
-          null,
-          "error",
-          "invalid-option",
-          invalidOption.text || "Invalid option."
-        )
+        buildMessage({
+          lineValue: null,
+          columnValue: null,
+          severityValue: "error",
+          ruleValue: "invalid-option",
+          text: invalidOption.text || "Invalid option.",
+        })
       );
     });
 
@@ -414,13 +411,13 @@ function parseStylelintOutput(result) {
     deprecations.forEach((deprecation) => {
       warnings += 1;
       messages.push(
-        buildMessage(
-          null,
-          null,
-          "warning",
-          "deprecation",
-          deprecation.text || "Deprecated rule."
-        )
+        buildMessage({
+          lineValue: null,
+          columnValue: null,
+          severityValue: "warning",
+          ruleValue: "deprecation",
+          text: deprecation.text || "Deprecated rule.",
+        })
       );
     });
 
@@ -496,13 +493,13 @@ function parseHtmlhintOutput(result) {
         message.rule && typeof message.rule === "object"
           ? message.rule.id
           : message.rule;
-      return buildMessage(
-        message.line,
-        message.col || message.column,
-        severity,
-        ruleValue || "",
-        message.message || ""
-      );
+      return buildMessage({
+        lineValue: message.line,
+        columnValue: message.col || message.column,
+        severityValue: severity,
+        ruleValue: ruleValue || "",
+        text: message.message || "",
+      });
     });
     files.push({
       path: toRelativePath(entry.file),
@@ -619,13 +616,13 @@ function parseTscOutput(result) {
       fileMap.set(filePathValue, entry);
     }
     entry.messages.push(
-      buildMessage(
-        diagnostic.line,
-        diagnostic.column,
-        diagnostic.severity,
-        diagnostic.rule,
-        diagnostic.message
-      )
+      buildMessage({
+        lineValue: diagnostic.line,
+        columnValue: diagnostic.column,
+        severityValue: diagnostic.severity,
+        ruleValue: diagnostic.rule,
+        text: diagnostic.message,
+      })
     );
   });
 
