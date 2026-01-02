@@ -873,21 +873,14 @@ function getDestinationDisplayLabel() {
 }
 
 /**
- * 経路結果から乗降駅情報を抽出する。
- * @param {any} result 経路結果。
- * @returns {any} 乗降駅情報。
+ * 乗換ステップを収集する。
+ * @param {any} route 経路データ。
+ * @param {any} transitMode 交通モード。
+ * @returns {any[]} 乗換ステップ配列。
  */
-function extractTransitStops(result) {
-  const route = result?.routes?.[0];
-  let stops = null;
+function collectTransitSteps(route, transitMode) {
   /** @type {any[]} */
   const transitSteps = [];
-  const transitMode =
-    (typeof google !== "undefined" &&
-      google.maps &&
-      google.maps.TravelMode &&
-      google.maps.TravelMode.TRANSIT) ||
-    "TRANSIT";
   if (route) {
     (route.legs || []).forEach((/** @type {any} */ leg) => {
       (leg.steps || []).forEach((/** @type {any} */ step) => {
@@ -899,16 +892,44 @@ function extractTransitStops(result) {
         }
       });
     });
-    if (transitSteps.length) {
-      const first = transitSteps[0].transit;
-      const last = transitSteps[transitSteps.length - 1].transit;
-      const departure = first?.departure_stop || null;
-      const arrival = last?.arrival_stop || null;
-      if (departure?.location && arrival?.location) {
-        stops = { departure, arrival };
-      }
+  }
+  return transitSteps;
+}
+
+/**
+ * 乗降駅情報を組み立てる。
+ * @param {any[]} transitSteps 乗換ステップ配列。
+ * @returns {any} 乗降駅情報。
+ */
+function buildTransitStopsFromSteps(transitSteps) {
+  let stops = null;
+  if (Array.isArray(transitSteps) && transitSteps.length) {
+    const first = transitSteps[0].transit;
+    const last = transitSteps[transitSteps.length - 1].transit;
+    const departure = first?.departure_stop || null;
+    const arrival = last?.arrival_stop || null;
+    if (departure?.location && arrival?.location) {
+      stops = { departure, arrival };
     }
   }
+  return stops;
+}
+
+/**
+ * 経路結果から乗降駅情報を抽出する。
+ * @param {any} result 経路結果。
+ * @returns {any} 乗降駅情報。
+ */
+function extractTransitStops(result) {
+  const route = result?.routes?.[0];
+  const transitMode =
+    (typeof google !== "undefined" &&
+      google.maps &&
+      google.maps.TravelMode &&
+      google.maps.TravelMode.TRANSIT) ||
+    "TRANSIT";
+  const transitSteps = collectTransitSteps(route, transitMode);
+  const stops = buildTransitStopsFromSteps(transitSteps);
   return stops;
 }
 
@@ -1060,8 +1081,91 @@ function renderRouteBreakdown(segments) {
 }
 
 /**
+ * 在来線ルートの内訳を組み立てる。
+ * @param {any} options 生成オプション。
+ * @returns {any[]} 区間配列。
+ */
+function buildRailBreakdownSegments(
+  /** @type {any} */
+  {
+    origin,
+    destination,
+    originLabel: originLabelText,
+    destinationLabel: destinationLabelText,
+    railResult,
+  }
+) {
+  let segments = [];
+  if (origin && destination) {
+    const transitStops = extractTransitStops(railResult);
+    if (transitStops) {
+      const departureLabel = transitStops.departure?.name || "出発駅";
+      const arrivalLabel = transitStops.arrival?.name || "到着駅";
+      const firstWalk = buildWalkSegment({
+        origin,
+        destination: transitStops.departure.location,
+        fromLabel: originLabelText,
+        toLabel: departureLabel,
+      });
+      const railSegment = buildRailSegment({
+        origin: transitStops.departure.location,
+        destination: transitStops.arrival.location,
+        fromLabel: departureLabel,
+        toLabel: arrivalLabel,
+      });
+      const lastWalk = buildWalkSegment({
+        origin: transitStops.arrival.location,
+        destination,
+        fromLabel: arrivalLabel,
+        toLabel: destinationLabelText,
+      });
+      const railSegments = [firstWalk, railSegment, lastWalk].filter(Boolean);
+      if (railSegments.length) {
+        segments = railSegments;
+      }
+    }
+  }
+  return segments;
+}
+
+/**
+ * 徒歩ルートの内訳を組み立てる。
+ * @param {any} options 生成オプション。
+ * @returns {any[]} 区間配列。
+ */
+function buildWalkBreakdownSegments(
+  /** @type {any} */
+  {
+    origin,
+    destination,
+    originLabel: originLabelText,
+    destinationLabel: destinationLabelText,
+    mode,
+    waypointPoints,
+  }
+) {
+  /** @type {any[]} */
+  let segments = [];
+  if (origin && destination) {
+    const waypoints =
+      mode === "walk" && waypointPoints.length ? waypointPoints : null;
+    const walkSegment = buildWalkSegment({
+      origin,
+      destination,
+      fromLabel: originLabelText,
+      toLabel: destinationLabelText,
+      waypoints,
+    });
+    if (walkSegment) {
+      segments = [walkSegment];
+    }
+  }
+  return segments;
+}
+
+/**
  * ルート内訳の区間配列を組み立てる。
- * @param {{ mode?: any, railResult?: any }} options 生成オプション。
+ * @param {any} options 生成オプション。
  * @returns {any[]} 区間配列。
  */
 function buildRouteBreakdownSegments(
@@ -1076,47 +1180,24 @@ function buildRouteBreakdownSegments(
       : [];
 
     if (mode === "rail") {
-      const transitStops = extractTransitStops(railResult);
-      if (transitStops) {
-        const departureLabel = transitStops.departure?.name || "出発駅";
-        const arrivalLabel = transitStops.arrival?.name || "到着駅";
-        const firstWalk = buildWalkSegment({
-          origin: originLatLng,
-          destination: transitStops.departure.location,
-          fromLabel: originDisplayLabel,
-          toLabel: departureLabel,
-        });
-        const railSegment = buildRailSegment({
-          origin: transitStops.departure.location,
-          destination: transitStops.arrival.location,
-          fromLabel: departureLabel,
-          toLabel: arrivalLabel,
-        });
-        const lastWalk = buildWalkSegment({
-          origin: transitStops.arrival.location,
-          destination: destinationLatLng,
-          fromLabel: arrivalLabel,
-          toLabel: destinationDisplayLabel,
-        });
-        const railSegments = [firstWalk, railSegment, lastWalk].filter(Boolean);
-        if (railSegments.length) {
-          segments = railSegments;
-        }
-      }
+      segments = buildRailBreakdownSegments({
+        origin: originLatLng,
+        destination: destinationLatLng,
+        originLabel: originDisplayLabel,
+        destinationLabel: destinationDisplayLabel,
+        railResult,
+      });
     }
 
     if (!segments.length) {
-      const walkSegment = buildWalkSegment({
+      segments = buildWalkBreakdownSegments({
         origin: originLatLng,
         destination: destinationLatLng,
-        fromLabel: originDisplayLabel,
-        toLabel: destinationDisplayLabel,
-        waypoints:
-          mode === "walk" && waypointPoints.length ? waypointPoints : null,
+        originLabel: originDisplayLabel,
+        destinationLabel: destinationDisplayLabel,
+        mode,
+        waypointPoints,
       });
-      if (walkSegment) {
-        segments = [walkSegment];
-      }
     }
   }
   return segments;
@@ -1555,6 +1636,98 @@ async function findNearestStationToLocation(
 }
 
 /**
+ * 地域指定の入力条件を確認する。
+ * @param {any} options 判定オプション。
+ * @returns {boolean} 判定結果。
+ */
+function canUseOriginRegionContext(
+  /** @type {{ context: any, source?: string }} */ { context, source }
+) {
+  let canProceed = true;
+  if (!originRegionHint) {
+    if (source === "recommend") {
+      setRecommendHint("先に出発地を選択してください。");
+    }
+    canProceed = false;
+  } else if (!context?.label) {
+    setOriginRegionHint("地方または都道府県を選択してください。");
+    if (source === "recommend") {
+      setRecommendHint(
+        "地方または都道府県を選択するか、地図をクリックして出発地を指定してください。"
+      );
+    }
+    canProceed = false;
+  }
+  return canProceed;
+}
+
+/**
+ * 地域コンテキストから駅候補を探す。
+ * @param {any} context 地域コンテキスト。
+ * @returns {Promise<any>} 駅候補のPromise。
+ */
+async function resolveStationFromContext(context) {
+  let station = null;
+  if (context?.label) {
+    const regionLabel = context.label;
+    const regionFilter = context.prefectures || context.label;
+    if (context.anchor) {
+      const anchorLocation = await resolveRegionAnchor(context.anchor);
+      if (anchorLocation) {
+        station = await findNearestStationToLocation({
+          startLocation: anchorLocation,
+          stopName: context.anchor,
+          region: regionFilter,
+        });
+      }
+    }
+    if (!station?.location) {
+      station = await findStationInRegion(regionLabel);
+    }
+    if (!station?.location && context.anchor) {
+      station = await findStationInRegion(context.anchor);
+    }
+  }
+  return station;
+}
+
+/**
+ * 駅候補を出発地に反映する。
+ * @param {any} options 反映オプション。
+ * @returns {boolean} 反映可否。
+ */
+function applyOriginFromStation(
+  /** @type {{ station: any, context: any, source?: string }} */
+  { station, context, source }
+) {
+  let isReady = false;
+  const regionLabel = context?.label || "";
+  if (!station?.location) {
+    setOriginRegionHint("地域内の駅が見つかりませんでした。");
+    if (source === "recommend") {
+      setRecommendHint("地域内の駅が見つからないため出発地を指定できません。");
+    }
+  } else {
+    setOrigin(station.location, regionLabel);
+    updateRouteLabels();
+    updateRouteHint();
+    if (map && station.location) {
+      map.panTo(station.location);
+      map.setZoom(Math.max(DEFAULT_ZOOM, map.getZoom() || DEFAULT_ZOOM));
+    }
+    const stationLabel = station.name
+      ? `${station.name}から開始しました。`
+      : "駅から開始しました。";
+    setOriginRegionHint(`${regionLabel}内の${stationLabel}`);
+    if (source === "recommend") {
+      setRecommendHint("地域の駅を出発地に設定しました。");
+    }
+    isReady = true;
+  }
+  return isReady;
+}
+
+/**
  * 地域指定から出発地を設定する。
  * @param {{ source?: string }} [options] 設定オプション。
  * @returns {Promise<boolean>} 設定可否のPromise。
@@ -1564,66 +1737,19 @@ async function ensureOriginFromRegion(
 ) {
   let isReady = Boolean(originLatLng);
   if (!isReady) {
-    if (!originRegionHint) {
-      if (source === "recommend") {
-        setRecommendHint("先に出発地を選択してください。");
-      }
-    } else {
-      const context = getSelectedRegionContext({ refreshAnchor: true });
-      if (!context?.label) {
-        setOriginRegionHint("地方または都道府県を選択してください。");
-        if (source === "recommend") {
-          setRecommendHint(
-            "地方または都道府県を選択するか、地図をクリックして出発地を指定してください。"
-          );
-        }
-      } else {
-        const regionLabel = context.label;
-        const regionFilter = context.prefectures || context.label;
-        setOriginRegionHint(`${regionLabel}の駅を探しています...`);
-
-        let station = null;
-        if (context.anchor) {
-          const anchorLocation = await resolveRegionAnchor(context.anchor);
-          if (anchorLocation) {
-            station = await findNearestStationToLocation({
-              startLocation: anchorLocation,
-              stopName: context.anchor,
-              region: regionFilter,
-            });
-          }
-        }
-        if (!station?.location) {
-          station = await findStationInRegion(regionLabel);
-        }
-        if (!station?.location && context.anchor) {
-          station = await findStationInRegion(context.anchor);
-        }
-        if (!station?.location) {
-          setOriginRegionHint("地域内の駅が見つかりませんでした。");
-          if (source === "recommend") {
-            setRecommendHint(
-              "地域内の駅が見つからないため出発地を指定できません。"
-            );
-          }
-        } else {
-          setOrigin(station.location, regionLabel);
-          updateRouteLabels();
-          updateRouteHint();
-          if (map && station.location) {
-            map.panTo(station.location);
-            map.setZoom(Math.max(DEFAULT_ZOOM, map.getZoom() || DEFAULT_ZOOM));
-          }
-          const stationLabel = station.name
-            ? `${station.name}から開始しました。`
-            : "駅から開始しました。";
-          setOriginRegionHint(`${regionLabel}内の${stationLabel}`);
-          if (source === "recommend") {
-            setRecommendHint("地域の駅を出発地に設定しました。");
-          }
-          isReady = true;
-        }
-      }
+    const context = getSelectedRegionContext({ refreshAnchor: true });
+    const contextOptions =
+      typeof source === "string" ? { context, source } : { context };
+    const canProceed = canUseOriginRegionContext(contextOptions);
+    if (canProceed) {
+      const regionLabel = context.label;
+      setOriginRegionHint(`${regionLabel}の駅を探しています...`);
+      const station = await resolveStationFromContext(context);
+      const stationOptions =
+        typeof source === "string"
+          ? { station, context, source }
+          : { station, context };
+      isReady = applyOriginFromStation(stationOptions);
     }
   }
   return isReady;
@@ -1670,6 +1796,238 @@ function getAdjustedTargetMinutes(targetMinutes, durationMinutes) {
 }
 
 /**
+ * 散歩ルートの地域情報を整理する。
+ * @param {boolean} auto 自動再検索フラグ。
+ * @returns {any} 地域情報。
+ */
+function buildWalkRouteRegionInfo(auto) {
+  const regionContext = getSelectedRegionContext({ refreshAnchor: !auto });
+  const regionLabel = regionContext?.label || originRegion || "";
+  const regionFilter = Array.isArray(regionContext?.prefectures)
+    ? regionContext.prefectures
+    : regionLabel
+      ? [regionLabel]
+      : [];
+  const regionForPrompt = formatRegionForPrompt(regionContext) || regionLabel;
+  const regionAnchor = regionContext?.anchor || regionLabel;
+  return {
+    regionContext,
+    regionLabel,
+    regionFilter,
+    regionForPrompt,
+    regionAnchor,
+  };
+}
+
+/**
+ * 散歩ルートの出発地状態を判定する。
+ * @param {any} regionContext 地域コンテキスト。
+ * @returns {Promise<any>} 判定結果のPromise。
+ */
+async function resolveWalkRouteOriginStatus(regionContext) {
+  let originMismatch = false;
+  if (originLatLng && regionContext) {
+    originMismatch = !(await resolveIsOriginInRegion(originLatLng, regionContext));
+  }
+  const originMissing = !originLatLng || originMismatch;
+  return { originMissing, originMismatch };
+}
+
+/**
+ * 散歩ルートの出発地補正を取得する。
+ * @param {any} options 補正オプション。
+ * @returns {Promise<any>} 補正結果のPromise。
+ */
+async function resolveWalkRouteOriginOverride(
+  /**
+   * @type {{
+   *   originMissing: boolean,
+   *   originMismatch: boolean,
+   *   regionForPrompt: string,
+   *   regionAnchor: string,
+   *   regionLabel: string
+   * }}
+   */
+  { originMissing, originMismatch, regionForPrompt, regionAnchor, regionLabel }
+) {
+  let originOverride = null;
+  let originRegionOverride = null;
+  if (originMissing) {
+    if (originMismatch) {
+      setOriginRegionHint("選択した地域に合わせて出発地を再設定しています...");
+    }
+    originRegionOverride = regionForPrompt;
+    if (!originRegionOverride) {
+      throw new Error("地方または都道府県を選択してください。");
+    }
+    originOverride = await resolveRegionAnchor(regionAnchor || originRegionOverride);
+    if (!originOverride) {
+      throw new Error("地域の中心座標が取得できませんでした。");
+    }
+    if (originMismatch) {
+      setOrigin(originOverride, regionLabel || originRegionOverride, {
+        preserveWalkState: true,
+      });
+      updateRouteLabels();
+      updateRouteHint();
+    }
+  }
+  return { originOverride, originRegionOverride };
+}
+
+/**
+ * 散歩ルートのおすすめを取得する。
+ * @param {any} options 取得オプション。
+ * @returns {Promise<any>} おすすめデータのPromise。
+ */
+async function fetchWalkRouteRecommendation(
+  /**
+   * @type {{
+   *   query?: any,
+   *   requestTargetMinutes?: any,
+   *   adjustment?: any,
+   *   actualMinutes?: any,
+   *   originOverride?: any,
+   *   originRegionOverride?: any,
+   *   regionContext?: any
+   * }}
+   */
+  {
+    query,
+    requestTargetMinutes,
+    adjustment,
+    actualMinutes,
+    originOverride,
+    originRegionOverride,
+    regionContext,
+  }
+) {
+  const data = await requestRecommendation({
+    query,
+    mode: "walk_route",
+    targetMinutes: requestTargetMinutes,
+    adjustment,
+    actualMinutes,
+    originOverride,
+    originRegionOverride,
+    originPrefectures: regionContext?.prefectures,
+    originAreaLabel: regionContext?.label,
+  });
+  if (!data?.place) {
+    throw new Error("おすすめ地点の取得に失敗しました。");
+  }
+  return data.place;
+}
+
+/**
+ * 散歩ルートの地点情報を取得する。
+ * @param {any} place おすすめデータ。
+ * @returns {Promise<any>} 地点情報のPromise。
+ */
+async function resolveWalkRouteLocations(place) {
+  const locations = await geocodeStops(place?.stops);
+  if (locations.length < 2) {
+    throw new Error("散歩ルートの地点を見つけられませんでした。");
+  }
+  const startLocation = locations[0];
+  const startStop = Array.isArray(place?.stops) ? place.stops[0] : null;
+  const startStopName =
+    typeof startStop === "string"
+      ? startStop
+      : startStop?.name || startStop?.title || "";
+  return { locations, startLocation, startStopName };
+}
+
+/**
+ * 散歩ルートの出発地を調整する。
+ * @param {any} options 調整オプション。
+ * @returns {Promise<boolean>} 先頭地点を使ったかどうかのPromise。
+ */
+async function applyWalkRouteOriginFromStops(
+  /**
+   * @type {{
+   *   originMissing: boolean,
+   *   startLocation: any,
+   *   startStopName: string,
+   *   regionFilter: any[],
+   *   regionLabel: string,
+   *   originRegionOverride: string | null
+   * }}
+   */
+  {
+    originMissing,
+    startLocation,
+    startStopName,
+    regionFilter,
+    regionLabel,
+    originRegionOverride,
+  }
+) {
+  let originUsesStartLocation = false;
+  if (originMissing) {
+    const regionValue = regionFilter.length ? regionFilter : originRegionOverride;
+    const station = await findNearestStationToLocation({
+      startLocation,
+      stopName: startStopName,
+      region: regionValue,
+    });
+    if (station?.location) {
+      setOrigin(station.location, regionLabel || originRegionOverride, {
+        preserveWalkState: true,
+      });
+      setOriginRegionHint(
+        station.name
+          ? `${station.name}を出発地に設定しました。`
+          : "最寄り駅を出発地に設定しました。"
+      );
+    } else {
+      setOrigin(startLocation, regionLabel || originRegionOverride, {
+        preserveWalkState: true,
+      });
+      originUsesStartLocation = true;
+      setOriginRegionHint("最寄り駅が見つからないため最初の地点から開始します。");
+    }
+  }
+  return originUsesStartLocation;
+}
+
+/**
+ * 散歩ルートの目的地と経由地を更新する。
+ * @param {any} options 更新オプション。
+ */
+function applyWalkRouteDestination(
+  /**
+   * @type {{
+   *   locations: any[],
+   *   originUsesStartLocation: boolean,
+   *   place: any,
+   *   desiredTargetMinutes: any
+   * }}
+   */
+  { locations, originUsesStartLocation, place, desiredTargetMinutes }
+) {
+  const waypointStartIndex = originUsesStartLocation ? 1 : 0;
+  walkingWaypoints = locations.slice(waypointStartIndex, -1).map((location) => ({
+    location,
+    stopover: true,
+  }));
+  const endStop = Array.isArray(place?.stops)
+    ? place.stops[place.stops.length - 1]
+    : null;
+  const endStopLabel =
+    getStopLabel(endStop) || place?.address || place?.area || "";
+  walkRouteTargetMinutes = desiredTargetMinutes;
+  desiredWalkTargetMinutes = desiredTargetMinutes;
+  setDestination(locations[locations.length - 1], "walk_multi", {
+    label: endStopLabel,
+  });
+  updateRouteLabels();
+  updateRouteHint();
+  updateRouteLinks();
+  calculateRoutes();
+}
+
+/**
  * 散歩ルート検索を実行する。
  * @param {{
  *   query?: any,
@@ -1707,123 +2065,43 @@ async function runWalkRouteSearch(
   walkRoutePreferredMode = null;
 
   try {
-    const regionContext = getSelectedRegionContext({ refreshAnchor: !auto });
-    const originMismatch =
-      originLatLng && regionContext
-        ? !(await resolveIsOriginInRegion(originLatLng, regionContext))
-        : false;
-    const originMissing = !originLatLng || originMismatch;
-    const regionLabel =
-      regionContext?.label || originRegion || "";
-    const regionFilter = Array.isArray(regionContext?.prefectures)
-      ? regionContext.prefectures
-      : regionLabel
-        ? [regionLabel]
-        : [];
-    const regionForPrompt = formatRegionForPrompt(regionContext) || regionLabel;
-    const regionAnchor = regionContext?.anchor || regionLabel;
-    let originOverride = null;
-    let originRegionOverride = null;
-    if (originMissing) {
-      if (originMismatch) {
-        setOriginRegionHint(
-          "選択した地域に合わせて出発地を再設定しています..."
-        );
-      }
-      originRegionOverride = regionForPrompt;
-      if (!originRegionOverride) {
-        throw new Error("地方または都道府県を選択してください。");
-      }
-      originOverride = await resolveRegionAnchor(
-        regionAnchor || originRegionOverride
-      );
-      if (!originOverride) {
-        throw new Error("地域の中心座標が取得できませんでした。");
-      }
-      if (originMismatch) {
-        setOrigin(originOverride, regionLabel || originRegionOverride, {
-          preserveWalkState: true,
-        });
-        updateRouteLabels();
-        updateRouteHint();
-      }
-    }
-
-    const data = await requestRecommendation({
+    const regionInfo = buildWalkRouteRegionInfo(Boolean(auto));
+    const originStatus = await resolveWalkRouteOriginStatus(
+      regionInfo.regionContext
+    );
+    const originOverrides = await resolveWalkRouteOriginOverride({
+      originMissing: originStatus.originMissing,
+      originMismatch: originStatus.originMismatch,
+      regionForPrompt: regionInfo.regionForPrompt,
+      regionAnchor: regionInfo.regionAnchor,
+      regionLabel: regionInfo.regionLabel,
+    });
+    const place = await fetchWalkRouteRecommendation({
       query,
-      mode: "walk_route",
-      targetMinutes: requestTargetMinutes,
+      requestTargetMinutes,
       adjustment,
       actualMinutes,
-      originOverride,
-      originRegionOverride,
-      originPrefectures: regionContext?.prefectures,
-      originAreaLabel: regionContext?.label,
+      originOverride: originOverrides.originOverride,
+      originRegionOverride: originOverrides.originRegionOverride,
+      regionContext: regionInfo.regionContext,
     });
-    if (!data?.place) {
-      throw new Error("おすすめ地点の取得に失敗しました。");
-    }
-    showRecommendResult(data.place);
+    showRecommendResult(place);
 
-    const locations = await geocodeStops(data.place.stops);
-    if (locations.length < 2) {
-      throw new Error("散歩ルートの地点を見つけられませんでした。");
-    }
-    const startLocation = locations[0];
-    const startStop = Array.isArray(data.place.stops) ? data.place.stops[0] : null;
-    const startStopName =
-      typeof startStop === "string"
-        ? startStop
-        : startStop?.name || startStop?.title || "";
-
-    let originUsesStartLocation = false;
-    if (originMissing) {
-      const station = await findNearestStationToLocation({
-        startLocation,
-        stopName: startStopName,
-        region: regionFilter.length ? regionFilter : originRegionOverride,
-      });
-      if (station?.location) {
-        setOrigin(station.location, regionLabel || originRegionOverride, {
-          preserveWalkState: true,
-        });
-        setOriginRegionHint(
-          station.name
-            ? `${station.name}を出発地に設定しました。`
-            : "最寄り駅を出発地に設定しました。"
-        );
-      } else {
-        setOrigin(startLocation, regionLabel || originRegionOverride, {
-          preserveWalkState: true,
-        });
-        originUsesStartLocation = true;
-        setOriginRegionHint(
-          "最寄り駅が見つからないため最初の地点から開始します。"
-        );
-      }
-    }
-
-    const waypointStartIndex = originUsesStartLocation ? 1 : 0;
-    walkingWaypoints = locations
-      .slice(waypointStartIndex, -1)
-      .map((location) => ({
-        location,
-        stopover: true,
-      }));
-    const endStop = Array.isArray(data.place.stops)
-      ? data.place.stops[data.place.stops.length - 1]
-      : null;
-    const endStopLabel =
-      getStopLabel(endStop) || data.place?.address || data.place?.area || "";
-    walkRouteTargetMinutes = desiredTargetMinutes;
-    desiredWalkTargetMinutes = desiredTargetMinutes;
-    setDestination(locations[locations.length - 1], "walk_multi", {
-      label: endStopLabel,
+    const locationInfo = await resolveWalkRouteLocations(place);
+    const originUsesStartLocation = await applyWalkRouteOriginFromStops({
+      originMissing: originStatus.originMissing,
+      startLocation: locationInfo.startLocation,
+      startStopName: locationInfo.startStopName,
+      regionFilter: regionInfo.regionFilter,
+      regionLabel: regionInfo.regionLabel,
+      originRegionOverride: originOverrides.originRegionOverride,
     });
-    updateRouteLabels();
-    updateRouteHint();
-    updateRouteLinks();
-    calculateRoutes();
+    applyWalkRouteDestination({
+      locations: locationInfo.locations,
+      originUsesStartLocation,
+      place,
+      desiredTargetMinutes,
+    });
     setRecommendHint(
       auto ? "散歩ルートを調整しました。" : "おすすめの散歩ルートを表示しました。"
     );
@@ -1863,6 +2141,139 @@ function showRecommendResult(place) {
 }
 
 /**
+ * おすすめ取得用の出発地情報を取得する。
+ * @param {any} originOverride 出発地上書き。
+ * @returns {any} 出発地情報。
+ */
+function resolveRecommendationOrigin(originOverride) {
+  const originSource = originOverride || originLatLng;
+  const originLiteral = getLatLngLiteral(originSource);
+  if (!originLiteral) {
+    throw new Error("出発地の座標が不正です。");
+  }
+  return { originSource, originLiteral };
+}
+
+/**
+ * おすすめ取得の地域名を取得する。
+ * @param {any} originSource 出発地座標。
+ * @param {any} originRegionOverride 上書き地域。
+ * @returns {Promise<string>} 地域名のPromise。
+ */
+async function resolveRecommendationRegion(originSource, originRegionOverride) {
+  let region =
+    typeof originRegionOverride === "string" ? originRegionOverride.trim() : "";
+  if (!region) {
+    region = originRegion || (await resolveOriginRegion(originSource)) || "";
+  }
+  originRegion = region;
+  return region;
+}
+
+/**
+ * おすすめ取得の地域選択情報を取得する。
+ * @param {any} context 地域コンテキスト。
+ * @param {any} originPrefectures 都道府県配列。
+ * @param {any} originAreaLabel 地方ラベル。
+ * @returns {any} 選択結果。
+ */
+function resolveRecommendationSelections(
+  context,
+  originPrefectures,
+  originAreaLabel
+) {
+  const selectedPrefectures =
+    Array.isArray(originPrefectures) && originPrefectures.length > 0
+      ? originPrefectures
+      : Array.isArray(context?.prefectures)
+        ? context.prefectures
+        : [];
+  const selectedAreaLabel =
+    typeof originAreaLabel === "string" && originAreaLabel.trim()
+      ? originAreaLabel.trim()
+      : context?.label || "";
+  return { selectedPrefectures, selectedAreaLabel };
+}
+
+/**
+ * 出発地ラベルを取得する。
+ * @param {any} originSource 出発地座標。
+ * @param {string} region 地域名。
+ * @returns {Promise<string>} ラベルのPromise。
+ */
+async function resolveOriginLabelValue(originSource, region) {
+  const localities = await resolveLocalityCandidates(originSource);
+  const originLabelValue =
+    (Array.isArray(localities) && localities[0]) || region || "";
+  return originLabelValue;
+}
+
+/**
+ * おすすめ取得のリクエストペイロードを作成する。
+ * @param {any} options リクエストオプション。
+ * @returns {Promise<any>} ペイロードのPromise。
+ */
+async function buildRecommendationPayload(
+  /**
+   * @type {{
+   *   query?: any,
+   *   mode?: any,
+   *   targetMinutes?: any,
+   *   adjustment?: any,
+   *   actualMinutes?: any,
+   *   originOverride?: any,
+   *   originRegionOverride?: any,
+   *   originPrefectures?: any,
+   *   originAreaLabel?: any
+   * }}
+   */
+  {
+    query,
+    mode,
+    targetMinutes,
+    adjustment,
+    actualMinutes,
+    originOverride,
+    originRegionOverride,
+    originPrefectures,
+    originAreaLabel,
+  }
+) {
+  const maxMinutes = getMaxMinutes();
+  const originInfo = resolveRecommendationOrigin(originOverride);
+  const region = await resolveRecommendationRegion(
+    originInfo.originSource,
+    originRegionOverride
+  );
+  const context = getSelectedRegionContext();
+  const selection = resolveRecommendationSelections(
+    context,
+    originPrefectures,
+    originAreaLabel
+  );
+  const originLabelValue = await resolveOriginLabelValue(
+    originInfo.originSource,
+    region
+  );
+  return {
+    query,
+    origin: {
+      lat: originInfo.originLiteral.lat,
+      lng: originInfo.originLiteral.lng,
+    },
+    originLabel: originLabelValue,
+    originAreaLabel: selection.selectedAreaLabel,
+    originPrefectures: selection.selectedPrefectures,
+    maxMinutes,
+    targetMinutes,
+    mode,
+    adjustment,
+    actualMinutes,
+    originRegion: region,
+  };
+}
+
+/**
  * おすすめ取得APIを呼び出す。
  * @param {{
  *   query?: any,
@@ -1899,59 +2310,27 @@ async function requestRecommendation(
     actualMinutes,
     originOverride,
     originRegionOverride,
-    originPrefectures,
-    originAreaLabel,
+  originPrefectures,
+  originAreaLabel,
   }
 ) {
-  const maxMinutes = getMaxMinutes();
-  const originSource = originOverride || originLatLng;
-  const originLiteral = getLatLngLiteral(originSource);
-  if (!originLiteral) {
-    throw new Error("出発地の座標が不正です。");
-  }
-  let region =
-    typeof originRegionOverride === "string"
-      ? originRegionOverride.trim()
-      : "";
-  if (!region) {
-    region = originRegion || (await resolveOriginRegion(originSource)) || "";
-  }
-  const context = getSelectedRegionContext();
-  const selectedPrefectures =
-    Array.isArray(originPrefectures) && originPrefectures.length > 0
-      ? originPrefectures
-      : Array.isArray(context?.prefectures)
-        ? context.prefectures
-        : [];
-  const selectedAreaLabel =
-    typeof originAreaLabel === "string" && originAreaLabel.trim()
-      ? originAreaLabel.trim()
-      : context?.label || "";
-  originRegion = region;
-  const localities = await resolveLocalityCandidates(originSource);
-  const originLabelValue =
-    (Array.isArray(localities) && localities[0]) || region || "";
+  const payload = await buildRecommendationPayload({
+    query,
+    mode,
+    targetMinutes,
+    adjustment,
+    actualMinutes,
+    originOverride,
+    originRegionOverride,
+    originPrefectures,
+    originAreaLabel,
+  });
   const response = await fetch("/api/recommend", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      query,
-      origin: {
-        lat: originLiteral.lat,
-        lng: originLiteral.lng,
-      },
-      originLabel: originLabelValue,
-      originAreaLabel: selectedAreaLabel,
-      originPrefectures: selectedPrefectures,
-      maxMinutes,
-      targetMinutes,
-      mode,
-      adjustment,
-      actualMinutes,
-      originRegion: region,
-    }),
+    body: JSON.stringify(payload),
   });
 
   const data = await response.json();
@@ -2066,6 +2445,58 @@ async function geocodeStops(stops) {
 }
 
 /**
+ * 散歩ルート検索の前提を確認する。
+ * @returns {boolean} 確認結果。
+ */
+function canStartWalkRoute() {
+  let canStart = true;
+  if (!originLatLng && !getSelectedRegionContext()?.label) {
+    setRecommendHint(
+      "地方または都道府県を選択するか、地図をクリックして出発地を指定してください。"
+    );
+    canStart = false;
+  }
+  return canStart;
+}
+
+/**
+ * 目的地おすすめの検索を実行する。
+ * @param {any} options 検索オプション。
+ * @returns {Promise<void>} 処理完了のPromise。
+ */
+async function runSpotRecommendation(
+  /** @type {{ query: string, mode: string, targetMinutes: number | null }} */
+  { query, mode, targetMinutes }
+) {
+  setRecommendLoading(true);
+  setRecommendHint("検索中です...");
+  clearRecommendResult();
+
+  try {
+    const data = await requestRecommendation({ query, mode, targetMinutes });
+    if (!data?.place) {
+      throw new Error("おすすめ地点の取得に失敗しました。");
+    }
+    showRecommendResult(data.place);
+    const location = await geocodeDestination(data.place);
+    const destinationLabelValue = [data.place?.name, data.place?.address]
+      .filter(Boolean)
+      .join(" ");
+    setDestination(location, "recommendation", { label: destinationLabelValue });
+    updateRouteLabels();
+    updateRouteHint();
+    updateRouteLinks();
+    calculateRoutes();
+    setRecommendHint("おすすめ地点を目的地に設定しました。");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    setRecommendHint(message || "おすすめ地点の取得に失敗しました。");
+  } finally {
+    setRecommendLoading(false);
+  }
+}
+
+/**
  * おすすめフォーム送信を処理する。
  * @param {Event} event 送信イベント。
  * @returns {Promise<void>} 処理完了のPromise。
@@ -2086,54 +2517,23 @@ async function handleRecommendSubmit(event) {
     }
   }
 
-  if (shouldProceed && isWalkRoute) {
-    if (!originLatLng && !getSelectedRegionContext()?.label) {
-      setRecommendHint(
-        "地方または都道府県を選択するか、地図をクリックして出発地を指定してください。"
-      );
-      shouldProceed = false;
-    } else {
-      lastWalkQuery = query;
-      walkRouteRetryCount = 0;
-      desiredWalkTargetMinutes = targetMinutes;
-      await runWalkRouteSearch({
-        query,
-        requestTargetMinutes: targetMinutes,
-        desiredTargetMinutes: targetMinutes,
-        adjustment: null,
-        auto: false,
-      });
-    }
-  }
-
-  if (shouldProceed && !isWalkRoute) {
-    setRecommendLoading(true);
-    setRecommendHint("検索中です...");
-    clearRecommendResult();
-
-    try {
-      const data = await requestRecommendation({ query, mode, targetMinutes });
-      if (!data?.place) {
-        throw new Error("おすすめ地点の取得に失敗しました。");
+  if (shouldProceed) {
+    if (isWalkRoute) {
+      const canStart = canStartWalkRoute();
+      if (canStart) {
+        lastWalkQuery = query;
+        walkRouteRetryCount = 0;
+        desiredWalkTargetMinutes = targetMinutes;
+        await runWalkRouteSearch({
+          query,
+          requestTargetMinutes: targetMinutes,
+          desiredTargetMinutes: targetMinutes,
+          adjustment: null,
+          auto: false,
+        });
       }
-      showRecommendResult(data.place);
-      const location = await geocodeDestination(data.place);
-      const destinationLabelValue = [data.place?.name, data.place?.address]
-        .filter(Boolean)
-        .join(" ");
-      setDestination(location, "recommendation", {
-        label: destinationLabelValue,
-      });
-      updateRouteLabels();
-      updateRouteHint();
-      updateRouteLinks();
-      calculateRoutes();
-      setRecommendHint("おすすめ地点を目的地に設定しました。");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setRecommendHint(message || "おすすめ地点の取得に失敗しました。");
-    } finally {
-      setRecommendLoading(false);
+    } else {
+      await runSpotRecommendation({ query, mode, targetMinutes });
     }
   }
 }
@@ -2319,293 +2719,617 @@ function selectLocalRailRoute(result) {
 }
 
 /**
+ * ルート結果の判定を行う。
+ * @param {any} options 判定オプション。
+ * @returns {any} 判定結果。
+ */
+function evaluateRouteSelection(
+  /** @type {{ type: string, status: any, result: any }} */ { type, status, result }
+) {
+  let routeResult = result;
+  let rejectReason = null;
+  if (type === "rail" && status === "OK" && result?.routes?.length) {
+    const selection = selectLocalRailRoute(result);
+    if (!selection.route) {
+      rejectReason = selection.reason;
+    } else if (selection.route !== result.routes[0]) {
+      routeResult = { ...result, routes: [selection.route] };
+    }
+  }
+  const isOk = status === "OK" && routeResult?.routes?.[0] && !rejectReason;
+  return { routeResult, rejectReason, isOk };
+}
+
+/**
+ * ルート結果を状態に反映する。
+ * @param {any} options 反映オプション。
+ */
+function applyWalkRouteSuccess(
+  /** @type {{ result: any, durationText: string, durationSeconds: number | null, flags: any }} */
+  { result, durationText, durationSeconds, flags }
+) {
+  walkingValue.textContent = durationText;
+  flags.walkOk = true;
+  flags.walkSeconds = durationSeconds;
+  flags.walkText = durationText;
+  flags.walkResult = result;
+  if (destinationSource !== "walk_multi" && walkingRenderer) {
+    walkingRenderer.setDirections(result);
+  }
+}
+
+/**
+ * 在来線ルートの成功結果を反映する。
+ * @param {any} options 反映オプション。
+ */
+function applyRailRouteSuccess(
+  /** @type {{ routeResult: any, durationText: string, durationSeconds: number | null, flags: any }} */
+  { routeResult, durationText, durationSeconds, flags }
+) {
+  railValue.textContent = durationText;
+  flags.railOk = true;
+  flags.railSeconds = durationSeconds;
+  flags.railText = durationText;
+  flags.railResult = routeResult;
+  if (destinationSource !== "walk_multi" && railRenderer) {
+    railRenderer.setDirections(routeResult);
+  }
+}
+
+/**
+ * 徒歩ルートの失敗結果を反映する。
+ */
+function applyWalkRouteFailure() {
+  walkingValue.textContent = "経路なし";
+  if (destinationSource !== "walk_multi" && walkingRenderer) {
+    walkingRenderer.set("directions", null);
+  }
+}
+
+/**
+ * 在来線ルートの失敗結果を反映する。
+ * @param {any} options 反映オプション。
+ */
+function applyRailRouteFailure(
+  /** @type {{ rejectReason: string | null, flags: any }} */
+  { rejectReason, flags }
+) {
+  if (rejectReason === "high_speed") {
+    railValue.textContent = "新幹線除外";
+    flags.railRejected = "high_speed";
+  } else {
+    railValue.textContent = "経路なし";
+  }
+  if (destinationSource !== "walk_multi" && railRenderer) {
+    railRenderer.set("directions", null);
+  }
+}
+
+/**
+ * ルート結果を状態に反映する。
+ * @param {any} options 反映オプション。
+ */
+function applyRouteResultState(
+  /**
+   * @type {{
+   *   type: string,
+   *   isOk: boolean,
+   *   routeResult: any,
+   *   result: any,
+   *   rejectReason: string | null,
+   *   bounds: any,
+   *   flags: any
+   * }}
+   */
+  { type, isOk, routeResult, result, rejectReason, bounds, flags }
+) {
+  if (isOk) {
+    const legs = routeResult.routes[0]?.legs || [];
+    const { text: durationText, seconds: durationSeconds } =
+      getRouteDurationFromLegs(legs);
+    if (type === "walk") {
+      applyWalkRouteSuccess({ result, durationText, durationSeconds, flags });
+    } else {
+      applyRailRouteSuccess({
+        routeResult,
+        durationText,
+        durationSeconds,
+        flags,
+      });
+    }
+
+    if (routeResult.routes[0].bounds) {
+      bounds.union(routeResult.routes[0].bounds);
+    }
+  } else if (type === "walk") {
+    applyWalkRouteFailure();
+  } else {
+    applyRailRouteFailure({ rejectReason, flags });
+  }
+}
+
+/**
+ * 完了数を更新する。
+ * @param {any} flags 進捗フラグ。
+ * @returns {boolean} 完了判定。
+ */
+function incrementRouteCompletion(flags) {
+  flags.completed += 1;
+  return flags.completed >= flags.expected;
+}
+
+/**
+ * 散歩ルートの目標分数を取得する。
+ * @returns {number} 目標分数。
+ */
+function getWalkMultiTargetMinutes() {
+  return (
+    desiredWalkTargetMinutes ||
+    walkRouteTargetMinutes ||
+    getMaxMinutes() ||
+    DEFAULT_WALK_TARGET_MINUTES
+  );
+}
+
+/**
+ * 散歩ルートの評価値を計算する。
+ * @param {any} flags 進捗フラグ。
+ * @param {number} targetMinutes 目標分数。
+ * @returns {any} 評価値。
+ */
+function buildWalkMultiMetrics(flags, targetMinutes) {
+  const walkMinutes =
+    typeof flags.walkSeconds === "number"
+      ? Math.round(flags.walkSeconds / 60)
+      : null;
+  const railMinutes =
+    typeof flags.railSeconds === "number"
+      ? Math.round(flags.railSeconds / 60)
+      : null;
+  const tolerance = Math.max(1, Math.round(targetMinutes * 0.008));
+  const walkDiff =
+    walkMinutes !== null ? Math.abs(walkMinutes - targetMinutes) : null;
+  const railDiff =
+    railMinutes !== null ? Math.abs(railMinutes - targetMinutes) : null;
+  const safeWalkDiff = walkDiff ?? Number.POSITIVE_INFINITY;
+  const safeRailDiff = railDiff ?? Number.POSITIVE_INFINITY;
+  return {
+    walkMinutes,
+    railMinutes,
+    tolerance,
+    safeWalkDiff,
+    safeRailDiff,
+  };
+}
+
+/**
+ * 散歩ルートの採用モードを選ぶ。
+ * @param {any} options 判定オプション。
+ * @returns {string | null} 採用モード。
+ */
+function resolveToleranceMode(
+  /**
+   * @type {{
+   *   walkMinutes: number | null,
+   *   railMinutes: number | null,
+   *   tolerance: number,
+   *   safeWalkDiff: number,
+   *   safeRailDiff: number
+   * }}
+   */
+  { walkMinutes, railMinutes, tolerance, safeWalkDiff, safeRailDiff }
+) {
+  let selectedMode = null;
+  if (walkMinutes !== null && safeWalkDiff <= tolerance) {
+    selectedMode = "walk";
+  } else if (railMinutes !== null && safeRailDiff <= tolerance) {
+    selectedMode = "rail";
+  }
+  return selectedMode;
+}
+
+/**
+ * 散歩ルートの代替モードを判定する。
+ * @param {any} options 判定オプション。
+ * @returns {string | null} 採用モード。
+ */
+function resolveFallbackMode(
+  /**
+   * @type {{
+   *   walkMinutes: number | null,
+   *   railMinutes: number | null,
+   *   targetMinutes: number,
+   *   tolerance: number,
+   *   safeWalkDiff: number,
+   *   safeRailDiff: number,
+   *   flags: any
+   * }}
+   */
+  {
+    walkMinutes,
+    railMinutes,
+    targetMinutes,
+    tolerance,
+    safeWalkDiff,
+    safeRailDiff,
+    flags,
+  }
+) {
+  let selectedMode = null;
+  if (walkMinutes !== null && railMinutes !== null) {
+    if (walkMinutes < targetMinutes - tolerance && flags.railOk) {
+      selectedMode = "rail";
+    } else {
+      selectedMode = safeWalkDiff <= safeRailDiff ? "walk" : "rail";
+    }
+  } else if (walkMinutes !== null) {
+    selectedMode = "walk";
+  } else if (railMinutes !== null) {
+    selectedMode = "rail";
+  }
+  return selectedMode;
+}
+
+/**
+ * 散歩ルートの採用モードを選ぶ。
+ * @param {any} options 判定オプション。
+ * @returns {string | null} 採用モード。
+ */
+function selectWalkMultiMode(
+  /**
+   * @type {{
+   *   walkMinutes: number | null,
+   *   railMinutes: number | null,
+   *   tolerance: number,
+   *   safeWalkDiff: number,
+   *   safeRailDiff: number,
+   *   targetMinutes: number,
+   *   flags: any
+   * }}
+   */
+  { walkMinutes, railMinutes, tolerance, safeWalkDiff, safeRailDiff, targetMinutes, flags }
+) {
+  let selectedMode = resolveToleranceMode({
+    walkMinutes,
+    railMinutes,
+    tolerance,
+    safeWalkDiff,
+    safeRailDiff,
+  });
+  if (!selectedMode) {
+    selectedMode = resolveFallbackMode({
+      walkMinutes,
+      railMinutes,
+      targetMinutes,
+      tolerance,
+      safeWalkDiff,
+      safeRailDiff,
+      flags,
+    });
+  }
+  return selectedMode;
+}
+
+/**
+ * 散歩ルートの選択結果を組み立てる。
+ * @param {any} options 選択オプション。
+ * @returns {any} 選択結果。
+ */
+function buildWalkMultiSelection(
+  /** @type {{ flags: any, targetMinutes: number }} */ { flags, targetMinutes }
+) {
+  const metrics = buildWalkMultiMetrics(flags, targetMinutes);
+  const selectedMode = selectWalkMultiMode({
+    ...metrics,
+    targetMinutes,
+    flags,
+  });
+  const selectedMinutes =
+    selectedMode === "rail" ? metrics.railMinutes : metrics.walkMinutes;
+  const selectedText = selectedMode === "rail" ? flags.railText : flags.walkText;
+  const selectedLabel =
+    selectedMode === "rail" ? "散歩ルート（在来線併用）" : "散歩ルート";
+  return {
+    selectedMode,
+    selectedMinutes,
+    selectedText,
+    selectedLabel,
+    tolerance: metrics.tolerance,
+  };
+}
+
+/**
+ * 散歩ルートの選択結果を反映する。
+ * @param {any} options 反映オプション。
+ */
+function applyWalkMultiSelection(
+  /** @type {{ selection: any, flags: any }} */ { selection, flags }
+) {
+  const selectedMode = selection.selectedMode;
+  walkRoutePreferredMode = selectedMode || "walk";
+  if (selectedMode === "rail") {
+    if (railRenderer) {
+      railRenderer.setDirections(flags.railResult || null);
+    }
+    if (walkingRenderer) {
+      walkingRenderer.set("directions", null);
+    }
+  } else {
+    if (walkingRenderer) {
+      walkingRenderer.setDirections(flags.walkResult || null);
+    }
+    if (railRenderer) {
+      railRenderer.set("directions", null);
+    }
+  }
+  updateRouteLinks();
+  updateRouteBreakdown({
+    mode: selectedMode || "walk",
+    railResult: flags.railResult,
+  });
+}
+
+/**
+ * 散歩ルートの時間調整を処理する。
+ * @param {any} options 判定オプション。
+ * @returns {boolean} 最終確定するか。
+ */
+function handleWalkMultiTiming(
+  /** @type {{ selection: any, targetMinutes: number }} */ { selection, targetMinutes }
+) {
+  let shouldFinalize = true;
+  const selectedMinutes = selection.selectedMinutes;
+  if (selectedMinutes !== null) {
+    const diff = Math.abs(selectedMinutes - targetMinutes);
+    if (diff <= selection.tolerance) {
+      setRouteStatus(
+        `${selection.selectedLabel}: 約${selection.selectedText}（目標${targetMinutes}分）`
+      );
+      walkRouteRetryCount = 0;
+    } else if (walkRouteRetryCount < WALK_ROUTE_MAX_RETRIES) {
+      walkRouteRetryCount += 1;
+      const adjustment = selectedMinutes < targetMinutes ? "longer" : "shorter";
+      const requestTargetMinutes = getAdjustedTargetMinutes(
+        targetMinutes,
+        selectedMinutes
+      );
+      setRouteStatus(
+        `散歩ルートを調整中... (${walkRouteRetryCount}/${WALK_ROUTE_MAX_RETRIES})`
+      );
+      runWalkRouteSearch({
+        query: lastWalkQuery,
+        requestTargetMinutes,
+        desiredTargetMinutes: targetMinutes,
+        adjustment,
+        actualMinutes: selectedMinutes,
+        auto: true,
+      });
+      shouldFinalize = false;
+    } else {
+      setRouteStatus(
+        `${selection.selectedLabel}: 約${selection.selectedText}（目標${targetMinutes}分から${diff}分ずれ）`
+      );
+      setRecommendHint("時間が合わない場合は再検索してください。");
+    }
+  } else {
+    setRouteStatus("散歩ルートの所要時間を表示中です。");
+  }
+  return shouldFinalize;
+}
+
+/**
+ * 散歩ルートの完了処理を行う。
+ * @param {any} options 完了オプション。
+ * @returns {boolean} 続行可否。
+ */
+function handleWalkMultiCompletion(
+  /** @type {{ flags: any }} */ { flags }
+) {
+  let shouldFinalize = true;
+  if (flags.walkOk) {
+    const targetMinutes = getWalkMultiTargetMinutes();
+    const selection = buildWalkMultiSelection({ flags, targetMinutes });
+    applyWalkMultiSelection({ selection, flags });
+    shouldFinalize = handleWalkMultiTiming({ selection, targetMinutes });
+  } else if (flags.railOk) {
+    walkRoutePreferredMode = "rail";
+    if (railRenderer) {
+      railRenderer.setDirections(flags.railResult || null);
+    }
+    if (walkingRenderer) {
+      walkingRenderer.set("directions", null);
+    }
+    updateRouteLinks();
+    updateRouteBreakdown({ mode: "rail", railResult: flags.railResult });
+    setRouteStatus(
+      flags.railText
+        ? `散歩ルート（在来線併用）: 約${flags.railText}`
+        : "散歩ルート（在来線併用）を表示中です。"
+    );
+  } else {
+    walkRoutePreferredMode = null;
+    if (walkingRenderer) {
+      walkingRenderer.set("directions", null);
+    }
+    if (railRenderer) {
+      railRenderer.set("directions", null);
+    }
+    updateRouteLinks();
+    clearRouteBreakdown();
+    setRouteStatus("徒歩経路が見つかりませんでした。");
+  }
+  return shouldFinalize;
+}
+
+/**
+ * 通常ルートの状態文言を取得する。
+ * @param {any} flags 進捗フラグ。
+ * @returns {string} 状態文言。
+ */
+function getStandardRouteStatusMessage(flags) {
+  let message = "";
+  if (flags.railRejected === "high_speed") {
+    message = flags.walkOk
+      ? "新幹線が含まれるため在来線ルートを除外しました。徒歩のみ表示しています。"
+      : "新幹線が含まれるため在来線ルートを除外しました。";
+  } else if (flags.walkOk && flags.railOk) {
+    message = "徒歩と在来線の所要時間を表示中です。";
+  } else if (!flags.walkOk && !flags.railOk) {
+    message = "経路が見つかりませんでした。";
+  } else if (!flags.walkOk) {
+    message = "徒歩経路が見つかりませんでした。";
+  } else {
+    message = "在来線経路が見つかりませんでした。";
+  }
+  return message;
+}
+
+/**
+ * 所要時間の上限判定を反映する。
+ * @param {any} flags 進捗フラグ。
+ */
+function evaluateRouteLimit(
+  /** @type {{ flags: any, maxMinutes: number | null }} */ { flags, maxMinutes }
+) {
+  let shouldCheck = false;
+  let walkWithin = false;
+  let railWithin = false;
+  if (maxMinutes && (flags.walkOk || flags.railOk)) {
+    const limitSeconds = maxMinutes * 60;
+    walkWithin =
+      typeof flags.walkSeconds === "number" &&
+      flags.walkSeconds <= limitSeconds;
+    railWithin =
+      typeof flags.railSeconds === "number" &&
+      flags.railSeconds <= limitSeconds;
+    shouldCheck = true;
+  }
+  return { shouldCheck, walkWithin, railWithin, maxMinutes };
+}
+
+/**
+ * 所要時間の上限メッセージを反映する。
+ * @param {any} options 判定オプション。
+ * @param {any} flags 進捗フラグ。
+ */
+function applyRouteLimitMessage(
+  /** @type {{ maxMinutes: number | null, walkWithin: boolean, railWithin: boolean }} */
+  { maxMinutes, walkWithin, railWithin },
+  flags
+) {
+  if (!walkWithin && !railWithin) {
+    const message = `上限${maxMinutes}分を超えています。別の候補を選んでください。`;
+    if (destinationSource === "recommendation") {
+      clearDestination(message);
+      setRecommendHint("所要時間の上限を超えたため、候補を再検索してください。");
+    } else {
+      setRouteStatus(message);
+    }
+  } else if (walkWithin && railWithin && !flags.railRejected) {
+    setRouteStatus(`上限${maxMinutes}分以内です。`);
+  }
+}
+
+/**
+ * 所要時間の上限判定を反映する。
+ * @param {any} flags 進捗フラグ。
+ */
+function applyStandardRouteLimits(flags) {
+  const maxMinutes = getMaxMinutes();
+  const limitState = evaluateRouteLimit({ flags, maxMinutes });
+  if (limitState.shouldCheck) {
+    applyRouteLimitMessage(limitState, flags);
+  }
+}
+
+/**
+ * ルート内訳の表示を更新する。
+ * @param {any} flags 進捗フラグ。
+ */
+function updateStandardRouteBreakdown(flags) {
+  if (flags.railOk && !flags.railRejected) {
+    updateRouteBreakdown({ mode: "rail", railResult: flags.railResult });
+  } else if (flags.walkOk) {
+    updateRouteBreakdown({ mode: "walk", railResult: flags.railResult });
+  } else {
+    clearRouteBreakdown();
+  }
+}
+
+/**
+ * 表示範囲を調整する。
+ * @param {any} bounds 表示範囲。
+ */
+function fitBoundsIfNeeded(bounds) {
+  if (!bounds.isEmpty() && destinationLatLng) {
+    map.fitBounds(bounds, 80);
+  }
+}
+
+/**
+ * 通常ルートの完了処理を行う。
+ * @param {any} options 完了オプション。
+ */
+function handleStandardCompletion(
+  /** @type {{ flags: any, bounds: any }} */ { flags, bounds }
+) {
+  const message = getStandardRouteStatusMessage(flags);
+  if (message) {
+    setRouteStatus(message);
+  }
+  applyStandardRouteLimits(flags);
+  updateStandardRouteBreakdown(flags);
+  fitBoundsIfNeeded(bounds);
+}
+
+/**
+ * 完了後の後処理を実行する。
+ * @param {any} options 完了オプション。
+ * @returns {boolean} 続行可否。
+ */
+function finalizeRouteCompletion(
+  /** @type {{ flags: any, bounds: any }} */ { flags, bounds }
+) {
+  let shouldFinalize = true;
+  if (destinationSource === "walk_multi") {
+    shouldFinalize = handleWalkMultiCompletion({ flags });
+  } else {
+    handleStandardCompletion({ flags, bounds });
+  }
+  return shouldFinalize;
+}
+
+/**
  * ルート検索結果を反映する。
  * @param {{ type: string, result: any, status: any, bounds: any, flags: any, currentRequest: number }} options 結果オプション。
  */
 function handleRouteResult(options) {
   const { type, result, status, bounds, flags, currentRequest } = options;
   if (currentRequest === requestId) {
-    let routeResult = result;
-    let rejectReason = null;
-    if (type === "rail" && status === "OK" && result?.routes?.length) {
-      const selection = selectLocalRailRoute(result);
-      if (!selection.route) {
-        rejectReason = selection.reason;
-      } else if (selection.route !== result.routes[0]) {
-        routeResult = { ...result, routes: [selection.route] };
-      }
-    }
-
-    const isOk = status === "OK" && routeResult?.routes?.[0] && !rejectReason;
-    if (isOk) {
-      const legs = routeResult.routes[0]?.legs || [];
-      const { text: durationText, seconds: durationSeconds } =
-        getRouteDurationFromLegs(legs);
-      if (type === "walk") {
-        walkingValue.textContent = durationText;
-        flags.walkOk = true;
-        flags.walkSeconds = durationSeconds;
-        flags.walkText = durationText;
-        flags.walkResult = result;
-        if (destinationSource !== "walk_multi" && walkingRenderer) {
-          walkingRenderer.setDirections(result);
-        }
-      } else {
-        railValue.textContent = durationText;
-        flags.railOk = true;
-        flags.railSeconds = durationSeconds;
-        flags.railText = durationText;
-        flags.railResult = routeResult;
-        if (destinationSource !== "walk_multi" && railRenderer) {
-          railRenderer.setDirections(routeResult);
-        }
-      }
-
-      if (routeResult.routes[0].bounds) {
-        bounds.union(routeResult.routes[0].bounds);
-      }
-    } else {
-      if (type === "walk") {
-        walkingValue.textContent = "経路なし";
-        if (destinationSource !== "walk_multi" && walkingRenderer) {
-          walkingRenderer.set("directions", null);
-        }
-      } else {
-        if (rejectReason === "high_speed") {
-          railValue.textContent = "新幹線除外";
-          flags.railRejected = "high_speed";
-        } else {
-          railValue.textContent = "経路なし";
-        }
-        if (destinationSource !== "walk_multi" && railRenderer) {
-          railRenderer.set("directions", null);
-        }
-      }
-    }
-
-    flags.completed += 1;
-    const isComplete = flags.completed >= flags.expected;
+    const evaluation = evaluateRouteSelection({ type, status, result });
+    applyRouteResultState({
+      type,
+      isOk: evaluation.isOk,
+      routeResult: evaluation.routeResult,
+      result,
+      rejectReason: evaluation.rejectReason,
+      bounds,
+      flags,
+    });
+    const isComplete = incrementRouteCompletion(flags);
     if (isComplete) {
-      let shouldFinalize = true;
-      if (destinationSource === "walk_multi") {
-        if (flags.walkOk) {
-          const targetMinutes =
-            desiredWalkTargetMinutes ||
-            walkRouteTargetMinutes ||
-            getMaxMinutes() ||
-            DEFAULT_WALK_TARGET_MINUTES;
-          const walkMinutes =
-            typeof flags.walkSeconds === "number"
-              ? Math.round(flags.walkSeconds / 60)
-              : null;
-          const railMinutes =
-            typeof flags.railSeconds === "number"
-              ? Math.round(flags.railSeconds / 60)
-              : null;
-          const tolerance = Math.max(1, Math.round(targetMinutes * 0.008));
-          const walkDiff =
-            walkMinutes !== null ? Math.abs(walkMinutes - targetMinutes) : null;
-          const railDiff =
-            railMinutes !== null ? Math.abs(railMinutes - targetMinutes) : null;
-          const safeWalkDiff = walkDiff ?? Number.POSITIVE_INFINITY;
-          const safeRailDiff = railDiff ?? Number.POSITIVE_INFINITY;
-
-          let selectedMode = null;
-          if (walkMinutes !== null && safeWalkDiff <= tolerance) {
-            selectedMode = "walk";
-          } else if (railMinutes !== null && safeRailDiff <= tolerance) {
-            selectedMode = "rail";
-          } else if (walkMinutes !== null && railMinutes !== null) {
-            if (walkMinutes < targetMinutes - tolerance && flags.railOk) {
-              selectedMode = "rail";
-            } else {
-              selectedMode = safeWalkDiff <= safeRailDiff ? "walk" : "rail";
-            }
-          } else if (walkMinutes !== null) {
-            selectedMode = "walk";
-          } else if (railMinutes !== null) {
-            selectedMode = "rail";
-          }
-
-          const selectedMinutes =
-            selectedMode === "rail" ? railMinutes : walkMinutes;
-          const selectedText =
-            selectedMode === "rail" ? flags.railText : flags.walkText;
-          const selectedLabel =
-            selectedMode === "rail" ? "散歩ルート（在来線併用）" : "散歩ルート";
-
-          walkRoutePreferredMode = selectedMode || "walk";
-
-          if (selectedMode === "rail") {
-            if (railRenderer) {
-              railRenderer.setDirections(flags.railResult || null);
-            }
-            if (walkingRenderer) {
-              walkingRenderer.set("directions", null);
-            }
-          } else {
-            if (walkingRenderer) {
-              walkingRenderer.setDirections(flags.walkResult || null);
-            }
-            if (railRenderer) {
-              railRenderer.set("directions", null);
-            }
-          }
-          updateRouteLinks();
-          updateRouteBreakdown({
-            mode: selectedMode || "walk",
-            railResult: flags.railResult,
-          });
-
-          if (selectedMinutes !== null) {
-            const diff = Math.abs(selectedMinutes - targetMinutes);
-            if (diff <= tolerance) {
-              setRouteStatus(
-                `${selectedLabel}: 約${selectedText}（目標${targetMinutes}分）`
-              );
-              walkRouteRetryCount = 0;
-            } else if (walkRouteRetryCount < WALK_ROUTE_MAX_RETRIES) {
-              walkRouteRetryCount += 1;
-              const adjustment =
-                selectedMinutes < targetMinutes ? "longer" : "shorter";
-              const requestTargetMinutes = getAdjustedTargetMinutes(
-                targetMinutes,
-                selectedMinutes
-              );
-              setRouteStatus(
-                `散歩ルートを調整中... (${walkRouteRetryCount}/${WALK_ROUTE_MAX_RETRIES})`
-              );
-              runWalkRouteSearch({
-                query: lastWalkQuery,
-                requestTargetMinutes,
-                desiredTargetMinutes: targetMinutes,
-                adjustment,
-                actualMinutes: selectedMinutes,
-                auto: true,
-              });
-              shouldFinalize = false;
-            } else {
-              setRouteStatus(
-                `${selectedLabel}: 約${selectedText}（目標${targetMinutes}分から${diff}分ずれ）`
-              );
-              setRecommendHint("時間が合わない場合は再検索してください。");
-            }
-          } else {
-            setRouteStatus("散歩ルートの所要時間を表示中です。");
-          }
-        } else if (flags.railOk) {
-          walkRoutePreferredMode = "rail";
-          if (railRenderer) {
-            railRenderer.setDirections(flags.railResult || null);
-          }
-          if (walkingRenderer) {
-            walkingRenderer.set("directions", null);
-          }
-          updateRouteLinks();
-          updateRouteBreakdown({ mode: "rail", railResult: flags.railResult });
-          setRouteStatus(
-            flags.railText
-              ? `散歩ルート（在来線併用）: 約${flags.railText}`
-              : "散歩ルート（在来線併用）を表示中です。"
-          );
-        } else {
-          walkRoutePreferredMode = null;
-          if (walkingRenderer) {
-            walkingRenderer.set("directions", null);
-          }
-          if (railRenderer) {
-            railRenderer.set("directions", null);
-          }
-          updateRouteLinks();
-          clearRouteBreakdown();
-          setRouteStatus("徒歩経路が見つかりませんでした。");
-        }
-      } else if (flags.railRejected === "high_speed") {
-        setRouteStatus(
-          flags.walkOk
-            ? "新幹線が含まれるため在来線ルートを除外しました。徒歩のみ表示しています。"
-            : "新幹線が含まれるため在来線ルートを除外しました。"
-        );
-      } else if (flags.walkOk && flags.railOk) {
-        setRouteStatus("徒歩と在来線の所要時間を表示中です。");
-      } else if (!flags.walkOk && !flags.railOk) {
-        setRouteStatus("経路が見つかりませんでした。");
-      } else if (!flags.walkOk) {
-        setRouteStatus("徒歩経路が見つかりませんでした。");
-      } else {
-        setRouteStatus("在来線経路が見つかりませんでした。");
-      }
-
-      if (shouldFinalize) {
-        const maxMinutes = getMaxMinutes();
-        if (
-          destinationSource !== "walk_multi" &&
-          maxMinutes &&
-          (flags.walkOk || flags.railOk)
-        ) {
-          const limitSeconds = maxMinutes * 60;
-          const walkWithin =
-            typeof flags.walkSeconds === "number" &&
-            flags.walkSeconds <= limitSeconds;
-          const railWithin =
-            typeof flags.railSeconds === "number" &&
-            flags.railSeconds <= limitSeconds;
-          if (!walkWithin && !railWithin) {
-            const message = `上限${maxMinutes}分を超えています。別の候補を選んでください。`;
-            if (destinationSource === "recommendation") {
-              clearDestination(message);
-              setRecommendHint(
-                "所要時間の上限を超えたため、候補を再検索してください。"
-              );
-            } else {
-              setRouteStatus(message);
-            }
-          } else if (walkWithin && railWithin && !flags.railRejected) {
-            setRouteStatus(`上限${maxMinutes}分以内です。`);
-          }
-        }
-
-        if (destinationSource !== "walk_multi") {
-          if (flags.railOk && !flags.railRejected) {
-            updateRouteBreakdown({ mode: "rail", railResult: flags.railResult });
-          } else if (flags.walkOk) {
-            updateRouteBreakdown({ mode: "walk", railResult: flags.railResult });
-          } else {
-            clearRouteBreakdown();
-          }
-        }
-
-        if (
-          destinationSource !== "walk_multi" &&
-          !bounds.isEmpty() &&
-          destinationLatLng
-        ) {
-          map.fitBounds(bounds, 80);
-        }
-      }
+      finalizeRouteCompletion({ flags, bounds });
     }
   }
 }
 
 /**
- * 徒歩/鉄道ルートを計算して表示する。
+ * ルート判定フラグを初期化する。
+ * @param {boolean} includeTransit 乗換ルート有無。
+ * @returns {any} フラグオブジェクト。
  */
-function calculateRoutes() {
-  if (!originLatLng || !destinationLatLng || !directionsService) {
-    return;
-  }
-
-  const includeTransit = true;
-  const hasWaypoints =
-    Array.isArray(walkingWaypoints) && walkingWaypoints.length > 0;
-
-  requestId += 1;
-  const currentRequest = requestId;
-  const bounds = new google.maps.LatLngBounds();
-  bounds.extend(originLatLng);
-  bounds.extend(destinationLatLng);
-
-  const flags = {
+function buildRouteFlags(includeTransit) {
+  return {
     walkOk: false,
     railOk: false,
     completed: 0,
@@ -2618,6 +3342,89 @@ function calculateRoutes() {
     railResult: null,
     expected: includeTransit ? 2 : 1,
   };
+}
+
+/**
+ * 徒歩ルートのリクエストを作成する。
+ * @param {any} options 作成オプション。
+ * @returns {any} リクエスト。
+ */
+function buildWalkingRequest(
+  /** @type {{ origin: any, destination: any, waypoints: any[] | null }} */
+  { origin, destination, waypoints }
+) {
+  /** @type {any} */
+  const request = {
+    origin,
+    destination,
+    travelMode: google.maps.TravelMode.WALKING,
+  };
+  if (Array.isArray(waypoints) && waypoints.length > 0) {
+    request.waypoints = waypoints;
+    request.optimizeWaypoints = false;
+  }
+  return request;
+}
+
+/**
+ * 在来線ルートのリクエストを作成する。
+ * @param {any} options 作成オプション。
+ * @returns {any} リクエスト。
+ */
+function buildTransitRequest(
+  /**
+   * @type {{
+   *   origin: any,
+   *   destination: any,
+   *   waypoints: any[] | null,
+   *   allowWaypoints: boolean
+   * }}
+   */
+  { origin, destination, waypoints, allowWaypoints }
+) {
+  /** @type {any} */
+  const request = {
+    origin,
+    destination,
+    travelMode: google.maps.TravelMode.TRANSIT,
+    provideRouteAlternatives: true,
+    transitOptions: {
+      modes: [
+        google.maps.TransitMode.TRAIN,
+        google.maps.TransitMode.SUBWAY,
+        google.maps.TransitMode.TRAM,
+        google.maps.TransitMode.RAIL,
+      ],
+    },
+  };
+  if (allowWaypoints && Array.isArray(waypoints) && waypoints.length > 0) {
+    request.waypoints = waypoints;
+    request.optimizeWaypoints = false;
+  }
+  return request;
+}
+
+/**
+ * 徒歩/鉄道ルートを計算して表示する。
+ */
+function calculateRoutes() {
+  if (!originLatLng || !destinationLatLng || !directionsService) {
+    return;
+  }
+
+  const includeTransit = true;
+  const waypoints =
+    Array.isArray(walkingWaypoints) && walkingWaypoints.length > 0
+      ? walkingWaypoints
+      : null;
+
+  requestId += 1;
+  const currentRequest = requestId;
+  const bounds = new google.maps.LatLngBounds();
+  bounds.extend(originLatLng);
+  bounds.extend(destinationLatLng);
+
+  const flags = buildRouteFlags(includeTransit);
 
   walkingValue.textContent = "計算中...";
   railValue.textContent = includeTransit ? "計算中..." : "対象外";
@@ -2625,16 +3432,11 @@ function calculateRoutes() {
   clearRouteBreakdown();
   updateRouteLinks();
 
-  /** @type {any} */
-  const walkingRequest = {
+  const walkingRequest = buildWalkingRequest({
     origin: originLatLng,
     destination: destinationLatLng,
-    travelMode: google.maps.TravelMode.WALKING,
-  };
-  if (hasWaypoints) {
-    walkingRequest.waypoints = walkingWaypoints;
-    walkingRequest.optimizeWaypoints = false;
-  }
+    waypoints,
+  });
 
   directionsService.route(
     walkingRequest,
@@ -2649,26 +3451,15 @@ function calculateRoutes() {
       })
   );
 
-  if (includeTransit) {
-    /** @type {any} */
-    const transitRequest = {
-      origin: originLatLng,
-      destination: destinationLatLng,
-      travelMode: google.maps.TravelMode.TRANSIT,
-      provideRouteAlternatives: true,
-      transitOptions: {
-        modes: [
-          google.maps.TransitMode.TRAIN,
-          google.maps.TransitMode.SUBWAY,
-          google.maps.TransitMode.TRAM,
-          google.maps.TransitMode.RAIL,
-        ],
-      },
-    };
-    if (hasWaypoints && destinationSource !== "walk_multi") {
-      transitRequest.waypoints = walkingWaypoints;
-      transitRequest.optimizeWaypoints = false;
-    }
+  const transitRequest = includeTransit
+    ? buildTransitRequest({
+        origin: originLatLng,
+        destination: destinationLatLng,
+        waypoints,
+        allowWaypoints: destinationSource !== "walk_multi",
+      })
+    : null;
+  if (transitRequest) {
     directionsService.route(
       transitRequest,
       (/** @type {any} */ result, /** @type {any} */ status) =>

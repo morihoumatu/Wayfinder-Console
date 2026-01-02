@@ -105,6 +105,16 @@ function parseJsonOutput(text) {
 }
 
 /**
+ * 文字列内のエスケープ判定を行う。
+ * @param {string} text 対象テキスト。
+ * @param {number} index 判定位置。
+ * @returns {boolean} 判定結果。
+ */
+function isEscapedChar(text, index) {
+  return text[index] === "\\" && index + 1 < text.length;
+}
+
+/**
  * 対応する閉じ括弧位置を探す。
  * @param {string} text 対象テキスト。
  * @param {number} startIndex 開始位置。
@@ -119,7 +129,7 @@ function findMatchingBracket(text, startIndex) {
   for (let i = startIndex; i < text.length; i += 1) {
     const ch = text[i];
     if (inString) {
-      if (ch === "\\" && i + 1 < text.length) {
+      if (isEscapedChar(text, i)) {
         i += 1;
         continue;
       }
