@@ -17,6 +17,7 @@
 
 1. `npm install`
 2. `npm run lint`
+3. `npm run docs:html`（フォルダ説明・JSDocのHTMLを生成）
 
 注意:
 
