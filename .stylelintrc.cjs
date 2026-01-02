@@ -1,6 +1,10 @@
 module.exports = {
   extends: ["stylelint-config-standard"],
-  plugins: ["stylelint-order", "./stylelint-rules/inline-comment"],
+  plugins: [
+    "stylelint-order",
+    "./stylelint-rules/inline-comment",
+    "./stylelint-rules/large-file",
+  ],
   rules: {
     "declaration-no-important": true,
     "max-nesting-depth": 0,
@@ -9,5 +13,11 @@ module.exports = {
     "selector-max-compound-selectors": 4,
     "selector-max-id": 0,
     "project/inline-comment": true,
+    "project/large-file": {
+      maxLines: 300,
+      maxRules: 40,
+      maxSelectors: 120,
+      maxDeclarations: 300,
+    },
   },
 };
