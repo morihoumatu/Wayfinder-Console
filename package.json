@@ -12,6 +12,7 @@
   "devDependencies": {
     "@types/node": "^20.11.30",
     "eslint": "^8.57.0",
+    "eslint-plugin-jsdoc": "^61.5.0",
     "htmlhint": "^1.1.4",
     "stylelint": "^16.9.0",
     "stylelint-config-standard": "^36.0.0",

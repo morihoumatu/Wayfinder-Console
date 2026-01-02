@@ -120,3 +120,17 @@
 - `noUnusedParameters`: 未使用引数を禁止
 - `noImplicitReturns`: すべての分岐で `return` を強制
 - `noFallthroughCasesInSwitch`: `switch` のフォールスルーを禁止
+
+## JSDoc コメント運用
+- 目的文を先頭に1行で書き、日本語で「。」で終える
+- `@param` / `@returns` は目的文の後に記述し、各タグの横に日本語で用途を追記する
+- ESLint に `eslint-plugin-jsdoc` を導入し、`FunctionDeclaration` と名前付き `FunctionExpression` に JSDoc を必須化
+- ESLint で目的文と `@param` / `@returns` の説明文を必須化
+- 例:
+  ```js
+  /**
+   * 配列からランダムに1件選ぶ。
+   * @param {string[]} list 候補配列。
+   * @returns {string} 選択された要素。
+   */
+  ```

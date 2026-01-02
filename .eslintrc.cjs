@@ -8,6 +8,7 @@ module.exports = {
     sourceType: "script",
   },
   extends: ["eslint:recommended"],
+  plugins: ["jsdoc"],
   reportUnusedDisableDirectives: true,
   rules: {
     "array-callback-return": "error",
@@ -40,6 +41,15 @@ module.exports = {
     "object-shorthand": ["error", "always"],
     "prefer-const": "error",
     "prefer-template": "error",
+    "jsdoc/require-jsdoc": [
+      "error",
+      {
+        contexts: ["FunctionDeclaration", "FunctionExpression[id]"],
+      },
+    ],
+    "jsdoc/require-description": "error",
+    "jsdoc/require-param-description": "error",
+    "jsdoc/require-returns-description": "error",
     radix: ["error", "always"],
     yoda: "error",
   },

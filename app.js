@@ -196,9 +196,9 @@ let areaAnchorCache = "";
 let areaAnchorSelection = "";
 
 /**
- * Update the status label and state indicator.
- * @param {string} label
- * @param {string} state
+ * 状態ラベルと状態表示を更新する。
+ * @param {string} label 表示ラベル。
+ * @param {string} state 状態値。
  */
 function setStatus(label, state) {
   keyStatus.textContent = label;
@@ -206,9 +206,9 @@ function setStatus(label, state) {
 }
 
 /**
- * Show or hide the overlay message.
- * @param {string} message
- * @param {boolean} visible
+ * オーバーレイ表示を切り替える。
+ * @param {string} message 表示メッセージ。
+ * @param {boolean} visible 表示フラグ。
  */
 function setOverlay(message, visible) {
   overlay.textContent = message;
@@ -216,9 +216,9 @@ function setOverlay(message, visible) {
 }
 
 /**
- * Format a LatLng for display.
- * @param {any} latLng
- * @returns {string}
+ * 緯度経度を表示用に整形する。
+ * @param {any} latLng 緯度経度オブジェクト。
+ * @returns {string} 表示用文字列。
  */
 function formatLatLng(latLng) {
   return `${latLng.lat().toFixed(5)}, ${latLng.lng().toFixed(5)}`;
@@ -246,8 +246,8 @@ function updateRouteHint() {
 }
 
 /**
- * Update the origin region hint text.
- * @param {string} message
+ * 出発地の地域ヒントを更新する。
+ * @param {string} message ヒント文。
  */
 function setOriginRegionHint(message) {
   if (originRegionHint) {
@@ -276,8 +276,8 @@ function updateRegionControls() {
 }
 
 /**
- * Update the route status message.
- * @param {string} message
+ * ルート状態メッセージを更新する。
+ * @param {string} message 状態メッセージ。
  */
 function setRouteStatus(message) {
   routeStatus.textContent = message;
@@ -326,9 +326,9 @@ function updateRouteLinks() {
 }
 
 /**
- * Build a region label from address components.
- * @param {any} components
- * @returns {string | null}
+ * 住所コンポーネントから地域名を抽出する。
+ * @param {any} components 住所コンポーネント配列。
+ * @returns {string | null} 地域名またはnull。
  */
 function extractRegionFromComponents(components) {
   if (!Array.isArray(components)) {
@@ -346,9 +346,9 @@ function extractRegionFromComponents(components) {
 }
 
 /**
- * Normalize a region filter to a list.
- * @param {any} region
- * @returns {string[]}
+ * 地域フィルタを配列に正規化する。
+ * @param {any} region 地域指定。
+ * @returns {string[]} フィルタ配列。
  */
 function normalizeRegionFilter(region) {
   if (!region) {
@@ -367,10 +367,10 @@ function normalizeRegionFilter(region) {
 }
 
 /**
- * Check whether a region matches the filter context.
- * @param {string} regionName
- * @param {any} context
- * @returns {boolean}
+ * 地域名がフィルタに一致するか判定する。
+ * @param {string} regionName 地域名。
+ * @param {any} context 判定用コンテキスト。
+ * @returns {boolean} 一致判定。
  */
 function isRegionMatch(regionName, context) {
   if (!regionName || !context) {
@@ -388,10 +388,10 @@ function isRegionMatch(regionName, context) {
 }
 
 /**
- * Resolve origin coordinates and test against region filters.
- * @param {any} latLng
- * @param {any} context
- * @returns {Promise<boolean>}
+ * 出発地が地域条件に合うか判定する。
+ * @param {any} latLng 出発地座標。
+ * @param {any} context 判定用コンテキスト。
+ * @returns {Promise<boolean>} 一致判定のPromise。
  */
 async function resolveIsOriginInRegion(latLng, context) {
   if (!latLng || !context) {
@@ -408,9 +408,9 @@ async function resolveIsOriginInRegion(latLng, context) {
 }
 
 /**
- * Pick a random item from a list.
- * @param {any[]} list
- * @returns {string}
+ * 配列からランダムに1件選ぶ。
+ * @param {any[]} list 候補配列。
+ * @returns {string} 選択された文字列。
  */
 function pickRandomItem(list) {
   if (!Array.isArray(list) || list.length === 0) {
@@ -421,10 +421,10 @@ function pickRandomItem(list) {
 }
 
 /**
- * Resolve the anchor label for the selected area.
- * @param {string} areaValue
- * @param {boolean} refreshAnchor
- * @returns {string}
+ * 選択エリアのアンカー文字列を決定する。
+ * @param {string} areaValue エリア名。
+ * @param {boolean} refreshAnchor アンカー再生成フラグ。
+ * @returns {string} アンカー文字列。
  */
 function getAreaAnchor(areaValue, refreshAnchor) {
   if (!areaValue || !REGION_GROUPS[areaValue]) {
@@ -443,9 +443,9 @@ function getAreaAnchor(areaValue, refreshAnchor) {
 }
 
 /**
- * Build the region context from the selection UI.
- * @param {{ refreshAnchor?: boolean }} [options]
- * @returns {any}
+ * 選択UIから地域コンテキストを取得する。
+ * @param {{ refreshAnchor?: boolean }} [options] 取得オプション。
+ * @returns {any} 地域コンテキスト。
  */
 function getSelectedRegionContext(options = {}) {
   const refreshAnchor = Boolean(options.refreshAnchor);
@@ -470,9 +470,9 @@ function getSelectedRegionContext(options = {}) {
 }
 
 /**
- * Format a region context for prompting.
- * @param {any} context
- * @returns {string}
+ * プロンプト用に地域ラベルを整形する。
+ * @param {any} context 地域コンテキスト。
+ * @returns {string} 地域ラベル。
  */
 function formatRegionForPrompt(context) {
   if (!context) {
@@ -482,9 +482,9 @@ function formatRegionForPrompt(context) {
 }
 
 /**
- * Reverse geocode the origin to a region label.
- * @param {any} latLng
- * @returns {Promise<string | null>}
+ * 逆ジオコードで出発地の地域名を取得する。
+ * @param {any} latLng 出発地座標。
+ * @returns {Promise<string | null>} 地域名またはnullのPromise。
  */
 function resolveOriginRegion(latLng) {
   return new Promise((resolve) => {
@@ -529,16 +529,16 @@ function updateLimitHint() {
 }
 
 /**
- * Update the recommendation hint text.
- * @param {string} message
+ * おすすめヒントを更新する。
+ * @param {string} message ヒント文。
  */
 function setRecommendHint(message) {
   recommendHint.textContent = message;
 }
 
 /**
- * Toggle recommendation UI loading state.
- * @param {boolean} loading
+ * おすすめ検索のローディング状態を切り替える。
+ * @param {boolean} loading ローディングフラグ。
  */
 function setRecommendLoading(loading) {
   recommendButton.disabled = loading;
@@ -561,8 +561,8 @@ function clearRecommendResult() {
 }
 
 /**
- * Render the stop list in the recommendation panel.
- * @param {any} stops
+ * おすすめ地点の立ち寄りを描画する。
+ * @param {any} stops 立ち寄りリスト。
  */
 function renderStops(stops) {
   recommendStops.textContent = "";
@@ -600,8 +600,8 @@ function renderStops(stops) {
 }
 
 /**
- * Render source links in the recommendation panel.
- * @param {any} sources
+ * おすすめの参照元を描画する。
+ * @param {any} sources 参照元リスト。
  */
 function renderSources(sources) {
   recommendSources.textContent = "";
@@ -633,9 +633,9 @@ function renderSources(sources) {
 }
 
 /**
- * Build a Google Maps search URL.
- * @param {string} query
- * @returns {string}
+ * Google Maps検索リンクを作成する。
+ * @param {string} query 検索クエリ。
+ * @returns {string} 検索URL。
  */
 function buildMapsLink(query) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -644,9 +644,9 @@ function buildMapsLink(query) {
 }
 
 /**
- * Format a LatLng value for URL parameters.
- * @param {any} latLng
- * @returns {string}
+ * 座標をURL用に整形する。
+ * @param {any} latLng 座標オブジェクト。
+ * @returns {string} URL用文字列。
  */
 function formatLatLngForUrl(latLng) {
   if (!latLng) {
@@ -662,9 +662,9 @@ function formatLatLngForUrl(latLng) {
 }
 
 /**
- * Format a duration in seconds to a label.
- * @param {number} totalSeconds
- * @returns {string}
+ * 秒数を時間表記に変換する。
+ * @param {number} totalSeconds 合計秒数。
+ * @returns {string} 表示用文字列。
  */
 function formatDurationText(totalSeconds) {
   if (!Number.isFinite(totalSeconds)) {
@@ -683,9 +683,9 @@ function formatDurationText(totalSeconds) {
 }
 
 /**
- * Aggregate duration from route legs.
- * @param {any[]} legs
- * @returns {{ text: string, seconds: number | null }}
+ * ルート区間から所要時間を集計する。
+ * @param {any[]} legs ルート区間配列。
+ * @returns {{ text: string, seconds: number | null }} 表示文字列と秒数。
  */
 function getRouteDurationFromLegs(legs) {
   if (!Array.isArray(legs) || legs.length === 0) {
@@ -708,9 +708,9 @@ function getRouteDurationFromLegs(legs) {
 }
 
 /**
- * Normalize a LatLng into a literal object.
- * @param {any} latLng
- * @returns {{ lat: number, lng: number } | null}
+ * 座標をリテラル形式に正規化する。
+ * @param {any} latLng 座標オブジェクト。
+ * @returns {{ lat: number, lng: number } | null} 座標リテラルまたはnull。
  */
 function getLatLngLiteral(latLng) {
   if (!latLng) {
@@ -726,10 +726,10 @@ function getLatLngLiteral(latLng) {
 }
 
 /**
- * Compute distance between two points in meters.
- * @param {any} a
- * @param {any} b
- * @returns {number | null}
+ * 2点間の距離をメートルで計算する。
+ * @param {any} a 座標A。
+ * @param {any} b 座標B。
+ * @returns {number | null} 距離メートルまたはnull。
  */
 function computeDistanceMeters(a, b) {
   if (!a || !b) {
@@ -781,9 +781,9 @@ function buildDirectionsLink(
 const GENERIC_POINT_LABELS = new Set(["出発地", "目的地", "未選択", "不明"]);
 
 /**
- * Normalize point labels by trimming and filtering defaults.
- * @param {any} label
- * @returns {string}
+ * ポイントラベルを正規化する。
+ * @param {any} label ラベル値。
+ * @returns {string} 正規化ラベル。
  */
 function normalizePointLabel(label) {
   if (typeof label !== "string") {
@@ -826,9 +826,9 @@ function getDestinationDisplayLabel() {
 }
 
 /**
- * Extract transit departure/arrival stops from a route.
- * @param {any} result
- * @returns {any}
+ * 経路結果から乗降駅情報を抽出する。
+ * @param {any} result 経路結果。
+ * @returns {any} 乗降駅情報。
  */
 function extractTransitStops(result) {
   const route = result?.routes?.[0];
@@ -916,8 +916,8 @@ function clearRouteBreakdown() {
 }
 
 /**
- * Render the route segment breakdown list.
- * @param {any} segments
+ * ルート内訳の区間リストを描画する。
+ * @param {any} segments 区間リスト。
  */
 function renderRouteBreakdown(segments) {
   if (!routeBreakdown || !routeBreakdownList) {
@@ -1060,9 +1060,9 @@ function updateRouteBreakdown(
 }
 
 /**
- * Check if a result is a station.
- * @param {any} result
- * @returns {boolean}
+ * 結果が駅に該当するか判定する。
+ * @param {any} result 検索結果。
+ * @returns {boolean} 駅判定。
  */
 function isStationResult(result) {
   const types = result?.types;
@@ -1073,10 +1073,10 @@ function isStationResult(result) {
 }
 
 /**
- * Check if a result belongs to the specified region.
- * @param {any} result
- * @param {any} region
- * @returns {boolean}
+ * 結果が地域フィルタに一致するか判定する。
+ * @param {any} result 検索結果。
+ * @param {any} region 地域フィルタ。
+ * @returns {boolean} 一致判定。
  */
 function isResultInRegion(result, region) {
   const regionFilters = normalizeRegionFilter(region);
@@ -1097,9 +1097,9 @@ function isResultInRegion(result, region) {
 }
 
 /**
- * Extract a station label from a result.
- * @param {any} result
- * @returns {string}
+ * 結果から駅ラベルを抽出する。
+ * @param {any} result 検索結果。
+ * @returns {string} 駅ラベル。
  */
 function extractStationLabel(result) {
   const components = result?.address_components || [];
@@ -1114,9 +1114,9 @@ function extractStationLabel(result) {
 }
 
 /**
- * Remove suffixes from a region label.
- * @param {string} region
- * @returns {string}
+ * 地域名の接尾辞を除去する。
+ * @param {string} region 地域名。
+ * @returns {string} 整形済み地域名。
  */
 function stripRegionSuffix(region) {
   if (!region) {
@@ -1133,9 +1133,9 @@ function stripRegionSuffix(region) {
 }
 
 /**
- * Normalize a region value to a string label.
- * @param {string} region
- * @returns {string}
+ * 地域指定からラベル文字列を取得する。
+ * @param {string} region 地域指定。
+ * @returns {string} 地域ラベル。
  */
 function getRegionLabel(region) {
   if (!region) {
@@ -1148,9 +1148,9 @@ function getRegionLabel(region) {
 }
 
 /**
- * Build station search queries for a region.
- * @param {string} region
- * @returns {string[]}
+ * 地域に基づく駅検索クエリを生成する。
+ * @param {string} region 地域名。
+ * @returns {string[]} 検索クエリ配列。
  */
 function buildRegionStationQueries(region) {
   const trimmed = region.trim();
@@ -1178,9 +1178,9 @@ function buildRegionStationQueries(region) {
 }
 
 /**
- * Check if a result mentions stations.
- * @param {any} result
- * @returns {boolean}
+ * 結果に駅キーワードが含まれるか判定する。
+ * @param {any} result 検索結果。
+ * @returns {boolean} 駅キーワード判定。
  */
 function resultHasStationKeyword(result) {
   const label = extractStationLabel(result);
@@ -1197,9 +1197,9 @@ function resultHasStationKeyword(result) {
 }
 
 /**
- * Extract locality names from address components.
- * @param {any} components
- * @returns {string[]}
+ * 住所コンポーネントから地名候補を抽出する。
+ * @param {any} components 住所コンポーネント配列。
+ * @returns {string[]} 地名候補配列。
  */
 function extractLocalityCandidates(components) {
   if (!Array.isArray(components)) {
@@ -1225,9 +1225,9 @@ function extractLocalityCandidates(components) {
 }
 
 /**
- * Reverse geocode locality candidates for a location.
- * @param {any} latLng
- * @returns {Promise<string[]>}
+ * 逆ジオコードで地名候補を取得する。
+ * @param {any} latLng 座標。
+ * @returns {Promise<string[]>} 地名候補配列のPromise。
  */
 function resolveLocalityCandidates(latLng) {
   return new Promise((resolve) => {
@@ -1249,8 +1249,8 @@ function resolveLocalityCandidates(latLng) {
 }
 
 /**
- * Build station search queries for the start area.
- * @returns {string[]}
+ * 出発地周辺の駅検索クエリを生成する。
+ * @returns {string[]} 検索クエリ配列。
  */
 function buildStartStationQueries(
   /** @type {{ region?: any, stopName?: any, localities?: any }} */
@@ -1290,9 +1290,9 @@ function buildStartStationQueries(
 }
 
 /**
- * Geocode an address string to results.
- * @param {string} address
- * @returns {Promise<any[]>}
+ * 住所文字列をジオコードする。
+ * @param {string} address 住所文字列。
+ * @returns {Promise<any[]>} ジオコード結果のPromise。
  */
 function geocodeByAddress(address) {
   return new Promise((resolve) => {
@@ -1314,10 +1314,10 @@ function geocodeByAddress(address) {
 }
 
 /**
- * Filter geocode results to station candidates.
- * @param {any} results
- * @param {any} region
- * @returns {any[]}
+ * 検索結果を駅候補に絞り込む。
+ * @param {any} results 検索結果配列。
+ * @param {any} region 地域フィルタ。
+ * @returns {any[]} 駅候補配列。
  */
 function filterStationResults(results, region) {
   const list = Array.isArray(results) ? results : [];
@@ -1347,10 +1347,10 @@ function filterStationResults(results, region) {
 }
 
 /**
- * Select the best station result for a region.
- * @param {any} results
- * @param {any} region
- * @returns {any}
+ * 地域条件に合う駅候補を選ぶ。
+ * @param {any} results 検索結果配列。
+ * @param {any} region 地域フィルタ。
+ * @returns {any} 選択された駅候補。
  */
 function selectStationResult(results, region) {
   const filtered = filterStationResults(results, region);
@@ -1358,9 +1358,9 @@ function selectStationResult(results, region) {
 }
 
 /**
- * Find a station within the given region.
- * @param {string} region
- * @returns {Promise<any>}
+ * 地域内の駅候補を探す。
+ * @param {string} region 地域名。
+ * @returns {Promise<any>} 駅候補のPromise。
  */
 async function findStationInRegion(region) {
   if (!geocoder || !region) {
@@ -1382,9 +1382,9 @@ async function findStationInRegion(region) {
 }
 
 /**
- * Derive a station name from a result.
- * @param {any} result
- * @returns {string}
+ * 結果から駅名を取得する。
+ * @param {any} result 検索結果。
+ * @returns {string} 駅名。
  */
 function getStationNameFromResult(result) {
   if (!result) {
@@ -1399,9 +1399,9 @@ function getStationNameFromResult(result) {
 }
 
 /**
- * Resolve a region label to a location.
- * @param {string} region
- * @returns {Promise<any>}
+ * 地域名をアンカー座標に解決する。
+ * @param {string} region 地域名。
+ * @returns {Promise<any>} 座標のPromise。
  */
 async function resolveRegionAnchor(region) {
   if (!region) {
@@ -1548,10 +1548,10 @@ async function handleOriginRegionStart() {
 }
 
 /**
- * Adjust target minutes based on actual duration.
- * @param {number | null} targetMinutes
- * @param {number | null} durationMinutes
- * @returns {number | null}
+ * 目標時間を実測に合わせて補正する。
+ * @param {number | null} targetMinutes 目標分数。
+ * @param {number | null} durationMinutes 実測分数。
+ * @returns {number | null} 補正後分数。
  */
 function getAdjustedTargetMinutes(targetMinutes, durationMinutes) {
   if (!targetMinutes || !durationMinutes) {
@@ -1714,8 +1714,8 @@ async function runWalkRouteSearch(
 }
 
 /**
- * Populate the recommendation result UI.
- * @param {any} place
+ * おすすめ結果をUIに表示する。
+ * @param {any} place おすすめデータ。
  */
 function showRecommendResult(place) {
   const isWalkRoute =
@@ -1813,9 +1813,9 @@ async function requestRecommendation(
 }
 
 /**
- * Resolve an address string to a location.
- * @param {string} address
- * @returns {Promise<any>}
+ * 住所を座標に変換する。
+ * @param {string} address 住所文字列。
+ * @returns {Promise<any>} 座標のPromise。
  */
 function geocodeAddress(address) {
   return new Promise((resolve, reject) => {
@@ -1837,9 +1837,9 @@ function geocodeAddress(address) {
 }
 
 /**
- * Resolve a place into a destination location.
- * @param {any} place
- * @returns {Promise<any>}
+ * おすすめ地点の住所から座標を取得する。
+ * @param {any} place おすすめデータ。
+ * @returns {Promise<any>} 座標のPromise。
  */
 function geocodeDestination(place) {
   const address = [place?.name, place?.address].filter(Boolean).join(" ");
@@ -1847,9 +1847,9 @@ function geocodeDestination(place) {
 }
 
 /**
- * Normalize a stop input into a stop object.
- * @param {any} stop
- * @returns {any}
+ * 立ち寄りデータを正規化する。
+ * @param {any} stop 立ち寄りデータ。
+ * @returns {any} 正規化済みの立ち寄り。
  */
 function normalizeStop(stop) {
   if (typeof stop === "string") {
@@ -1867,9 +1867,9 @@ function normalizeStop(stop) {
 }
 
 /**
- * Build a display label for a stop.
- * @param {any} stop
- * @returns {string}
+ * 立ち寄り表示用ラベルを作成する。
+ * @param {any} stop 立ち寄りデータ。
+ * @returns {string} 表示ラベル。
  */
 function getStopLabel(stop) {
   const normalized = normalizeStop(stop);
@@ -1880,9 +1880,9 @@ function getStopLabel(stop) {
 }
 
 /**
- * Geocode stop list into coordinates.
- * @param {any} stops
- * @returns {Promise<any[]>}
+ * 立ち寄りリストを座標化する。
+ * @param {any} stops 立ち寄りリスト。
+ * @returns {Promise<any[]>} 座標配列のPromise。
  */
 async function geocodeStops(stops) {
   if (!Array.isArray(stops)) {
@@ -1917,9 +1917,9 @@ async function geocodeStops(stops) {
 }
 
 /**
- * Handle recommendation form submission.
- * @param {Event} event
- * @returns {Promise<void>}
+ * おすすめフォーム送信を処理する。
+ * @param {Event} event 送信イベント。
+ * @returns {Promise<void>} 処理完了のPromise。
  */
 async function handleRecommendSubmit(event) {
   event.preventDefault();
@@ -2008,8 +2008,8 @@ function clearWalkRouteState() {
 }
 
 /**
- * Clear the destination and reset related state.
- * @param {string} message
+ * 目的地をクリアして状態をリセットする。
+ * @param {string} message 表示メッセージ。
  */
 function clearDestination(message) {
   destinationLatLng = null;
@@ -2060,10 +2060,10 @@ function resetRoute() {
 }
 
 /**
- * Set the origin location and marker.
- * @param {any} latLng
- * @param {string | null} [regionOverride]
- * @param {{ preserveWalkState?: boolean }} [options]
+ * 出発地を設定してマーカーを更新する。
+ * @param {any} latLng 出発地座標。
+ * @param {string | null} [regionOverride] 地域上書き。
+ * @param {{ preserveWalkState?: boolean }} [options] 設定オプション。
  */
 function setOrigin(latLng, regionOverride, options = {}) {
   originLatLng = latLng;
@@ -2089,10 +2089,10 @@ function setOrigin(latLng, regionOverride, options = {}) {
 }
 
 /**
- * Set the destination location and marker.
- * @param {any} latLng
- * @param {string} source
- * @param {{ label?: string }} [options]
+ * 目的地を設定してマーカーを更新する。
+ * @param {any} latLng 目的地座標。
+ * @param {string} source 設定元。
+ * @param {{ label?: string }} [options] 設定オプション。
  */
 function setDestination(latLng, source, options = {}) {
   destinationLatLng = latLng;
@@ -2114,9 +2114,9 @@ function setDestination(latLng, source, options = {}) {
 }
 
 /**
- * Detect high-speed trains in a route.
- * @param {any} route
- * @returns {boolean}
+ * ルートに新幹線等が含まれるか判定する。
+ * @param {any} route ルート情報。
+ * @returns {boolean} 高速鉄道判定。
  */
 function routeHasHighSpeedTrain(route) {
   const legs = route?.legs || [];
@@ -2138,9 +2138,9 @@ function routeHasHighSpeedTrain(route) {
 }
 
 /**
- * Pick a rail route that avoids high-speed trains.
- * @param {any} result
- * @returns {{ route: any, reason: string | null }}
+ * 在来線のみのルートを選択する。
+ * @param {any} result 経路結果。
+ * @returns {{ route: any, reason: string | null }} 選択結果と理由。
  */
 function selectLocalRailRoute(result) {
   const routes = result?.routes || [];
@@ -2156,13 +2156,13 @@ function selectLocalRailRoute(result) {
 }
 
 /**
- * Handle route API results and update UI state.
- * @param {string} type
- * @param {any} result
- * @param {any} status
- * @param {any} bounds
- * @param {any} flags
- * @param {number} currentRequest
+ * ルート検索結果を反映する。
+ * @param {string} type ルート種別。
+ * @param {any} result 検索結果。
+ * @param {any} status ステータス。
+ * @param {any} bounds 表示範囲。
+ * @param {any} flags 結果フラグ。
+ * @param {number} currentRequest リクエストID。
  */
 function handleRouteResult(type, result, status, bounds, flags, currentRequest) {
   if (currentRequest !== requestId) {
@@ -2509,8 +2509,8 @@ function calculateRoutes() {
 }
 
 /**
- * Load the Google Maps script with the API key.
- * @param {string} apiKey
+ * Google Maps APIスクリプトを読み込む。
+ * @param {string} apiKey APIキー。
  */
 function loadGoogleMaps(apiKey) {
   const existingScript = document.querySelector(

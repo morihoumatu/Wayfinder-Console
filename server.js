@@ -29,10 +29,10 @@ const MIME_TYPES = {
 };
 
 /**
- * Safely join a base path with a target path.
- * @param {string} base
- * @param {string} target
- * @returns {string | null}
+ * ベースパスとターゲットを安全に結合する。
+ * @param {string} base 基準パス。
+ * @param {string} target 対象パス。
+ * @returns {string | null} 安全なパスまたはnull。
  */
 function safeJoin(base, target) {
   const targetPath = path.normalize(path.join(base, target));
@@ -43,10 +43,10 @@ function safeJoin(base, target) {
 }
 
 /**
- * Send a JSON response with status.
- * @param {import("http").ServerResponse} res
- * @param {number} status
- * @param {unknown} payload
+ * JSONレスポンスを送信する。
+ * @param {import("http").ServerResponse} res レスポンスオブジェクト。
+ * @param {number} status HTTPステータス。
+ * @param {unknown} payload レスポンス本文。
  */
 function sendJson(res, status, payload) {
   res.writeHead(status, {
@@ -56,20 +56,23 @@ function sendJson(res, status, payload) {
 }
 
 /**
- * Read and parse JSON from the request body.
- * @param {import("http").IncomingMessage} req
- * @returns {Promise<any>}
+ * リクエスト本文のJSONを読み取る。
+ * @param {import("http").IncomingMessage} req リクエスト。
+ * @returns {Promise<any>} 解析結果のPromise。
  */
 function readJson(req) {
   return new Promise((resolve, reject) => {
     let body = "";
-    req.on("data", /** @param {Buffer | string} chunk */ (chunk) => {
-      body += chunk;
-      if (body.length > 1_000_000) {
-        reject(new Error("Request body too large."));
-        req.destroy();
+    req.on(
+      "data",
+      /** @param {Buffer | string} chunk 受信チャンク。 */ (chunk) => {
+        body += chunk;
+        if (body.length > 1_000_000) {
+          reject(new Error("Request body too large."));
+          req.destroy();
+        }
       }
-    });
+    );
     req.on("end", () => {
       if (!body) {
         resolve({});
@@ -85,9 +88,9 @@ function readJson(req) {
 }
 
 /**
- * Extract text output from the OpenAI response.
- * @param {any} response
- * @returns {string}
+ * OpenAIレスポンスからテキストを抽出する。
+ * @param {any} response APIレスポンス。
+ * @returns {string} 抽出テキスト。
  */
 function extractOutputText(response) {
   if (typeof response.output_text === "string") {
@@ -115,9 +118,9 @@ function extractOutputText(response) {
 }
 
 /**
- * Parse JSON from raw text or fenced blocks.
- * @param {string} text
- * @returns {any}
+ * テキストからJSONを抽出して解析する。
+ * @param {string} text 入力テキスト。
+ * @returns {any} 解析結果。
  */
 function parseJsonFromText(text) {
   if (!text) {
@@ -141,9 +144,9 @@ function parseJsonFromText(text) {
 }
 
 /**
- * Check whether a value looks like a stop.
- * @param {any} entry
- * @returns {boolean}
+ * 立ち寄り候補として扱えるか判定する。
+ * @param {any} entry 候補データ。
+ * @returns {boolean} 判定結果。
  */
 function isStopLike(entry) {
   if (!entry || typeof entry !== "object") {
@@ -157,9 +160,9 @@ function isStopLike(entry) {
 }
 
 /**
- * Normalize a stop line by stripping bullets and numbers.
- * @param {string} line
- * @returns {string}
+ * 立ち寄り行から記号を除去する。
+ * @param {string} line 入力行。
+ * @returns {string} 整形済み行。
  */
 function cleanStopLine(line) {
   if (!line) {
@@ -169,9 +172,9 @@ function cleanStopLine(line) {
 }
 
 /**
- * Parse a stop string into structured stops.
- * @param {string} value
- * @returns {Array<{ name: string, address: string }>}
+ * 文字列から立ち寄り情報を解析する。
+ * @param {string} value 入力文字列。
+ * @returns {Array<{ name: string, address: string }>} 立ち寄り配列。
  */
 function parseStopString(value) {
   const trimmed = value.trim();
@@ -201,9 +204,9 @@ function parseStopString(value) {
 }
 
 /**
- * Normalize raw stop data into an array.
- * @param {any} rawStops
- * @returns {any[]}
+ * 立ち寄りデータを配列に正規化する。
+ * @param {any} rawStops 元データ。
+ * @returns {any[]} 正規化配列。
  */
 function normalizeStops(rawStops) {
   if (!rawStops) {
@@ -227,9 +230,9 @@ function normalizeStops(rawStops) {
 }
 
 /**
- * Extract stops from a result payload.
- * @param {any} result
- * @returns {any[]}
+ * 結果オブジェクトから立ち寄り情報を抽出する。
+ * @param {any} result 結果データ。
+ * @returns {any[]} 立ち寄り配列。
  */
 function extractStopsFromResult(result) {
   if (!result) {
@@ -276,9 +279,9 @@ function extractStopsFromResult(result) {
 }
 
 /**
- * Scan text for an embedded JSON value.
- * @param {string} text
- * @returns {any}
+ * テキスト内のJSONを探索する。
+ * @param {string} text 入力テキスト。
+ * @returns {any} 抽出したJSON。
  */
 function findJsonInText(text) {
   if (!text) {
@@ -304,10 +307,10 @@ function findJsonInText(text) {
 }
 
 /**
- * Find the matching closing bracket index.
- * @param {string} text
- * @param {number} startIndex
- * @returns {number}
+ * 対応する閉じ括弧の位置を探す。
+ * @param {string} text 検索対象テキスト。
+ * @param {number} startIndex 開始位置。
+ * @returns {number} 閉じ括弧位置。
  */
 function findMatchingBracket(text, startIndex) {
   const openChar = text[startIndex];
@@ -343,9 +346,9 @@ function findMatchingBracket(text, startIndex) {
 }
 
 /**
- * Extract the prefecture portion of a region.
- * @param {string} region
- * @returns {string}
+ * 地域名から都道府県を抽出する。
+ * @param {string} region 地域名。
+ * @returns {string} 都道府県名。
  */
 function extractPrefecture(region) {
   if (!region) {
@@ -359,9 +362,9 @@ function extractPrefecture(region) {
 }
 
 /**
- * Call the OpenAI API with the given payload.
- * @param {any} payload
- * @returns {Promise<any>}
+ * OpenAI APIを呼び出す。
+ * @param {any} payload リクエストペイロード。
+ * @returns {Promise<any>} APIレスポンスのPromise。
  */
 function callOpenAI(payload) {
   return new Promise((resolve, reject) => {
@@ -380,11 +383,16 @@ function callOpenAI(payload) {
 
     const request = https.request(
       options,
-      /** @param {import("http").IncomingMessage} response */ (response) => {
+      /** @param {import("http").IncomingMessage} response レスポンス。 */ (
+        response
+      ) => {
         let body = "";
-        response.on("data", /** @param {Buffer | string} chunk */ (chunk) => {
-          body += chunk;
-        });
+        response.on(
+          "data",
+          /** @param {Buffer | string} chunk 受信チャンク。 */ (chunk) => {
+            body += chunk;
+          }
+        );
         response.on("end", () => {
           let parsed;
           try {
