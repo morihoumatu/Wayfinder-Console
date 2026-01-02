@@ -25,22 +25,44 @@ function normalizeAboutText(aboutText) {
   let normalized = "";
   if (typeof aboutText === "string" && aboutText.length > 0) {
     const lines = aboutText.split(/\r?\n/);
-    let startIndex = 0;
-    while (startIndex < lines.length && lines[startIndex].trim().length === 0) {
-      startIndex += 1;
-    }
-    if (
-      startIndex < lines.length &&
-      /^#\s*ABOUT\b/i.test(lines[startIndex].trim())
-    ) {
-      startIndex += 1;
-      while (startIndex < lines.length && lines[startIndex].trim().length === 0) {
-        startIndex += 1;
-      }
+    let startIndex = skipBlankLines(lines, 0);
+    if (isAboutHeaderLine(lines[startIndex])) {
+      startIndex = skipBlankLines(lines, startIndex + 1);
     }
     normalized = lines.slice(startIndex).join("\n").trim();
   }
   return normalized;
+}
+
+/**
+ * 空行をスキップして次の行番号を返す。
+ * @param {string[]} lines 行配列。
+ * @param {number} startIndex 開始位置。
+ * @returns {number} 空行を飛ばした次の行番号。
+ */
+function skipBlankLines(lines, startIndex) {
+  let index = startIndex;
+  while (index < lines.length) {
+    const line = lines[index];
+    if (typeof line !== "string" || line.trim().length !== 0) {
+      break;
+    }
+    index += 1;
+  }
+  return index;
+}
+
+/**
+ * ABOUT見出しかどうかを判定する。
+ * @param {string | undefined} line 行内容。
+ * @returns {boolean} ABOUT見出しかどうか。
+ */
+function isAboutHeaderLine(line) {
+  let result = false;
+  if (typeof line === "string") {
+    result = /^#\s*ABOUT\b/i.test(line.trim());
+  }
+  return result;
 }
 
 /**
@@ -54,7 +76,9 @@ function buildDirNode(dirPath) {
     const stat = fs.statSync(dirPath);
     if (stat.isDirectory()) {
       const entries = readDirectory(dirPath);
+      /** @type {any[]} */
       const files = [];
+      /** @type {any[]} */
       const subdirs = [];
 
       entries.forEach((entry) => {
@@ -96,6 +120,7 @@ function buildDirNode(dirPath) {
  * @returns {any} レポートデータ。
  */
 function buildReportData() {
+  /** @type {any[]} */
   const roots = [];
   ROOTS.forEach((rootName) => {
     const rootPath = path.join(ROOT_DIR, rootName);

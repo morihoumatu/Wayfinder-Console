@@ -119,14 +119,14 @@ function renderDocBlock(doc) {
   }
   if (doc.params.length > 0) {
     html += "<div class=\"doc-tags\"><div class=\"tag-title\">@param</div><ul>";
-    doc.params.forEach((param) => {
+    doc.params.forEach((/** @type {string} */ param) => {
       html += `<li>${escapeHtml(param)}</li>`;
     });
     html += "</ul></div>";
   }
   if (doc.returns.length > 0) {
     html += "<div class=\"doc-tags\"><div class=\"tag-title\">@returns</div><ul>";
-    doc.returns.forEach((returnValue) => {
+    doc.returns.forEach((/** @type {string} */ returnValue) => {
       html += `<li>${escapeHtml(returnValue)}</li>`;
     });
     html += "</ul></div>";
@@ -155,7 +155,7 @@ function renderFileSection(fileDoc) {
 
   html += "<div class=\"section-title\">JSDoc Blocks</div>";
   if (fileDoc.docs.length > 0) {
-    fileDoc.docs.forEach((doc) => {
+    fileDoc.docs.forEach((/** @type {any} */ doc) => {
       html += renderDocBlock(doc);
     });
   } else {
@@ -184,7 +184,7 @@ function renderDirSection(dirNode) {
 
   if (dirNode.files.length > 0) {
     html += "<div class=\"file-list\">";
-    dirNode.files.forEach((fileDoc) => {
+    dirNode.files.forEach((/** @type {any} */ fileDoc) => {
       html += renderFileSection(fileDoc);
     });
     html += "</div>";
@@ -192,7 +192,7 @@ function renderDirSection(dirNode) {
 
   if (dirNode.subdirs.length > 0) {
     html += "<div class=\"subdirs\">";
-    dirNode.subdirs.forEach((subdir) => {
+    dirNode.subdirs.forEach((/** @type {any} */ subdir) => {
       html += renderDirSection(subdir);
     });
     html += "</div>";

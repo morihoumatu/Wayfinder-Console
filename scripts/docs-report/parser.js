@@ -35,10 +35,14 @@ function parseJsDocBlock(blockText) {
     .split(/\r?\n/)
     .map(normalizeCommentLine)
     .filter((line) => line.length > 0);
+  /** @type {string[]} */
   const descriptionLines = [];
+  /** @type {string[]} */
   const params = [];
+  /** @type {string[]} */
   const returns = [];
   let tagStarted = false;
+  /** @type {("param" | "returns" | null)} */
   let currentTag = null;
   /** @type {string[]} */
   let currentTagLines = [];

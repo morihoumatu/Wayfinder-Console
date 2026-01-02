@@ -78,6 +78,7 @@ function shouldIgnoreDir(dirName) {
  * @returns {import("fs").Dirent[]} ディレクトリエントリ。
  */
 function readDirectory(dirPath) {
+  /** @type {import("fs").Dirent[]} */
   let entries = [];
   try {
     entries = fs.readdirSync(dirPath, { withFileTypes: true });
