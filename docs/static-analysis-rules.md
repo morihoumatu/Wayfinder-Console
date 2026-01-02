@@ -75,6 +75,7 @@
 - `order/properties-alphabetical-order`: プロパティをアルファベット順に並べる
 - `selector-max-compound-selectors: 4`: 複合セレクタの上限 4
 - `selector-max-id: 0`: `#id` セレクタを禁止
+- `project/inline-comment`: 各ブロック行と各宣言行の右側にインラインコメントを必須化
 
 ## HTMLHint（`.htmlhintrc`）
 - `tagname-lowercase`: タグ名は小文字

@@ -1,6 +1,6 @@
 module.exports = {
   extends: ["stylelint-config-standard"],
-  plugins: ["stylelint-order"],
+  plugins: ["stylelint-order", "./stylelint-rules/inline-comment"],
   rules: {
     "declaration-no-important": true,
     "max-nesting-depth": 0,
@@ -8,5 +8,6 @@ module.exports = {
     "order/properties-alphabetical-order": true,
     "selector-max-compound-selectors": 4,
     "selector-max-id": 0,
+    "project/inline-comment": true,
   },
 };
