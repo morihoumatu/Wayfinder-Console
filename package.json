@@ -6,7 +6,7 @@
     "lint:raw": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:types",
     "lint:js": "eslint --ext .js . --max-warnings 0",
     "lint:css": "stylelint \"**/*.css\" --max-warnings 0",
-    "lint:html": "htmlhint \"**/*.html\"",
+    "lint:html": "htmlhint \"**/*.html\" --ignore \"**/reports/**,**/node_modules/**\"",
     "lint:types": "tsc -p tsconfig.json"
   },
   "devDependencies": {

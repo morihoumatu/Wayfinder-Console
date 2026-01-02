@@ -1,3 +1,4 @@
+/* eslint-env node */
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
@@ -883,6 +884,8 @@ function main() {
   ]);
   const htmlhintResult = runCommand("htmlhint", [
     "**/*.html",
+    "--ignore",
+    "**/reports/**,**/node_modules/**",
     "--format",
     "json",
   ]);
