@@ -26,5 +26,11 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["*.js", "types/**/*.d.ts"]
+  "include": [
+    "*.js",
+    "app/**/*.js",
+    "server/**/*.js",
+    "scripts/**/*.js",
+    "types/**/*.d.ts"
+  ]
 }

@@ -63,13 +63,17 @@ module.exports = {
         ignoreRegExpLiterals: false,
       },
     ],
+    "god-file": [
+      "error",
+      { maxFunctions: 30, maxLines: 300 },
+    ],
     "single-return": "error",
     radix: ["error", "always"],
     yoda: "error",
   },
   overrides: [
     {
-      files: ["app.js"],
+      files: ["app.js", "app/**/*.js"],
       env: {
         browser: true,
       },
@@ -78,7 +82,7 @@ module.exports = {
       },
     },
     {
-      files: ["server.js"],
+      files: ["server.js", "server/**/*.js", "scripts/**/*.js"],
       env: {
         node: true,
       },
