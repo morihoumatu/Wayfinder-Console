@@ -1,3 +1,7 @@
+/**
+ * TypeScript出力の解析をまとめる。
+ * @file TypeScript出力の解析をまとめる。
+ */
 const {
   TSC_REGEX_PAREN,
   TSC_REGEX_COLON,

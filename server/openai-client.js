@@ -1,3 +1,7 @@
+/**
+ * OpenAI呼び出し処理をまとめる。
+ * @file OpenAI呼び出し処理をまとめる。
+ */
 const https = require("https");
 
 const { OPENAI_API_KEY, OPENAI_API_URL } = require("./config");

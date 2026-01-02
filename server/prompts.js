@@ -1,3 +1,7 @@
+/**
+ * OpenAIプロンプト生成をまとめる。
+ * @file OpenAIプロンプト生成をまとめる。
+ */
 const { buildDistanceHint } = require("./recommend-utils");
 
 /**

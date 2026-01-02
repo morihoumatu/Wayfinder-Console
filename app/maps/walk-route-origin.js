@@ -1,3 +1,7 @@
+/**
+ * 散歩ルートの出発地点選択をまとめる。
+ * @file 散歩ルートの出発地点選択をまとめる。
+ */
 /* exported getAdjustedTargetMinutes, buildWalkRouteRegionInfo, resolveWalkRouteOriginStatus */
 /* exported resolveWalkRouteOriginOverride, fetchWalkRouteRecommendation, resolveWalkRouteLocations */
 /* exported applyWalkRouteOriginFromStops */

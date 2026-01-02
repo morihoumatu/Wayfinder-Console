@@ -1,3 +1,7 @@
+/**
+ * 複数ルートの時間計算をまとめる。
+ * @file 複数ルートの時間計算をまとめる。
+ */
 /* exported getWalkMultiTargetMinutes, buildWalkMultiMetrics, resolveToleranceMode, resolveFallbackMode */
 /* global DEFAULT_WALK_TARGET_MINUTES: writable, desiredWalkTargetMinutes: writable, getMaxMinutes: writable */
 /* global walkRouteTargetMinutes: writable */

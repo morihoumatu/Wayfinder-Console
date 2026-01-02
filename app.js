@@ -1,3 +1,7 @@
+/**
+ * アプリ全体の共有状態と定数を定義する。
+ * @file アプリ全体の共有状態と定数を定義する。
+ */
 /* exported MAPS_API_KEY, DEFAULT_CENTER, DEFAULT_ZOOM, statusCard, keyStatus, overlay, mapElement, originLabel */
 /* exported destinationLabel, walkingValue, railValue, routeHint, routeStatus, routeLinks, walkingRouteLink */
 /* exported railRouteLink, routeBreakdown, routeBreakdownList, resetButton, recommendForm, recommendQuery */

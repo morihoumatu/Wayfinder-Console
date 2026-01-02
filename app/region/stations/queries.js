@@ -1,3 +1,7 @@
+/**
+ * 駅候補の検索とフィルタをまとめる。
+ * @file 駅候補の検索とフィルタをまとめる。
+ */
 /* exported isStationResult, isResultInRegion, extractStationLabel, stripRegionSuffix, getRegionLabel */
 /* exported buildRegionStationQueries, resultHasStationKeyword, extractLocalityCandidates, resolveLocalityCandidates */
 /* exported buildStartStationQueries */

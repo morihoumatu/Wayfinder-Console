@@ -1,3 +1,7 @@
+/**
+ * おすすめ検索フローの状態管理をまとめる。
+ * @file おすすめ検索フローの状態管理をまとめる。
+ */
 /* exported showRecommendResult, resolveRecommendationOrigin, resolveRecommendationRegion */
 /* exported resolveRecommendationSelections, resolveOriginLabelValue, buildRecommendationPayload */
 /* exported requestRecommendation */

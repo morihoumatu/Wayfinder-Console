@@ -1,3 +1,7 @@
+/**
+ * OpenAIリクエスト構築をまとめる。
+ * @file OpenAIリクエスト構築をまとめる。
+ */
 const { OPENAI_MODEL, WEB_SEARCH_TOOL } = require("./config");
 
 /**

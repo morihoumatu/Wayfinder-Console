@@ -1,3 +1,7 @@
+/**
+ * 地図リンクの表示更新をまとめる。
+ * @file 地図リンクの表示更新をまとめる。
+ */
 /* exported buildMapsLink, formatLatLngForUrl, formatDurationText, getRouteDurationFromLegs, getLatLngLiteral */
 /* exported computeDistanceMeters, buildDirectionsLink, GENERIC_POINT_LABELS, normalizePointLabel */
 /* exported buildSegmentSearchQuery, getOriginDisplayLabel, getDestinationDisplayLabel */

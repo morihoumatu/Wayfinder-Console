@@ -1,4 +1,8 @@
 /**
+ * JSON解析の補助処理をまとめる。
+ * @file JSON解析の補助処理をまとめる。
+ */
+/**
  * OpenAIレスポンスからテキストを抽出する。
  * @param {any} response APIレスポンス。
  * @returns {string} 抽出テキスト。

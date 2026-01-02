@@ -1,3 +1,7 @@
+/**
+ * サーバー本体の起動処理をまとめる。
+ * @file サーバー本体の起動処理をまとめる。
+ */
 const http = require("http");
 const fs = require("fs");
 const path = require("path");

@@ -1,3 +1,7 @@
+/**
+ * おすすめ検索の補助処理をまとめる。
+ * @file おすすめ検索の補助処理をまとめる。
+ */
 const { DEFAULT_WALK_TARGET_MINUTES } = require("./config");
 
 /**

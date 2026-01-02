@@ -1,3 +1,7 @@
+/**
+ * HTTPユーティリティをまとめる。
+ * @file HTTPユーティリティをまとめる。
+ */
 const path = require("path");
 
 /**

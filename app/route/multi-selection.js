@@ -1,3 +1,7 @@
+/**
+ * 複数ルートの採用判定をまとめる。
+ * @file 複数ルートの採用判定をまとめる。
+ */
 /* exported selectWalkMultiMode, buildWalkMultiSelection, applyWalkMultiSelection, handleWalkMultiTiming */
 /* exported handleWalkMultiCompletion */
 /* global WALK_ROUTE_MAX_RETRIES: writable, buildWalkMultiMetrics: writable, clearRouteBreakdown: writable */

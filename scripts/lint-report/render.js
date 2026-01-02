@@ -1,3 +1,7 @@
+/**
+ * lintレポートHTMLの描画処理をまとめる。
+ * @file lintレポートHTMLの描画処理をまとめる。
+ */
 const { REPORT_STYLE } = require("./styles");
 
 /**

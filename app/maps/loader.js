@@ -1,3 +1,7 @@
+/**
+ * 地図の初期化とイベント登録をまとめる。
+ * @file 地図の初期化とイベント登録をまとめる。
+ */
 /* exported loadGoogleMaps, keyMissing */
 /* global DEFAULT_CENTER: writable, DEFAULT_ZOOM: writable, MAPS_API_KEY: writable, areaAnchorCache: writable */
 /* global areaAnchorSelection: writable, calculateRoutes: writable, destinationLatLng: writable */

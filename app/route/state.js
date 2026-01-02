@@ -1,3 +1,7 @@
+/**
+ * ルート状態の管理をまとめる。
+ * @file ルート状態の管理をまとめる。
+ */
 /* exported clearRoutes, clearWalkRouteState, clearDestination, resetRoute, setOrigin, setDestination */
 /* exported getRouteStateSnapshot */
 /* global clearRecommendResult: writable, clearRouteBreakdown: writable, desiredWalkTargetMinutes: writable */

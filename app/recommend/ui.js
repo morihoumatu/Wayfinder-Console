@@ -1,3 +1,7 @@
+/**
+ * おすすめ検索UIの操作をまとめる。
+ * @file おすすめ検索UIの操作をまとめる。
+ */
 /* exported getMaxMinutes, getTargetMinutes, updateLimitHint, setRecommendHint, setRecommendLoading */
 /* exported clearRecommendResult, renderStops, renderSources */
 /* global DEFAULT_WALK_TARGET_MINUTES: writable, buildMapsLink: writable, limitHint: writable, maxTimeInput: writable */

@@ -1,3 +1,7 @@
+/**
+ * 地域選択の状態と判定をまとめる。
+ * @file 地域選択の状態と判定をまとめる。
+ */
 /* exported extractRegionFromComponents, normalizeRegionFilter, isRegionMatch, resolveIsOriginInRegion */
 /* exported pickRandomItem, getAreaAnchor, getSelectedRegionContext, formatRegionForPrompt, resolveOriginRegion */
 /* global REGION_GROUPS: writable, areaAnchorCache: writable, areaAnchorSelection: writable, geocoder: writable */

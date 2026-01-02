@@ -1,3 +1,7 @@
+/**
+ * 経路検索APIの呼び出しをまとめる。
+ * @file 経路検索APIの呼び出しをまとめる。
+ */
 /* exported buildWalkingRequest, buildTransitRequest, calculateRoutes */
 /* global buildRouteFlags: writable, clearRouteBreakdown: writable, destinationLatLng: writable */
 /* global destinationSource: writable, directionsService: writable, handleRouteResult: writable */

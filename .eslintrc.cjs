@@ -63,6 +63,7 @@ module.exports = {
         ignoreRegExpLiterals: false,
       },
     ],
+    "file-purpose-comment": "error",
     "god-file": [
       "error",
       { maxFunctions: 30, maxLines: 300 },

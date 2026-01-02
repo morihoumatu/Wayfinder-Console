@@ -1,3 +1,7 @@
+/**
+ * APIハンドラーの処理をまとめる。
+ * @file APIハンドラーの処理をまとめる。
+ */
 const { extractOutputText, parseJsonFromText } = require("./json-utils");
 const { extractStopsFromResult } = require("./stop-utils");
 const {

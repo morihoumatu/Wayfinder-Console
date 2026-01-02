@@ -1,3 +1,7 @@
+/**
+ * サーバー設定値を定義する。
+ * @file サーバー設定値を定義する。
+ */
 const path = require("path");
 
 const PORT = Number.parseInt(process.env["PORT"] || "3000", 10);

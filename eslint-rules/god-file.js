@@ -1,3 +1,7 @@
+/**
+ * ESLintのgod-fileルールを提供する。
+ * @file ESLintのgod-fileルールを提供する。
+ */
 /* eslint-env node */
 "use strict";
 

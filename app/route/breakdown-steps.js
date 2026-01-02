@@ -1,3 +1,7 @@
+/**
+ * ルート内訳のステップ生成をまとめる。
+ * @file ルート内訳のステップ生成をまとめる。
+ */
 /* exported collectTransitSteps, buildTransitStopsFromSteps, extractTransitStops, buildWalkSegment, buildRailSegment */
 /**
  * 乗換ステップを収集する。

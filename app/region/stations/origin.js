@@ -1,3 +1,7 @@
+/**
+ * 駅候補から出発地を選ぶ処理をまとめる。
+ * @file 駅候補から出発地を選ぶ処理をまとめる。
+ */
 /* exported canUseOriginRegionContext, resolveStationFromContext, applyOriginFromStation, ensureOriginFromRegion */
 /* exported handleOriginRegionStart */
 /* global DEFAULT_ZOOM: writable, findNearestStationToLocation: writable, findStationInRegion: writable */

@@ -1,3 +1,7 @@
+/**
+ * ESLint出力の解析をまとめる。
+ * @file ESLint出力の解析をまとめる。
+ */
 const {
   combineOutput,
   parseJsonOutput,

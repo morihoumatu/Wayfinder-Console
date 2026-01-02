@@ -1,3 +1,7 @@
+/**
+ * ルート内訳表示の描画処理をまとめる。
+ * @file ルート内訳表示の描画処理をまとめる。
+ */
 /* exported clearRouteBreakdown, renderRouteBreakdown, buildRailBreakdownSegments, buildWalkBreakdownSegments */
 /* exported buildRouteBreakdownSegments, updateRouteBreakdown */
 /* global buildDirectionsLink: writable, buildMapsLink: writable, buildRailSegment: writable */

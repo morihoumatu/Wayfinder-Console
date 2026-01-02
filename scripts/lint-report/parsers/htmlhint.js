@@ -1,3 +1,7 @@
+/**
+ * HTMLHint出力の解析をまとめる。
+ * @file HTMLHint出力の解析をまとめる。
+ */
 const {
   combineOutput,
   parseJsonOutput,

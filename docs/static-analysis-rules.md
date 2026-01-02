@@ -56,6 +56,7 @@
 - `prefer-template`: 文字列結合よりテンプレート文字列を推奨
 - `max-params: ["error", 4]`: 関数の引数は4つまで（5つ以上はエラー）
 - `max-len: ["error", { code: 120 }]`: 1行120文字超をエラー
+- `file-purpose-comment`: ファイル最上部または最下部の用途コメント（`@file` / `@fileoverview`）を必須化
 - `god-file: ["error", { maxFunctions: 30, maxLines: 300 }]`: JSファイルの肥大化（関数数/行数の超過）をエラー
 - `single-return`: return は1か所のみ（複数returnをエラー）
 - `radix: ["error", "always"]`: `parseInt` の基数指定を必須化
@@ -131,11 +132,18 @@
 - `@param` / `@returns` は目的文の後に記述し、各タグの横に日本語で用途を追記する
 - ESLint に `eslint-plugin-jsdoc` を導入し、`FunctionDeclaration` と名前付き `FunctionExpression` に JSDoc を必須化
 - ESLint で目的文と `@param` / `@returns` の説明文を必須化
+- 各ファイルの最上部または最下部に用途コメントを置く（`@file` / `@fileoverview` を含める）
 - 例:
   ```js
   /**
    * 配列からランダムに1件選ぶ。
    * @param {string[]} list 候補配列。
    * @returns {string} 選択された要素。
+   */
+  ```
+  ```js
+  /**
+   * 散歩ルートの地図表示と操作をまとめる。
+   * @file
    */
   ```

@@ -1,3 +1,7 @@
+/**
+ * 散歩ルート検索の実行処理をまとめる。
+ * @file 散歩ルート検索の実行処理をまとめる。
+ */
 /* exported applyWalkRouteDestination, runWalkRouteSearch */
 /* global applyWalkRouteOriginFromStops: writable, buildWalkRouteRegionInfo: writable, calculateRoutes: writable */
 /* global clearRecommendResult: writable, desiredWalkTargetMinutes: writable, fetchWalkRouteRecommendation: writable */

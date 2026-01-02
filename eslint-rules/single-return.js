@@ -1,3 +1,7 @@
+/**
+ * ESLintのsingle-returnルールを提供する。
+ * @file ESLintのsingle-returnルールを提供する。
+ */
 /* eslint-env node */
 "use strict";
 

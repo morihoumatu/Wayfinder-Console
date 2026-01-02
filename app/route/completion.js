@@ -1,3 +1,7 @@
+/**
+ * ルート確定後の処理をまとめる。
+ * @file ルート確定後の処理をまとめる。
+ */
 /* exported getStandardRouteStatusMessage, evaluateRouteLimit, applyRouteLimitMessage, applyStandardRouteLimits */
 /* exported updateStandardRouteBreakdown, fitBoundsIfNeeded, handleStandardCompletion, finalizeRouteCompletion */
 /* exported handleRouteResult, buildRouteFlags */

@@ -1,3 +1,7 @@
+/**
+ * 駅名検索のジオコード処理をまとめる。
+ * @file 駅名検索のジオコード処理をまとめる。
+ */
 /* exported geocodeByAddress, filterStationResults, selectStationResult, findStationInRegion */
 /* exported getStationNameFromResult, resolveRegionAnchor, findNearestStationToLocation */
 /* global MAX_STATION_QUERIES: writable, buildRegionStationQueries: writable, buildStartStationQueries: writable */

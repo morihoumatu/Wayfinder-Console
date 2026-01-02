@@ -1,3 +1,7 @@
+/**
+ * ルート選択時の表示更新をまとめる。
+ * @file ルート選択時の表示更新をまとめる。
+ */
 /* exported routeHasHighSpeedTrain, selectLocalRailRoute, evaluateRouteSelection, applyWalkRouteSuccess */
 /* exported applyRailRouteSuccess, applyWalkRouteFailure, applyRailRouteFailure, applyRouteResultState */
 /* exported incrementRouteCompletion */

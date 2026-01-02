@@ -1,3 +1,7 @@
+/**
+ * UIのステータス表示をまとめる。
+ * @file UIのステータス表示をまとめる。
+ */
 /* exported setStatus, setOverlay, formatLatLng, updateRouteLabels, updateRouteHint, setOriginRegionHint */
 /* exported updateRegionControls, setRouteStatus, updateRouteLinks */
 /* global DEFAULT_ORIGIN_REGION_HINT: writable, buildDirectionsLink: writable, destinationLabel: writable */

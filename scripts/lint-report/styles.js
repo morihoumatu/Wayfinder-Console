@@ -1,3 +1,7 @@
+/**
+ * lintレポートのスタイル定義をまとめる。
+ * @file lintレポートのスタイル定義をまとめる。
+ */
 const REPORT_STYLE = `
 :root {
   color-scheme: light;

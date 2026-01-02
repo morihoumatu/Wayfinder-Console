@@ -1,3 +1,7 @@
+/**
+ * おすすめ地点のジオコード処理をまとめる。
+ * @file おすすめ地点のジオコード処理をまとめる。
+ */
 /* exported geocodeAddress, geocodeDestination, normalizeStop, getStopLabel, geocodeStops, canStartWalkRoute */
 /* exported runSpotRecommendation, handleRecommendSubmit */
 /* global calculateRoutes: writable, clearRecommendResult: writable, desiredWalkTargetMinutes: writable */

@@ -1,3 +1,7 @@
+/**
+ * lintレポート生成の実行処理をまとめる。
+ * @file lintレポート生成の実行処理をまとめる。
+ */
 const fs = require("fs");
 const path = require("path");
 

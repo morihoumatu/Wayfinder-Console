@@ -1,3 +1,7 @@
+/**
+ * lintレポートの設定値を定義する。
+ * @file lintレポートの設定値を定義する。
+ */
 const path = require("path");
 
 const ROOT_DIR = process.cwd();

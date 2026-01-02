@@ -1,4 +1,8 @@
 /**
+ * lintレポート集計処理をまとめる。
+ * @file lintレポート集計処理をまとめる。
+ */
+/**
  * 実行コマンド文字列を組み立てる。
  * @param {string} command コマンド名。
  * @param {string[]} args 引数配列。

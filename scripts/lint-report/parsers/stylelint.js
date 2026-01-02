@@ -1,3 +1,7 @@
+/**
+ * Stylelint出力の解析をまとめる。
+ * @file Stylelint出力の解析をまとめる。
+ */
 const {
   combineOutput,
   parseJsonFromText,
