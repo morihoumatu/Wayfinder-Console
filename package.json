@@ -1,0 +1,21 @@
+{
+  "name": "random-googlemap",
+  "private": true,
+  "scripts": {
+    "lint": "node scripts/lint-report.js",
+    "lint:raw": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:types",
+    "lint:js": "eslint --ext .js . --max-warnings 0",
+    "lint:css": "stylelint \"**/*.css\" --max-warnings 0",
+    "lint:html": "htmlhint \"**/*.html\"",
+    "lint:types": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "eslint": "^8.57.0",
+    "htmlhint": "^1.1.4",
+    "stylelint": "^16.9.0",
+    "stylelint-config-standard": "^36.0.0",
+    "stylelint-order": "^6.0.4",
+    "typescript": "^5.5.4"
+  }
+}

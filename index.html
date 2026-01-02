@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ライブマップコンソール</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">フィールドマップ</p>
+          <h1>ライブマップコンソール</h1>
+          <p class="subhead">
+            Google Maps APIキーを設定するとライブマップが表示され、マーカーやスタイルを
+            カスタマイズできます。
+          </p>
+        </div>
+        <div class="hero-card">
+          <div class="status" id="statusCard">
+            <span class="dot" aria-hidden="true"></span>
+            <div>
+              <p class="label">APIキーの状態</p>
+              <p class="value" id="keyStatus">未設定</p>
+            </div>
+          </div>
+          <p class="hint">
+            地図を有効にするには <code>app.js</code> の <code>MAPS_API_KEY</code> を設定してください。
+          </p>
+        </div>
+      </header>
+      <main class="main">
+        <section class="panel">
+          <h2>はじめに</h2>
+          <ol class="steps">
+            <li><code>app.js</code> を開いて <code>MAPS_API_KEY</code> を設定します。</li>
+            <li><code>node server.js</code> を実行します。</li>
+            <li>ブラウザで <code>http://localhost:3000</code> を開きます。</li>
+            <li>マップを2回クリックして出発地と目的地を選択します。</li>
+          </ol>
+          <div class="meta">
+            <div>
+              <p class="meta-label">デフォルト中心</p>
+              <p class="meta-value">東京駅</p>
+            </div>
+            <div>
+              <p class="meta-label">ズーム</p>
+              <p class="meta-value">13</p>
+            </div>
+          </div>
+          <div class="route-section">
+            <h3>経路選択</h3>
+            <div class="route-points">
+              <div>
+                <p class="meta-label">出発地</p>
+                <p class="meta-value" id="originLabel">未選択</p>
+              </div>
+              <div>
+                <p class="meta-label">目的地</p>
+                <p class="meta-value" id="destinationLabel">未選択</p>
+              </div>
+            </div>
+            <div class="route-actions">
+              <button class="btn" id="resetRoute" type="button">選択をリセット</button>
+            </div>
+            <p class="route-hint" id="routeHint">
+              マップを2回クリックして地点を選択します。
+            </p>
+            <div class="region-select">
+              <label class="sr-only" for="originAreaSelect">地方</label>
+              <select class="input" id="originAreaSelect">
+                <option value="">地方を選択</option>
+                <option value="北海道地方">北海道地方</option>
+                <option value="東北地方">東北地方</option>
+                <option value="関東地方">関東地方</option>
+                <option value="中部地方">中部地方</option>
+                <option value="近畿地方">近畿地方</option>
+                <option value="中国地方">中国地方</option>
+                <option value="四国地方">四国地方</option>
+                <option value="九州地方">九州地方</option>
+                <option value="沖縄地方">沖縄地方</option>
+              </select>
+              <label class="sr-only" for="originRegionSelect">都道府県</label>
+              <select class="input" id="originRegionSelect">
+                <option value="">都道府県を選択</option>
+                <option value="北海道">北海道</option>
+                <option value="青森県">青森県</option>
+                <option value="岩手県">岩手県</option>
+                <option value="宮城県">宮城県</option>
+                <option value="秋田県">秋田県</option>
+                <option value="山形県">山形県</option>
+                <option value="福島県">福島県</option>
+                <option value="茨城県">茨城県</option>
+                <option value="栃木県">栃木県</option>
+                <option value="群馬県">群馬県</option>
+                <option value="埼玉県">埼玉県</option>
+                <option value="千葉県">千葉県</option>
+                <option value="東京都">東京都</option>
+                <option value="神奈川県">神奈川県</option>
+                <option value="新潟県">新潟県</option>
+                <option value="富山県">富山県</option>
+                <option value="石川県">石川県</option>
+                <option value="福井県">福井県</option>
+                <option value="山梨県">山梨県</option>
+                <option value="長野県">長野県</option>
+                <option value="岐阜県">岐阜県</option>
+                <option value="静岡県">静岡県</option>
+                <option value="愛知県">愛知県</option>
+                <option value="三重県">三重県</option>
+                <option value="滋賀県">滋賀県</option>
+                <option value="京都府">京都府</option>
+                <option value="大阪府">大阪府</option>
+                <option value="兵庫県">兵庫県</option>
+                <option value="奈良県">奈良県</option>
+                <option value="和歌山県">和歌山県</option>
+                <option value="鳥取県">鳥取県</option>
+                <option value="島根県">島根県</option>
+                <option value="岡山県">岡山県</option>
+                <option value="広島県">広島県</option>
+                <option value="山口県">山口県</option>
+                <option value="徳島県">徳島県</option>
+                <option value="香川県">香川県</option>
+                <option value="愛媛県">愛媛県</option>
+                <option value="高知県">高知県</option>
+                <option value="福岡県">福岡県</option>
+                <option value="佐賀県">佐賀県</option>
+                <option value="長崎県">長崎県</option>
+                <option value="熊本県">熊本県</option>
+                <option value="大分県">大分県</option>
+                <option value="宮崎県">宮崎県</option>
+                <option value="鹿児島県">鹿児島県</option>
+                <option value="沖縄県">沖縄県</option>
+              </select>
+              <button class="btn" id="originRegionButton" type="button">
+                地域の駅から開始
+              </button>
+            </div>
+            <p class="route-hint" id="originRegionHint">
+              地方または都道府県を選択して開始できます。
+            </p>
+          </div>
+          <div class="route-section">
+            <h3>おすすめ検索</h3>
+            <form class="recommend-form" id="recommendForm">
+              <label class="sr-only" for="recommendQuery">検索キーワード</label>
+              <input
+                class="input"
+                id="recommendQuery"
+                name="query"
+                type="text"
+                placeholder="例: 景色の良いカフェ / 空欄で散歩ルート"
+                autocomplete="off"
+              />
+              <button class="btn" id="recommendButton" type="submit">
+                おすすめ地点を探す
+              </button>
+            </form>
+            <div class="recommend-filters">
+              <label class="sr-only" for="maxTimeInput">所要時間の上限</label>
+              <input
+                class="input input-small"
+                id="maxTimeInput"
+                name="maxTime"
+                type="number"
+                min="1"
+                max="240"
+                placeholder="例: 30"
+              />
+              <span class="unit">分以内</span>
+            </div>
+            <p class="route-hint" id="limitHint">未入力なら制限なし</p>
+            <p class="route-hint" id="recommendHint">
+              出発地を選択してから検索できます。空欄なら散歩ルート。
+            </p>
+            <div class="recommend-result" id="recommendResult" hidden>
+              <p class="meta-label">おすすめ地点</p>
+              <p class="meta-value" id="recommendTitle">-</p>
+              <p class="meta-label">住所</p>
+              <p class="meta-value" id="recommendAddress">-</p>
+              <a
+                class="map-link"
+                id="recommendMapLink"
+                href="#"
+                target="_blank"
+                rel="noreferrer"
+                hidden
+              >
+                Google Mapsで開く
+              </a>
+              <p class="meta-label">理由</p>
+              <p class="route-hint" id="recommendReason">-</p>
+              <div class="recommend-stops" id="recommendStopsSection" hidden>
+                <p class="meta-label">立ち寄り順</p>
+                <ol class="stop-list" id="recommendStops"></ol>
+              </div>
+              <div class="recommend-sources">
+                <p class="meta-label">参照</p>
+                <ul class="source-list" id="recommendSources"></ul>
+              </div>
+            </div>
+          </div>
+          <div class="route-section">
+            <h3>所要時間</h3>
+            <div class="route-times">
+              <div class="time-card">
+                <p class="meta-label">徒歩</p>
+                <p class="meta-value" id="walkingValue">未計算</p>
+              </div>
+              <div class="time-card">
+                <p class="meta-label">在来線</p>
+                <p class="meta-value" id="railValue">未計算</p>
+              </div>
+            </div>
+            <p class="route-hint" id="routeStatus">
+              地点を選ぶと自動計算します。
+            </p>
+            <div class="route-links" id="routeLinks" hidden>
+              <a
+                class="map-link"
+                id="walkingRouteLink"
+                href="#"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Google Mapsで徒歩ルートを見る
+              </a>
+              <a
+                class="map-link"
+                id="railRouteLink"
+                href="#"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Google Mapsで在来線ルートを見る
+              </a>
+            </div>
+          </div>
+          <div class="route-section" id="routeBreakdown" hidden>
+            <h3>ルート内訳</h3>
+            <ol class="segment-list" id="routeBreakdownList"></ol>
+          </div>
+        </section>
+        <section class="map-shell">
+          <div class="map" id="map" aria-label="Google マップ"></div>
+          <div class="map-overlay" id="mapOverlay" aria-live="polite">
+            <p>APIキーを待機中...</p>
+          </div>
+        </section>
+      </main>
+      <footer class="footer">
+        <p>地図データ (c) Google. UI はあなたが作成。</p>
+      </footer>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
