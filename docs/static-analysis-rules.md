@@ -56,6 +56,7 @@
 - `prefer-template`: 文字列結合よりテンプレート文字列を推奨
 - `max-params: ["error", 4]`: 関数の引数は4つまで（5つ以上はエラー）
 - `max-len: ["error", { code: 120 }]`: 1行120文字超をエラー
+- `folder-about-file`: `app/`・`server/`・`scripts/` 配下の各フォルダに `ABOUT.md` を必須化
 - `file-purpose-comment`: ファイル最上部または最下部の用途コメント（`@file` / `@fileoverview`）を必須化
 - `god-file: ["error", { maxFunctions: 30, maxLines: 300 }]`: JSファイルの肥大化（関数数/行数の超過）をエラー
 - `single-return`: return は1か所のみ（複数returnをエラー）

@@ -63,6 +63,7 @@ module.exports = {
         ignoreRegExpLiterals: false,
       },
     ],
+    "folder-about-file": "error",
     "file-purpose-comment": "error",
     "god-file": [
       "error",
