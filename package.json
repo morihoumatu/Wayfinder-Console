@@ -4,7 +4,7 @@
   "scripts": {
     "lint": "node scripts/lint-report.js",
     "lint:raw": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:types",
-    "lint:js": "eslint --ext .js . --max-warnings 0",
+    "lint:js": "eslint --ext .js . --max-warnings 0 --rulesdir eslint-rules",
     "lint:css": "stylelint \"**/*.css\" --max-warnings 0",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"**/reports/**,**/node_modules/**\"",
     "lint:types": "tsc -p tsconfig.json"

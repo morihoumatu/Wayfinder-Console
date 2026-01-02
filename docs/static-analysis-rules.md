@@ -29,6 +29,7 @@
 - `array-callback-return`: 配列メソッドのコールバックは `return` を必須化
 - `block-scoped-var`: ブロックスコープ外参照を禁止
 - `consistent-return`: `return` の有無/返り値を一貫させる
+- `complexity: ["error", 10]`: 循環的複雑度が10を超える関数をエラー
 - `curly: ["error", "all"]`: 制御構文に波括弧を必須化
 - `default-case`: `switch` の `default` を必須化
 - `default-case-last`: `default` を末尾に配置
@@ -55,6 +56,7 @@
 - `prefer-template`: 文字列結合よりテンプレート文字列を推奨
 - `max-params: ["error", 4]`: 関数の引数は4つまで（5つ以上はエラー）
 - `max-len: ["error", { code: 120 }]`: 1行120文字超をエラー
+- `single-return`: return は1か所のみ（複数returnをエラー）
 - `radix: ["error", "always"]`: `parseInt` の基数指定を必須化
 - `yoda`: ヨーダ条件を禁止
 

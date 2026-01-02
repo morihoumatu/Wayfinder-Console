@@ -28,10 +28,8 @@ const TSC_REGEX_GLOBAL = /^(error|warning) TS(\d+): (.*)$/;
  */
 function resolveBin(command) {
   const binPath = path.join(BIN_DIR, `${command}${BIN_EXT}`);
-  if (fs.existsSync(binPath)) {
-    return binPath;
-  }
-  return command;
+  const resolved = fs.existsSync(binPath) ? binPath : command;
+  return resolved;
 }
 
 /**
@@ -50,8 +48,9 @@ function runCommand(command, args) {
     windowsHide: true,
   });
 
+  let output;
   if (result.error) {
-    return {
+    output = {
       command,
       resolvedCommand,
       args,
@@ -60,19 +59,19 @@ function runCommand(command, args) {
       stderr: result.error.message || String(result.error),
       hasError: true,
     };
+  } else {
+    const status = typeof result.status === "number" ? result.status : 1;
+    output = {
+      command,
+      resolvedCommand,
+      args,
+      status,
+      stdout: result.stdout || "",
+      stderr: result.stderr || "",
+      hasError: false,
+    };
   }
-
-  const status = typeof result.status === "number" ? result.status : 1;
-
-  return {
-    command,
-    resolvedCommand,
-    args,
-    status,
-    stdout: result.stdout || "",
-    stderr: result.stderr || "",
-    hasError: false,
-  };
+  return output;
 }
 
 /**
@@ -91,18 +90,18 @@ function combineOutput(stdout, stderr) {
  * @returns {any | null} 解析結果またはnull。
  */
 function parseJsonOutput(text) {
-  if (typeof text !== "string") {
-    return null;
+  let parsed = null;
+  if (typeof text === "string") {
+    const trimmed = text.trim();
+    if (trimmed.length > 0) {
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch (error) {
+        parsed = null;
+      }
+    }
   }
-  const trimmed = text.trim();
-  if (trimmed.length === 0) {
-    return null;
-  }
-  try {
-    return JSON.parse(trimmed);
-  } catch (error) {
-    return null;
-  }
+  return parsed;
 }
 
 /**
@@ -116,6 +115,7 @@ function findMatchingBracket(text, startIndex) {
   const closeChar = openChar === "{" ? "}" : "]";
   let depth = 0;
   let inString = false;
+  let matchIndex = -1;
   for (let i = startIndex; i < text.length; i += 1) {
     const ch = text[i];
     if (inString) {
@@ -137,11 +137,12 @@ function findMatchingBracket(text, startIndex) {
     } else if (ch === closeChar) {
       depth -= 1;
       if (depth === 0) {
-        return i;
+        matchIndex = i;
+        break;
       }
     }
   }
-  return -1;
+  return matchIndex;
 }
 
 /**
@@ -150,33 +151,34 @@ function findMatchingBracket(text, startIndex) {
  * @returns {any | null} 解析結果またはnull。
  */
 function parseJsonFromText(text) {
-  if (typeof text !== "string") {
-    return null;
-  }
-  const trimmed = text.trim();
-  if (trimmed.length === 0) {
-    return null;
-  }
-  const direct = parseJsonOutput(trimmed);
-  if (direct) {
-    return direct;
-  }
-  for (let i = 0; i < trimmed.length; i += 1) {
-    const ch = trimmed[i];
-    if (ch !== "{" && ch !== "[") {
-      continue;
+  let parsed = null;
+  if (typeof text === "string") {
+    const trimmed = text.trim();
+    if (trimmed.length > 0) {
+      const direct = parseJsonOutput(trimmed);
+      if (direct) {
+        parsed = direct;
+      } else {
+        for (let i = 0; i < trimmed.length; i += 1) {
+          const ch = trimmed[i];
+          if (ch !== "{" && ch !== "[") {
+            continue;
+          }
+          const endIndex = findMatchingBracket(trimmed, i);
+          if (endIndex === -1) {
+            continue;
+          }
+          const snippet = trimmed.slice(i, endIndex + 1);
+          const candidate = parseJsonOutput(snippet);
+          if (candidate) {
+            parsed = candidate;
+            break;
+          }
+        }
+      }
     }
-    const endIndex = findMatchingBracket(trimmed, i);
-    if (endIndex === -1) {
-      continue;
-    }
-    const snippet = trimmed.slice(i, endIndex + 1);
-    const parsed = parseJsonOutput(snippet);
-    if (parsed) {
-      return parsed;
-    }
   }
-  return null;
+  return parsed;
 }
 
 /**
@@ -185,17 +187,18 @@ function parseJsonFromText(text) {
  * @returns {string} 相対パス。
  */
 function toRelativePath(filePathValue) {
-  if (typeof filePathValue !== "string" || filePathValue.length === 0) {
-    return "unknown";
+  let normalized = "unknown";
+  if (typeof filePathValue === "string" && filePathValue.length > 0) {
+    const relative = path.relative(ROOT_DIR, filePathValue);
+    if (relative.length === 0) {
+      normalized = filePathValue;
+    } else if (relative.startsWith("..") || path.isAbsolute(relative)) {
+      normalized = filePathValue;
+    } else {
+      normalized = relative;
+    }
   }
-  const relative = path.relative(ROOT_DIR, filePathValue);
-  if (relative.length === 0) {
-    return filePathValue;
-  }
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    return filePathValue;
-  }
-  return relative;
+  return normalized;
 }
 
 /**
@@ -213,10 +216,8 @@ function normalizeNumber(value) {
  * @returns {string} 正規化重大度。
  */
 function normalizeSeverity(severityValue) {
-  if (severityValue === "warning") {
-    return "warning";
-  }
-  return "error";
+  const normalized = severityValue === "warning" ? "warning" : "error";
+  return normalized;
 }
 
 /**
@@ -248,70 +249,78 @@ function buildMessage(entry) {
  */
 function parseEslintOutput(result) {
   const rawOutput = combineOutput(result.stdout, result.stderr);
+  let report;
   if (result.hasError) {
-    return {
+    report = {
       errors: 0,
       warnings: 0,
       files: [],
       toolError: "Command failed.",
       rawOutput,
     };
-  }
-
-  const parsed = parseJsonOutput(result.stdout);
-  if (!parsed) {
-    if (rawOutput.length === 0) {
-      return { errors: 0, warnings: 0, files: [], toolError: null, rawOutput };
-    }
-    return {
-      errors: 0,
-      warnings: 0,
-      files: [],
-      toolError: "Unable to parse ESLint output.",
-      rawOutput,
-    };
-  }
-  if (!Array.isArray(parsed)) {
-    return {
-      errors: 0,
-      warnings: 0,
-      files: [],
-      toolError: "Unexpected ESLint output.",
-      rawOutput,
-    };
-  }
-
-  const files = [];
-  let errors = 0;
-  let warnings = 0;
-
-  parsed.forEach((entry) => {
-    const messageList = Array.isArray(entry.messages) ? entry.messages : [];
-    if (messageList.length === 0) {
-      return;
-    }
-    const messages = messageList.map((message) => {
-      const severity = message.severity === 2 ? "error" : "warning";
-      if (severity === "error") {
-        errors += 1;
+  } else {
+    const parsed = parseJsonOutput(result.stdout);
+    if (!parsed) {
+      if (rawOutput.length === 0) {
+        report = {
+          errors: 0,
+          warnings: 0,
+          files: [],
+          toolError: null,
+          rawOutput,
+        };
       } else {
-        warnings += 1;
+        report = {
+          errors: 0,
+          warnings: 0,
+          files: [],
+          toolError: "Unable to parse ESLint output.",
+          rawOutput,
+        };
       }
-      return buildMessage({
-        lineValue: message.line,
-        columnValue: message.column,
-        severityValue: severity,
-        ruleValue: message.ruleId || "",
-        text: message.message || "",
-      });
-    });
-    files.push({
-      path: toRelativePath(entry.filePath),
-      messages,
-    });
-  });
+    } else if (!Array.isArray(parsed)) {
+      report = {
+        errors: 0,
+        warnings: 0,
+        files: [],
+        toolError: "Unexpected ESLint output.",
+        rawOutput,
+      };
+    } else {
+      const files = [];
+      let errors = 0;
+      let warnings = 0;
 
-  return { errors, warnings, files, toolError: null, rawOutput };
+      parsed.forEach((entry) => {
+        const messageList = Array.isArray(entry.messages) ? entry.messages : [];
+        if (messageList.length === 0) {
+          return;
+        }
+        const messages = messageList.map((message) => {
+          const severity = message.severity === 2 ? "error" : "warning";
+          if (severity === "error") {
+            errors += 1;
+          } else {
+            warnings += 1;
+          }
+          return buildMessage({
+            lineValue: message.line,
+            columnValue: message.column,
+            severityValue: severity,
+            ruleValue: message.ruleId || "",
+            text: message.message || "",
+          });
+        });
+        files.push({
+          path: toRelativePath(entry.filePath),
+          messages,
+        });
+      });
+
+      report = { errors, warnings, files, toolError: null, rawOutput };
+    }
+  }
+  return report;
 }
 
 /**
@@ -321,121 +330,130 @@ function parseEslintOutput(result) {
  */
 function parseStylelintOutput(result) {
   const rawOutput = combineOutput(result.stdout, result.stderr);
+  let report;
   if (result.hasError) {
-    return {
+    report = {
       errors: 0,
       warnings: 0,
       files: [],
       toolError: "Command failed.",
       rawOutput,
     };
-  }
-
-  const parsed = parseJsonFromText(result.stdout) || parseJsonFromText(rawOutput);
-  if (!parsed) {
-    if (rawOutput.length === 0) {
-      return { errors: 0, warnings: 0, files: [], toolError: null, rawOutput };
-    }
-    return {
-      errors: 0,
-      warnings: 0,
-      files: [],
-      toolError: "Unable to parse Stylelint output.",
-      rawOutput,
-    };
-  }
-  if (!Array.isArray(parsed)) {
-    return {
-      errors: 0,
-      warnings: 0,
-      files: [],
-      toolError: "Unexpected Stylelint output.",
-      rawOutput,
-    };
-  }
-
-  const files = [];
-  let errors = 0;
-  let warnings = 0;
-
-  parsed.forEach((entry) => {
-    const messages = [];
-    const warningList = Array.isArray(entry.warnings) ? entry.warnings : [];
-    warningList.forEach((warning) => {
-      const severity = normalizeSeverity(warning.severity);
-      if (severity === "error") {
-        errors += 1;
+  } else {
+    const parsed =
+      parseJsonFromText(result.stdout) || parseJsonFromText(rawOutput);
+    if (!parsed) {
+      if (rawOutput.length === 0) {
+        report = {
+          errors: 0,
+          warnings: 0,
+          files: [],
+          toolError: null,
+          rawOutput,
+        };
       } else {
-        warnings += 1;
+        report = {
+          errors: 0,
+          warnings: 0,
+          files: [],
+          toolError: "Unable to parse Stylelint output.",
+          rawOutput,
+        };
       }
-      messages.push(
-        buildMessage({
-          lineValue: warning.line,
-          columnValue: warning.column,
-          severityValue: severity,
-          ruleValue: warning.rule || "",
-          text: warning.text || "",
-        })
-      );
-    });
+    } else if (!Array.isArray(parsed)) {
+      report = {
+        errors: 0,
+        warnings: 0,
+        files: [],
+        toolError: "Unexpected Stylelint output.",
+        rawOutput,
+      };
+    } else {
+      const files = [];
+      let errors = 0;
+      let warnings = 0;
 
-    const parseErrors = Array.isArray(entry.parseErrors)
-      ? entry.parseErrors
-      : [];
-    parseErrors.forEach((parseError) => {
-      errors += 1;
-      messages.push(
-        buildMessage({
-          lineValue: parseError.line,
-          columnValue: parseError.column,
-          severityValue: "error",
-          ruleValue: "parse-error",
-          text: parseError.text || "Parse error.",
-        })
-      );
-    });
+      parsed.forEach((entry) => {
+        const messages = [];
+        const warningList = Array.isArray(entry.warnings) ? entry.warnings : [];
+        warningList.forEach((warning) => {
+          const severity = normalizeSeverity(warning.severity);
+          if (severity === "error") {
+            errors += 1;
+          } else {
+            warnings += 1;
+          }
+          messages.push(
+            buildMessage({
+              lineValue: warning.line,
+              columnValue: warning.column,
+              severityValue: severity,
+              ruleValue: warning.rule || "",
+              text: warning.text || "",
+            })
+          );
+        });
 
-    const invalidOptionWarnings = Array.isArray(entry.invalidOptionWarnings)
-      ? entry.invalidOptionWarnings
-      : [];
-    invalidOptionWarnings.forEach((invalidOption) => {
-      errors += 1;
-      messages.push(
-        buildMessage({
-          lineValue: null,
-          columnValue: null,
-          severityValue: "error",
-          ruleValue: "invalid-option",
-          text: invalidOption.text || "Invalid option.",
-        })
-      );
-    });
+        const parseErrors = Array.isArray(entry.parseErrors)
+          ? entry.parseErrors
+          : [];
+        parseErrors.forEach((parseError) => {
+          errors += 1;
+          messages.push(
+            buildMessage({
+              lineValue: parseError.line,
+              columnValue: parseError.column,
+              severityValue: "error",
+              ruleValue: "parse-error",
+              text: parseError.text || "Parse error.",
+            })
+          );
+        });
 
-    const deprecations = Array.isArray(entry.deprecations)
-      ? entry.deprecations
-      : [];
-    deprecations.forEach((deprecation) => {
-      warnings += 1;
-      messages.push(
-        buildMessage({
-          lineValue: null,
-          columnValue: null,
-          severityValue: "warning",
-          ruleValue: "deprecation",
-          text: deprecation.text || "Deprecated rule.",
-        })
-      );
-    });
+        const invalidOptionWarnings = Array.isArray(entry.invalidOptionWarnings)
+          ? entry.invalidOptionWarnings
+          : [];
+        invalidOptionWarnings.forEach((invalidOption) => {
+          errors += 1;
+          messages.push(
+            buildMessage({
+              lineValue: null,
+              columnValue: null,
+              severityValue: "error",
+              ruleValue: "invalid-option",
+              text: invalidOption.text || "Invalid option.",
+            })
+          );
+        });
 
-    if (messages.length > 0) {
-      files.push({
-        path: toRelativePath(entry.source),
-        messages,
+        const deprecations = Array.isArray(entry.deprecations)
+          ? entry.deprecations
+          : [];
+        deprecations.forEach((deprecation) => {
+          warnings += 1;
+          messages.push(
+            buildMessage({
+              lineValue: null,
+              columnValue: null,
+              severityValue: "warning",
+              ruleValue: "deprecation",
+              text: deprecation.text || "Deprecated rule.",
+            })
+          );
+        });
+
+        if (messages.length > 0) {
+          files.push({
+            path: toRelativePath(entry.source),
+            messages,
+          });
+        }
       });
-    }
-  });
 
-  return { errors, warnings, files, toolError: null, rawOutput };
+      report = { errors, warnings, files, toolError: null, rawOutput };
+    }
+  }
+  return report;
 }
 
 /**
@@ -445,75 +463,83 @@ function parseStylelintOutput(result) {
  */
 function parseHtmlhintOutput(result) {
   const rawOutput = combineOutput(result.stdout, result.stderr);
+  let report;
   if (result.hasError) {
-    return {
+    report = {
       errors: 0,
       warnings: 0,
       files: [],
       toolError: "Command failed.",
       rawOutput,
     };
-  }
-
-  const parsed = parseJsonOutput(result.stdout);
-  if (!parsed) {
-    if (rawOutput.length === 0) {
-      return { errors: 0, warnings: 0, files: [], toolError: null, rawOutput };
-    }
-    return {
-      errors: 0,
-      warnings: 0,
-      files: [],
-      toolError: "Unable to parse HTMLHint output.",
-      rawOutput,
-    };
-  }
-  if (!Array.isArray(parsed)) {
-    return {
-      errors: 0,
-      warnings: 0,
-      files: [],
-      toolError: "Unexpected HTMLHint output.",
-      rawOutput,
-    };
-  }
-
-  const files = [];
-  let errors = 0;
-  let warnings = 0;
-
-  parsed.forEach((entry) => {
-    const messageList = Array.isArray(entry.messages) ? entry.messages : [];
-    if (messageList.length === 0) {
-      return;
-    }
-    const messages = messageList.map((message) => {
-      const severity =
-        message.type === "warning" ? "warning" : "error";
-      if (severity === "error") {
-        errors += 1;
+  } else {
+    const parsed = parseJsonOutput(result.stdout);
+    if (!parsed) {
+      if (rawOutput.length === 0) {
+        report = {
+          errors: 0,
+          warnings: 0,
+          files: [],
+          toolError: null,
+          rawOutput,
+        };
       } else {
-        warnings += 1;
+        report = {
+          errors: 0,
+          warnings: 0,
+          files: [],
+          toolError: "Unable to parse HTMLHint output.",
+          rawOutput,
+        };
       }
-      const ruleValue =
-        message.rule && typeof message.rule === "object"
-          ? message.rule.id
-          : message.rule;
-      return buildMessage({
-        lineValue: message.line,
-        columnValue: message.col || message.column,
-        severityValue: severity,
-        ruleValue: ruleValue || "",
-        text: message.message || "",
-      });
-    });
-    files.push({
-      path: toRelativePath(entry.file),
-      messages,
-    });
-  });
+    } else if (!Array.isArray(parsed)) {
+      report = {
+        errors: 0,
+        warnings: 0,
+        files: [],
+        toolError: "Unexpected HTMLHint output.",
+        rawOutput,
+      };
+    } else {
+      const files = [];
+      let errors = 0;
+      let warnings = 0;
 
-  return { errors, warnings, files, toolError: null, rawOutput };
+      parsed.forEach((entry) => {
+        const messageList = Array.isArray(entry.messages) ? entry.messages : [];
+        if (messageList.length === 0) {
+          return;
+        }
+        const messages = messageList.map((message) => {
+          const severity =
+            message.type === "warning" ? "warning" : "error";
+          if (severity === "error") {
+            errors += 1;
+          } else {
+            warnings += 1;
+          }
+          const ruleValue =
+            message.rule && typeof message.rule === "object"
+              ? message.rule.id
+              : message.rule;
+          return buildMessage({
+            lineValue: message.line,
+            columnValue: message.col || message.column,
+            severityValue: severity,
+            ruleValue: ruleValue || "",
+            text: message.message || "",
+          });
+        });
+        files.push({
+          path: toRelativePath(entry.file),
+          messages,
+        });
+      });
+
+      report = { errors, warnings, files, toolError: null, rawOutput };
+    }
+  }
+  return report;
 }
 
 /**
@@ -523,8 +549,9 @@ function parseHtmlhintOutput(result) {
  */
 function parseTscLine(line) {
   const matchParen = line.match(TSC_REGEX_PAREN);
+  let parsed = null;
   if (matchParen) {
-    return {
+    parsed = {
       filePath: matchParen[1].trim(),
       line: Number.parseInt(matchParen[2], 10),
       column: Number.parseInt(matchParen[3], 10),
@@ -532,33 +559,32 @@ function parseTscLine(line) {
       rule: `TS${matchParen[5]}`,
       message: matchParen[6].trim(),
     };
+  } else {
+    const matchColon = line.match(TSC_REGEX_COLON);
+    if (matchColon) {
+      parsed = {
+        filePath: matchColon[1].trim(),
+        line: Number.parseInt(matchColon[2], 10),
+        column: Number.parseInt(matchColon[3], 10),
+        severity: normalizeSeverity(matchColon[4]),
+        rule: `TS${matchColon[5]}`,
+        message: matchColon[6].trim(),
+      };
+    } else {
+      const matchGlobal = line.match(TSC_REGEX_GLOBAL);
+      if (matchGlobal) {
+        parsed = {
+          filePath: "[tsc]",
+          line: null,
+          column: null,
+          severity: normalizeSeverity(matchGlobal[1]),
+          rule: `TS${matchGlobal[2]}`,
+          message: matchGlobal[3].trim(),
+        };
+      }
+    }
   }
-
-  const matchColon = line.match(TSC_REGEX_COLON);
-  if (matchColon) {
-    return {
-      filePath: matchColon[1].trim(),
-      line: Number.parseInt(matchColon[2], 10),
-      column: Number.parseInt(matchColon[3], 10),
-      severity: normalizeSeverity(matchColon[4]),
-      rule: `TS${matchColon[5]}`,
-      message: matchColon[6].trim(),
-    };
-  }
-
-  const matchGlobal = line.match(TSC_REGEX_GLOBAL);
-  if (matchGlobal) {
-    return {
-      filePath: "[tsc]",
-      line: null,
-      column: null,
-      severity: normalizeSeverity(matchGlobal[1]),
-      rule: `TS${matchGlobal[2]}`,
-      message: matchGlobal[3].trim(),
-    };
-  }
-
-  return null;
+  return parsed;
 }
 
 /**
@@ -568,77 +594,77 @@ function parseTscLine(line) {
  */
 function parseTscOutput(result) {
   const rawOutput = combineOutput(result.stdout, result.stderr);
+  let report;
   if (result.hasError) {
-    return {
+    report = {
       errors: 0,
       warnings: 0,
       files: [],
       toolError: "Command failed.",
       rawOutput,
     };
-  }
+  } else if (rawOutput.length === 0) {
+    report = { errors: 0, warnings: 0, files: [], toolError: null, rawOutput };
+  } else {
+    const lines = rawOutput
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const diagnostics = [];
 
-  if (rawOutput.length === 0) {
-    return { errors: 0, warnings: 0, files: [], toolError: null, rawOutput };
-  }
+    lines.forEach((line) => {
+      const parsed = parseTscLine(line);
+      if (parsed) {
+        diagnostics.push(parsed);
+      }
+    });
 
-  const lines = rawOutput
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-  const diagnostics = [];
-
-  lines.forEach((line) => {
-    const parsed = parseTscLine(line);
-    if (parsed) {
-      diagnostics.push(parsed);
-    }
-  });
-
-  if (diagnostics.length === 0) {
-    return {
-      errors: 0,
-      warnings: 0,
-      files: [],
-      toolError: "Unable to parse TypeScript output.",
-      rawOutput,
-    };
-  }
-
-  let errors = 0;
-  let warnings = 0;
-  const fileMap = new Map();
-
-  diagnostics.forEach((diagnostic) => {
-    if (diagnostic.severity === "error") {
-      errors += 1;
+    if (diagnostics.length === 0) {
+      report = {
+        errors: 0,
+        warnings: 0,
+        files: [],
+        toolError: "Unable to parse TypeScript output.",
+        rawOutput,
+      };
     } else {
-      warnings += 1;
-    }
-    const filePathValue = toRelativePath(diagnostic.filePath);
-    let entry = fileMap.get(filePathValue);
-    if (!entry) {
-      entry = { path: filePathValue, messages: [] };
-      fileMap.set(filePathValue, entry);
-    }
-    entry.messages.push(
-      buildMessage({
-        lineValue: diagnostic.line,
-        columnValue: diagnostic.column,
-        severityValue: diagnostic.severity,
-        ruleValue: diagnostic.rule,
-        text: diagnostic.message,
-      })
-    );
-  });
+      let errors = 0;
+      let warnings = 0;
+      const fileMap = new Map();
 
-  return {
-    errors,
-    warnings,
-    files: Array.from(fileMap.values()),
-    toolError: null,
-    rawOutput,
-  };
+      diagnostics.forEach((diagnostic) => {
+        if (diagnostic.severity === "error") {
+          errors += 1;
+        } else {
+          warnings += 1;
+        }
+        const filePathValue = toRelativePath(diagnostic.filePath);
+        let entry = fileMap.get(filePathValue);
+        if (!entry) {
+          entry = { path: filePathValue, messages: [] };
+          fileMap.set(filePathValue, entry);
+        }
+        entry.messages.push(
+          buildMessage({
+            lineValue: diagnostic.line,
+            columnValue: diagnostic.column,
+            severityValue: diagnostic.severity,
+            ruleValue: diagnostic.rule,
+            text: diagnostic.message,
+          })
+        );
+      });
+
+      report = {
+        errors,
+        warnings,
+        files: Array.from(fileMap.values()),
+        toolError: null,
+        rawOutput,
+      };
+    }
+  }
+  return report;
 }
 
 /**
@@ -769,35 +795,35 @@ function renderToolSection(tool) {
   <span>Files: ${tool.files.length}</span>
 </div>`;
 
+  let section = "";
   if (tool.toolError) {
     const output = tool.rawOutput.length > 0 ? tool.rawOutput : tool.toolError;
-    return `<section class="tool">
+    section = `<section class="tool">
 ${header}
 <div class="tool-error">${escapeHtml(tool.toolError)}</div>
 <pre>${escapeHtml(output)}</pre>
 </section>`;
-  }
-
-  if (tool.files.length === 0) {
-    return `<section class="tool">
+  } else if (tool.files.length === 0) {
+    section = `<section class="tool">
 ${header}
 <p class="clean">No issues.</p>
 </section>`;
-  }
+  } else {
+    const fileSections = tool.files
+      .map((fileEntry) => {
+        const hasError = fileEntry.messages.some(
+          (message) => message.severity === "error"
+        );
+        return renderFileSection(fileEntry, hasError);
+      })
+      .join("");
 
-  const fileSections = tool.files
-    .map((fileEntry) => {
-      const hasError = fileEntry.messages.some(
-        (message) => message.severity === "error"
-      );
-      return renderFileSection(fileEntry, hasError);
-    })
-    .join("");
-
-  return `<section class="tool">
+    section = `<section class="tool">
 ${header}
 ${fileSections}
 </section>`;
+  }
+  return section;
 }
 
 /**
@@ -1002,6 +1028,8 @@ function main() {
     "--ext",
     ".js",
     ".",
+    "--rulesdir",
+    "eslint-rules",
     "-f",
     "json",
     "--max-warnings",
