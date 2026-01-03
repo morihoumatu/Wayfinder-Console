@@ -46,7 +46,9 @@ test("トップページが表示される", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
   // headingを取得する。
-  const heading = page.getByRole("heading", { name: "ライブマップコンソール" });
+  const heading = page.getByRole("heading", {
+    name: "地域起点のルート設計を、プロダクト品質で。",
+  });
   // マップを取得する。
   const map = page.locator("#map");
   // recommendFormを取得する。
