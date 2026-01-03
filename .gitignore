@@ -17,6 +17,11 @@ build/
 out/
 coverage/
 reports/
+playwright-report/
+test-results/
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
 
 # Caches
 .cache/

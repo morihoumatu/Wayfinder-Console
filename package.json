@@ -8,16 +8,25 @@
     "lint:js": "eslint --ext .js . --max-warnings 0 --rulesdir eslint-rules",
     "lint:css": "stylelint \"**/*.css\" --max-warnings 0",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"**/reports/**,**/node_modules/**\"",
-    "lint:types": "tsc -p tsconfig.json"
+    "lint:types": "tsc -p tsconfig.json",
+    "test:vitest": "vitest run",
+    "test:vitest:watch": "vitest",
+    "test:playwright": "playwright test",
+    "test:playwright:ui": "playwright test --ui",
+    "test:cypress": "cypress run",
+    "test:cypress:open": "cypress open"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/node": "^20.11.30",
+    "cypress": "^15.8.1",
     "eslint": "^8.57.0",
     "eslint-plugin-jsdoc": "^61.5.0",
     "htmlhint": "^1.1.4",
     "stylelint": "^16.9.0",
     "stylelint-config-standard": "^36.0.0",
     "stylelint-order": "^6.0.4",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^4.0.16"
   }
 }

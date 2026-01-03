@@ -89,5 +89,26 @@ module.exports = {
         node: true,
       },
     },
+    {
+      files: [
+        "playwright.config.js",
+        "cypress.config.js",
+        "vitest.config.js",
+        "tests/**/*.js",
+        "cypress/**/*.js",
+      ],
+      env: {
+        node: true,
+      },
+    },
+    {
+      files: ["cypress/**/*.js"],
+      globals: {
+        Cypress: "readonly",
+        cy: "readonly",
+        describe: "readonly",
+        it: "readonly",
+      },
+    },
   ],
 };

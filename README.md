@@ -19,6 +19,13 @@
 2. `npm run lint`
 3. `npm run docs:html`（フォルダ説明・JSDocのHTMLを生成）
 
+動的検証:
+
+1. `npm install`
+2. Playwright: `npm run test:playwright`（初回のみ `npx playwright install`）
+3. Cypress: `node server.js` を別ターミナルで起動してから `npm run test:cypress`
+4. Vitest: `npm run test:vitest`
+
 注意:
 
 - Google Maps JavaScript API を有効にしてください。
