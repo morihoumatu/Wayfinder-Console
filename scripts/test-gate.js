@@ -6,8 +6,11 @@ const fs = require("fs");
 const path = require("path");
 const {
   COVERAGE_RULES,
+  FILE_COVERAGE_RULES,
   summarizeCoverage,
+  summarizeFileCoverages,
   evaluateCoverage,
+  evaluateFileCoverageGate,
 } = require("./test-gate/coverage");
 const {
   readJson,
@@ -65,10 +68,11 @@ function buildGateReport(
    *   summaries: Array<{ summary: ToolSummary, rule: GateRule, path: string }>,
    *   allIssues: string[],
    *   coverageSummary: { lines: number, statements: number, functions: number, branches: number } | null,
-   *   coverageResult: { ok: boolean, issues: string[] }
+   *   coverageResult: { ok: boolean, issues: string[] },
+   *   fileCoverageResult: { ok: boolean, issues: string[], files: any[] }
    * }}
    */
-  { summaries, allIssues, coverageSummary, coverageResult }
+  { summaries, allIssues, coverageSummary, coverageResult, fileCoverageResult }
 ) {
   const tools = summaries.map((entry) => ({
     name: entry.summary.name,
@@ -81,7 +85,7 @@ function buildGateReport(
     reportPath: entry.path,
   }));
   const coverageStatus = coverageSummary
-    ? coverageResult.ok
+    ? coverageResult.ok && fileCoverageResult.ok
       ? "pass"
       : "fail"
     : "missing";
@@ -89,6 +93,8 @@ function buildGateReport(
     status: coverageStatus,
     summary: coverageSummary,
     rules: COVERAGE_RULES,
+    fileRules: FILE_COVERAGE_RULES,
+    files: fileCoverageResult.files,
     reportPath: COVERAGE_JSON_PATH,
     issues: coverageResult.issues,
   };
@@ -139,6 +145,17 @@ function main() {
     });
   });
   const coverageSummary = summarizeCoverage(coverageData);
+  const fileCoverageSummaries = summarizeFileCoverages(coverageData);
+  const normalizedFileCoverageSummaries = fileCoverageSummaries.map((summary) => {
+    const filePath = summary.file;
+    const relativePath = path.isAbsolute(filePath)
+      ? path.relative(ROOT_DIR, filePath)
+      : filePath;
+    return {
+      ...summary,
+      file: relativePath,
+    };
+  });
   const coverageResult = evaluateCoverage(
     coverageSummary,
     COVERAGE_RULES,
@@ -147,11 +164,20 @@ function main() {
   coverageResult.issues.forEach((issue) => {
     allIssues.push(issue);
   });
+  const fileCoverageResult = evaluateFileCoverageGate({
+    summaries: normalizedFileCoverageSummaries,
+    rules: FILE_COVERAGE_RULES,
+    reportPath: COVERAGE_JSON_PATH,
+  });
+  fileCoverageResult.issues.forEach((issue) => {
+    allIssues.push(issue);
+  });
   const gateReport = buildGateReport({
     summaries,
     allIssues,
     coverageSummary,
     coverageResult,
+    fileCoverageResult,
   });
   fs.mkdirSync(REPORT_DIR, { recursive: true });
   fs.writeFileSync(GATE_JSON_PATH, JSON.stringify(gateReport, null, 2), "utf8");

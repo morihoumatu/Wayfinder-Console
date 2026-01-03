@@ -184,6 +184,16 @@ function renderReport(tools, generatedAt, links, gate) {
         padding: 10px 12px;
         font-size: 13px;
       }
+      .gate-hint {
+        margin: 6px 0 8px;
+        font-size: 12px;
+        color: #6b7280;
+      }
+      .file-cell {
+        font-family: "Consolas", "Courier New", monospace;
+        font-size: 12px;
+        word-break: break-all;
+      }
       .gate-table thead {
         background: #111827;
         color: #fff;

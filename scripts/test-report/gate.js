@@ -136,6 +136,83 @@ function renderCoverageRows(coverage) {
 }
 
 /**
+ * ファイル別カバレッジの説明を描画する。
+ * @param {any} fileRules しきい値。
+ * @returns {string} HTML文字列。
+ */
+function renderFileCoverageHint(fileRules) {
+  let hint = "";
+  if (fileRules) {
+    hint = `Thresholds: line ${fileRules.lines}% / statement ${fileRules.statements}% / function ` +
+      `${fileRules.functions}% / branch ${fileRules.branches}%`;
+  }
+  return hint ? `<div class="gate-hint">${escapeHtml(hint)}</div>` : "";
+}
+
+/**
+ * ファイル別カバレッジ行を描画する。
+ * @param {any[]} files ファイル配列。
+ * @returns {string} HTML文字列。
+ */
+function renderFileCoverageRows(files) {
+  let rows = "<tr class=\"missing\"><td colspan=\"6\">No file coverage data.</td></tr>";
+  if (Array.isArray(files) && files.length > 0) {
+    rows = files
+      .map((file) => {
+        const statusClass = resolveGateStatusClass(file.status);
+        const statusLabel = resolveGateStatusLabel(file.status);
+        return `
+          <tr class="${statusClass}">
+            <td class="file-cell">${escapeHtml(file.file)}</td>
+            <td>${formatPercent(file.lines)}</td>
+            <td>${formatPercent(file.statements)}</td>
+            <td>${formatPercent(file.functions)}</td>
+            <td>${formatPercent(file.branches)}</td>
+            <td class="status">${statusLabel}</td>
+          </tr>
+        `;
+      })
+      .join("");
+  }
+  return rows;
+}
+
+/**
+ * ファイル別カバレッジのセクションを描画する。
+ * @param {any} coverage カバレッジ情報。
+ * @returns {string} HTML文字列。
+ */
+function renderFileCoverageSection(coverage) {
+  let section = "";
+  if (coverage) {
+    const hint = renderFileCoverageHint(coverage.fileRules);
+    const rows = renderFileCoverageRows(coverage.files);
+    section = `
+      <div>
+        <h3>File Coverage Gate</h3>
+        ${hint}
+        <table class="gate-table">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Lines</th>
+              <th>Statements</th>
+              <th>Functions</th>
+              <th>Branches</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+  return section;
+}
+
+/**
  * 品質ゲートのセクションを描画する。
  * @param {any | null} gate 品質ゲート結果。
  * @returns {string} HTML文字列。
@@ -155,6 +232,7 @@ function renderGateSection(gate) {
     const gateStatusClass = resolveGateStatusClass(gate.status);
     const toolRows = renderToolRows(gate.tools);
     const coverageRows = renderCoverageRows(gate.coverage);
+    const fileCoverageSection = renderFileCoverageSection(gate.coverage);
     const issueItems = renderGateIssues(gate.issues);
     section = `
       <section class="gate">
@@ -195,6 +273,7 @@ function renderGateSection(gate) {
                 ${coverageRows}
               </tbody>
             </table>
+            ${fileCoverageSection}
             <h3>Gate Issues</h3>
             <ul class="gate-issues">
               ${issueItems}
