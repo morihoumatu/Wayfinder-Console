@@ -6,6 +6,7 @@
 - Playwright: `npm run test:playwright`（初回のみ `npx playwright install`）
 - Cypress: `node server.js` を起動してから `npm run test:cypress`
 - Vitest: `npm run test:vitest`
+- 一括実行: `npm run test:all`（必要に応じてCypress用のサーバーを自動起動）
 
 ## 共通品質ルール
 - CIでは `CI=1` を前提に、`.only` の混入を禁止し、必要なリトライを有効化する。

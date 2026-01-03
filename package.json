@@ -14,7 +14,8 @@
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
     "test:cypress": "cypress run",
-    "test:cypress:open": "cypress open"
+    "test:cypress:open": "cypress open",
+    "test:all": "node scripts/test-all.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
