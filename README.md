@@ -1,12 +1,15 @@
-# ライブマップコンソール
+# Wayfinder Console
+
+地域起点のルート設計と所要時間検証を、プロダクト品質で運用できるライブコンソールです。
 
 クイックスタート:
 
-1. `.env` にキーを設定します。
+1. `.env.example` を `.env` にコピーします。
+2. `.env` にキーを設定します。
    - `GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY`
    - `OPENAI_API_KEY=YOUR_OPENAI_API_KEY`
-2. `node server.js` を実行します。
-3. ブラウザで `http://localhost:3000` を開きます。
+3. `node server.js` を実行します。
+4. ブラウザで `http://localhost:3000` を開きます。
 
 実行方法:
 
