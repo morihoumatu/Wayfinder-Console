@@ -1,4 +1,56 @@
 /* 目的: UIコンポーネントのスタイルをまとめる。 */
+.badge { /* バッジの見た目を設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  background: rgb(15 118 110 / 12%); /* 背景を設定する。 */
+  border: 1px solid rgb(15 118 110 / 18%); /* 枠線を設定する。 */
+  border-radius: 999px; /* 角丸を設定する。 */
+  color: var(--accent-2); /* 文字色を設定する。 */
+  display: inline-flex; /* 表示方式を設定する。 */
+  font-size: 0.75rem; /* 文字サイズを設定する。 */
+  font-weight: 600; /* 文字の太さを設定する。 */
+  letter-spacing: 0.08em; /* 文字間隔を設定する。 */
+  padding: 6px 12px; /* 内側余白を設定する。 */
+}
+
+.highlight-card { /* ハイライトカードの見た目を設定する。 */
+  background: #fff; /* 背景を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  border-radius: 18px; /* 角丸を設定する。 */
+  box-shadow: var(--shadow-soft); /* 影を設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 10px; /* 要素間の間隔を設定する。 */
+  padding: 18px 20px; /* 内側余白を設定する。 */
+}
+
+.highlight-card h3 { /* ハイライトの見出しを設定する。 */
+  font-family: var(--font-display); /* フォントファミリーを設定する。 */
+  font-size: 1.05rem; /* 文字サイズを設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+}
+
+.highlight-card p { /* ハイライト本文の見た目を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+}
+
+.reveal { /* フェードイン表示を設定する。 */
+  animation: float-in 0.9s ease forwards; /* アニメーションを設定する。 */
+  opacity: 0; /* 不透明度を設定する。 */
+  transform: translateY(16px); /* 変形を設定する。 */
+}
+
+.delay-1 { /* アニメーション遅延1を設定する。 */
+  animation-delay: 0.08s; /* アニメーションの開始遅延を設定する。 */
+}
+
+.delay-2 { /* アニメーション遅延2を設定する。 */
+  animation-delay: 0.16s; /* アニメーションの開始遅延を設定する。 */
+}
+
+.delay-3 { /* アニメーション遅延3を設定する。 */
+  animation-delay: 0.24s; /* アニメーションの開始遅延を設定する。 */
+}
+
 .recommend-result { /* おすすめ結果カードの見た目を設定する。 */
   background: #fffdf8; /* 背景を設定する。 */
   border: 1px solid var(--line); /* 枠線を設定する。 */
@@ -120,7 +172,7 @@
   animation-delay: 0.22s; /* アニメーションの開始遅延を設定する。 */
   border: 1px solid var(--line); /* 枠線を設定する。 */
   border-radius: 26px; /* 角丸を設定する。 */
-  box-shadow: var(--shadow); /* 影を設定する。 */
+  box-shadow: var(--shadow-soft); /* 影を設定する。 */
   min-height: 420px; /* 最小高さを設定する。 */
   opacity: 0; /* 不透明度を設定する。 */
   overflow: hidden; /* はみ出しを制御する。 */
@@ -135,7 +187,7 @@
 }
 
 .map-overlay { /* 地図オーバーレイの表示を設定する。 */
-  background: rgb(255 248 239 / 90%); /* 背景を設定する。 */
+  background: rgb(255 255 255 / 86%); /* 背景を設定する。 */
   color: var(--muted); /* 文字色を設定する。 */
   display: grid; /* 表示方式を設定する。 */
   font-size: 0.85rem; /* 文字サイズを設定する。 */

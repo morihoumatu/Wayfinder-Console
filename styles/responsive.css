@@ -4,6 +4,14 @@
     padding: 36px 20px 32px; /* 内側余白を設定する。 */
   }
 
+  .hero { /* 狭幅時のヒーロー余白を調整する。 */
+    padding: 24px; /* 内側余白を設定する。 */
+  }
+
+  .hero-highlights { /* 狭幅時のハイライト列数を調整する。 */
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* グリッドの列幅を設定する。 */
+  }
+
   .main { /* 狭幅時のメインレイアウトを1列にする。 */
     grid-template-columns: 1fr; /* グリッドの列幅を設定する。 */
   }
@@ -14,12 +22,20 @@
 }
 
 @media (width <= 640px) { /* 画面幅640px以下のレイアウト調整を行う。 */
+  .topbar-links { /* 狭幅時にナビリンクを非表示にする。 */
+    display: none; /* 表示方式を設定する。 */
+  }
+
   .hero { /* 狭幅時のヒーロー間隔を調整する。 */
     gap: 20px; /* 要素間の間隔を設定する。 */
   }
 
   .hero-card { /* 狭幅時のヒーローカード幅を調整する。 */
     width: 100%; /* 幅を設定する。 */
+  }
+
+  .hero-highlights { /* 狭幅時のハイライト列数を調整する。 */
+    grid-template-columns: 1fr; /* グリッドの列幅を設定する。 */
   }
 
   .route-points,

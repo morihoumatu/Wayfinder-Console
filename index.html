@@ -3,25 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ライブマップコンソール</title>
+    <title>Wayfinder Console | 地域起点のライブマップ運用</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Kaisei+Tokumin:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="page">
-      <header class="hero">
+      <nav class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name">Wayfinder Console</span>
+        </div>
+        <div class="topbar-links">
+          <a href="#product">プロダクト</a>
+          <a href="#workflow">体験</a>
+          <a href="#console">コンソール</a>
+        </div>
+        <a class="btn btn-ghost" href="#console">コンソールへ</a>
+      </nav>
+      <header class="hero" id="product">
         <div class="hero-copy">
-          <p class="eyebrow">フィールドマップ</p>
-          <h1>ライブマップコンソール</h1>
+          <p class="eyebrow">Wayfinder Platform</p>
+          <h1>地域起点のルート設計を、プロダクト品質で。</h1>
           <p class="subhead">
-            Google Maps APIキーを設定するとライブマップが表示され、マーカーやスタイルを
-            カスタマイズできます。
+            徒歩と在来線の所要時間を同一画面で検証しながら、地域・駅・散歩ルートの提案を
+            そのまま運用に載せられるライブコンソールです。
           </p>
+          <div class="hero-actions">
+            <a class="btn" href="#console">ライブコンソールを開く</a>
+            <a class="btn btn-secondary" href="#workflow">設計フローを見る</a>
+          </div>
+          <div class="hero-badges">
+            <span class="badge">地域アンカー自動選択</span>
+            <span class="badge">徒歩 / 在来線を同時計測</span>
+            <span class="badge">Google Maps連携</span>
+          </div>
         </div>
         <div class="hero-card">
           <div class="status" id="statusCard">
@@ -32,15 +53,50 @@
             </div>
           </div>
           <p class="hint">
-            地図を有効にするには <code>app.js</code> の <code>MAPS_API_KEY</code> を設定してください。
+            地図を有効にするには <code>.env</code> の
+            <code>GOOGLE_MAPS_API_KEY</code> を設定してください。
           </p>
+          <div class="hero-metrics">
+            <div>
+              <p class="meta-label">モード</p>
+              <p class="meta-value">徒歩 + 在来線</p>
+            </div>
+            <div>
+              <p class="meta-label">提供範囲</p>
+              <p class="meta-value">全国対応</p>
+            </div>
+          </div>
         </div>
       </header>
-      <main class="main">
+      <section class="hero-highlights" id="workflow">
+        <article class="highlight-card reveal delay-1">
+          <p class="meta-label">Step 01</p>
+          <h3>地域を指定して起点を選ぶ</h3>
+          <p>
+            地方・都道府県から検索し、最寄り駅と散歩ルートの起点を自動で組み立てます。
+          </p>
+        </article>
+        <article class="highlight-card reveal delay-2">
+          <p class="meta-label">Step 02</p>
+          <h3>所要時間をライブで検証</h3>
+          <p>
+            徒歩と在来線の所要時間を並列表示。条件の揺れも許容しながら候補を絞り込みます。
+          </p>
+        </article>
+        <article class="highlight-card reveal delay-3">
+          <p class="meta-label">Step 03</p>
+          <h3>提案を運用仕様に整える</h3>
+          <p>
+            Google Mapsリンクと区間内訳をそのまま共有できる形に整形して出力します。
+          </p>
+        </article>
+      </section>
+      <main class="main" id="console">
         <section class="panel">
-          <h2>はじめに</h2>
+          <h2>コンソール設定</h2>
           <ol class="steps">
-            <li><code>app.js</code> を開いて <code>MAPS_API_KEY</code> を設定します。</li>
+            <li><code>.env</code> に <code>GOOGLE_MAPS_API_KEY</code> を登録します。</li>
+            <li>おすすめ検索を使う場合は <code>OPENAI_API_KEY</code> も登録します。</li>
             <li><code>node server.js</code> を実行します。</li>
             <li>ブラウザで <code>http://localhost:3000</code> を開きます。</li>
             <li>マップを2回クリックして出発地と目的地を選択します。</li>
@@ -255,7 +311,7 @@
         </section>
       </main>
       <footer class="footer">
-        <p>地図データ (c) Google. UI はあなたが作成。</p>
+        <p>© 2026 Wayfinder Console. 地図データ: Google.</p>
       </footer>
     </div>
     <script src="app.js"></script>

@@ -1,24 +1,105 @@
 /* 目的: レイアウト構造のスタイルをまとめる。 */
+.topbar { /* トップバーの配置を設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-wrap: wrap; /* 折り返しを設定する。 */
+  gap: 20px; /* 要素間の間隔を設定する。 */
+  justify-content: space-between; /* 主軸の整列を設定する。 */
+  margin-bottom: 8px; /* 下余白を設定する。 */
+}
+
+.brand { /* ブランド表示のレイアウトを設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  font-weight: 600; /* 文字の太さを設定する。 */
+  gap: 10px; /* 要素間の間隔を設定する。 */
+  letter-spacing: 0.18em; /* 文字間隔を設定する。 */
+  text-transform: uppercase; /* 文字の変換を設定する。 */
+}
+
+.brand-mark { /* ブランドマークの見た目を設定する。 */
+  background: linear-gradient(135deg, var(--accent), #ffc2a7); /* 背景を設定する。 */
+  border-radius: 50%; /* 角丸を設定する。 */
+  box-shadow: 0 10px 25px -15px rgb(255 122 89 / 60%); /* 影を設定する。 */
+  display: inline-block; /* 表示方式を設定する。 */
+  height: 12px; /* 高さを設定する。 */
+  width: 12px; /* 幅を設定する。 */
+}
+
+.brand-name { /* ブランド名のサイズを設定する。 */
+  font-size: 0.9rem; /* 文字サイズを設定する。 */
+}
+
+.topbar-links { /* トップバーのリンク群を設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-wrap: wrap; /* 折り返しを設定する。 */
+  gap: 18px; /* 要素間の間隔を設定する。 */
+}
+
+.topbar-links a { /* トップバーリンクの見た目を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  font-size: 0.85rem; /* 文字サイズを設定する。 */
+  font-weight: 600; /* 文字の太さを設定する。 */
+  letter-spacing: 0.12em; /* 文字間隔を設定する。 */
+  text-decoration: none; /* 文字装飾を設定する。 */
+  text-transform: uppercase; /* 文字の変換を設定する。 */
+}
+
+.topbar-links a:hover { /* トップバーリンクのホバーを設定する。 */
+  color: var(--accent-2); /* 文字色を設定する。 */
+}
+
+.hero-actions { /* ヒーローのボタン群を設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-wrap: wrap; /* 折り返しを設定する。 */
+  gap: 12px; /* 要素間の間隔を設定する。 */
+  margin-top: 18px; /* 上余白を設定する。 */
+}
+
+.hero-badges { /* ヒーローのバッジ群を設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-wrap: wrap; /* 折り返しを設定する。 */
+  gap: 10px; /* 要素間の間隔を設定する。 */
+  margin-top: 18px; /* 上余白を設定する。 */
+}
+
+.hero-highlights { /* ハイライトカードのグリッドを設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 18px; /* 要素間の間隔を設定する。 */
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* グリッドの列幅を設定する。 */
+}
+
+.hero-metrics { /* ヒーローのメトリクスを設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 12px; /* 要素間の間隔を設定する。 */
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* グリッドの列幅を設定する。 */
+  margin-top: 16px; /* 上余白を設定する。 */
+}
+
 .main { /* メイン領域のグリッドを設定する。 */
   animation: float-in 0.9s ease forwards; /* アニメーションを設定する。 */
   animation-delay: 0.12s; /* アニメーションの開始遅延を設定する。 */
   display: grid; /* 表示方式を設定する。 */
   gap: 28px; /* 要素間の間隔を設定する。 */
-  grid-template-columns: minmax(220px, 0.32fr) minmax(0, 1fr); /* グリッドの列幅を設定する。 */
+  grid-template-columns: minmax(260px, 0.36fr) minmax(0, 1fr); /* グリッドの列幅を設定する。 */
   opacity: 0; /* 不透明度を設定する。 */
   transform: translateY(14px); /* 変形を設定する。 */
 }
 
 .panel { /* パネルカードの外観を設定する。 */
-  background: var(--card); /* 背景を設定する。 */
+  backdrop-filter: blur(12px); /* 背景のぼかしを設定する。 */
+  background: var(--glass); /* 背景を設定する。 */
   border: 1px solid var(--line); /* 枠線を設定する。 */
   border-radius: 22px; /* 角丸を設定する。 */
-  box-shadow: var(--shadow); /* 影を設定する。 */
+  box-shadow: var(--shadow-soft); /* 影を設定する。 */
   padding: 24px; /* 内側余白を設定する。 */
 }
 
 .panel h2 { /* パネル見出しの書体を設定する。 */
-  font-family: Fraunces, serif; /* フォントファミリーを設定する。 */
+  font-family: var(--font-display); /* フォントファミリーを設定する。 */
   margin: 0 0 16px; /* 外側余白を設定する。 */
 }
 
@@ -74,7 +155,7 @@
 }
 
 .route-section h3 { /* ルート見出しの書体を設定する。 */
-  font-family: Fraunces, serif; /* フォントファミリーを設定する。 */
+  font-family: var(--font-display); /* フォントファミリーを設定する。 */
   font-size: 1.05rem; /* 文字サイズを設定する。 */
   margin: 0; /* 外側余白を設定する。 */
 }
@@ -113,7 +194,7 @@
 }
 
 .input { /* 入力欄の基本スタイルを設定する。 */
-  background: #fffdf8; /* 背景を設定する。 */
+  background: #fff; /* 背景を設定する。 */
   border: 1px solid var(--line); /* 枠線を設定する。 */
   border-radius: 999px; /* 角丸を設定する。 */
   color: var(--ink); /* 文字色を設定する。 */
@@ -133,14 +214,20 @@
 }
 
 .btn { /* ボタンの基本スタイルを設定する。 */
-  background: var(--accent-2); /* 背景を設定する。 */
-  border: none; /* 枠線を設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  background: linear-gradient(120deg, var(--accent-2), #149b86); /* 背景を設定する。 */
+  border: 1px solid transparent; /* 枠線を設定する。 */
   border-radius: 999px; /* 角丸を設定する。 */
+  box-shadow: 0 16px 30px -20px rgb(15 118 110 / 70%); /* 影を設定する。 */
   color: #fff; /* 文字色を設定する。 */
   cursor: pointer; /* カーソルを設定する。 */
+  display: inline-flex; /* 表示方式を設定する。 */
   font-weight: 600; /* 文字の太さを設定する。 */
-  padding: 10px 16px; /* 内側余白を設定する。 */
-  transition: transform 0.15s ease, filter 0.15s ease; /* トランジションを設定する。 */
+  gap: 8px; /* 要素間の間隔を設定する。 */
+  justify-content: center; /* 主軸の整列を設定する。 */
+  padding: 10px 18px; /* 内側余白を設定する。 */
+  text-decoration: none; /* 文字装飾を設定する。 */
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease; /* トランジションを設定する。 */
 }
 
 .btn:hover { /* ボタンのホバー表示を設定する。 */
@@ -149,6 +236,20 @@
 
 .btn:active { /* ボタン押下時の動きを設定する。 */
   transform: translateY(1px); /* 変形を設定する。 */
+}
+
+.btn-secondary { /* セカンダリーボタンの見た目を設定する。 */
+  background: #fff; /* 背景を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  box-shadow: none; /* 影を設定する。 */
+  color: var(--ink); /* 文字色を設定する。 */
+}
+
+.btn-ghost { /* ゴーストボタンの見た目を設定する。 */
+  background: transparent; /* 背景を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  box-shadow: none; /* 影を設定する。 */
+  color: var(--ink); /* 文字色を設定する。 */
 }
 
 .region-select .btn { /* 地域選択ボタンの配置を調整する。 */
