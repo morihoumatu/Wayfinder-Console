@@ -10,8 +10,10 @@ const { DEFAULT_WALK_TARGET_MINUTES } = require("./config");
  * @returns {string} 都道府県名。
  */
 function extractPrefecture(region) {
+  // extractedの初期値を定義する。
   let extracted = "";
   if (region) {
+    // matchを取得する。
     const match = region.match(/^(.+?[都道府県])/);
     extracted = match && typeof match[1] === "string" ? match[1] : region;
   }
@@ -75,12 +77,14 @@ function parseRecommendPayload(payload) {
  * @returns {boolean} 検証結果。
  */
 function validateRecommendRequest(context, sendOnce) {
+  // 判定結果の初期値を定義する。
   let isValid = true;
   if (!context.query && context.mode !== "walk_route") {
     sendOnce(400, { error: "検索キーワードが空です。" });
     isValid = false;
   }
   if (isValid) {
+    // originの参照を保持する。
     const origin = context.origin;
     if (!origin || typeof origin.lat !== "number" || typeof origin.lng !== "number") {
       sendOnce(400, { error: "出発地の座標が不正です。" });
@@ -97,8 +101,11 @@ function validateRecommendRequest(context, sendOnce) {
  * @returns {any} 算出結果。
  */
 function resolveEffectiveTargetMinutes(maxMinutes, targetMinutes) {
+  // 判定結果を条件で選ぶ。
   const hasMaxMinutes = Number.isFinite(maxMinutes) && maxMinutes > 0;
+  // 判定結果を条件で選ぶ。
   const hasTargetMinutes = Number.isFinite(targetMinutes) && targetMinutes > 0;
+  // effectiveTargetMinutesを条件で選ぶ。
   const effectiveTargetMinutes = hasTargetMinutes
     ? targetMinutes
     : hasMaxMinutes
@@ -113,14 +120,17 @@ function resolveEffectiveTargetMinutes(maxMinutes, targetMinutes) {
  * @returns {any} 算出結果。
  */
 function buildSegmentRange(effectiveTargetMinutes) {
+  // desiredStopsを取得する。
   const desiredStops = Math.min(
     6,
     Math.max(3, Math.round(effectiveTargetMinutes / 45) + 2)
   );
+  // segmentMinutesを取得する。
   const segmentMinutes = Math.max(
     15,
     Math.round(effectiveTargetMinutes / (desiredStops + 1))
   );
+  // segmentRangeの初期値を定義する。
   const segmentRange = `${Math.max(
     10,
     Math.round(segmentMinutes * 0.7)
@@ -135,9 +145,11 @@ function buildSegmentRange(effectiveTargetMinutes) {
  * @returns {any} 距離レンジ。
  */
 function buildDistanceRange(estimatedDistanceKm, adjustment) {
+  // distanceMinKmを条件で選ぶ。
   let distanceMinKm = estimatedDistanceKm
     ? Math.max(1, Math.round(estimatedDistanceKm * 0.8 * 10) / 10)
     : null;
+  // distanceMaxKmを条件で選ぶ。
   let distanceMaxKm = estimatedDistanceKm
     ? Math.round(estimatedDistanceKm * 1.2 * 10) / 10
     : null;
@@ -157,16 +169,25 @@ function buildDistanceRange(estimatedDistanceKm, adjustment) {
  * @returns {any} 計算結果。
  */
 function buildWalkRouteMetrics(context) {
+  // maxMinutesの参照を保持する。
   const maxMinutes = context.maxMinutes;
+  // targetMinutesの参照を保持する。
   const targetMinutes = context.targetMinutes;
+  // targetInfoを解決する。
   const targetInfo = resolveEffectiveTargetMinutes(maxMinutes, targetMinutes);
+  // adjustmentの参照を保持する。
   const adjustment = context.adjustment;
+  // actualMinutesの参照を保持する。
   const actualMinutes = context.actualMinutes;
+  // 判定結果を条件で選ぶ。
   const hasActualMinutes = Number.isFinite(actualMinutes) && actualMinutes > 0;
+  // estimatedDistanceKmを条件で選ぶ。
   const estimatedDistanceKm = Number.isFinite(targetInfo.effectiveTargetMinutes)
     ? Math.round(targetInfo.effectiveTargetMinutes * 0.08 * 10) / 10
     : null;
+  // segmentInfoを作成する。
   const segmentInfo = buildSegmentRange(targetInfo.effectiveTargetMinutes);
+  // distanceRangeを作成する。
   const distanceRange = buildDistanceRange(estimatedDistanceKm, adjustment);
   return {
     maxMinutes,
@@ -213,6 +234,7 @@ function buildPrefectureHint(prefectureList) {
  * @returns {string} 検索地域。
  */
 function buildSearchRegion(originRegion, isWalkRoute, effectiveTargetMinutes) {
+  // searchRegionの参照を保持する。
   let searchRegion = originRegion;
   if (isWalkRoute && effectiveTargetMinutes >= 120) {
     searchRegion = extractPrefecture(originRegion) || originRegion;

@@ -16,6 +16,7 @@
  * @returns {string} 状態文言。
  */
 function getStandardRouteStatusMessage(flags) {
+  // メッセージの初期値を定義する。
   let message = "";
   if (flags.railRejected === "high_speed") {
     message = flags.walkOk
@@ -40,10 +41,14 @@ function getStandardRouteStatusMessage(flags) {
 function evaluateRouteLimit(
   /** @type {{ flags: any, maxMinutes: number | null }} */ { flags, maxMinutes }
 ) {
+  // 判定結果の初期値を定義する。
   let shouldCheck = false;
+  // walkWithinの初期値を定義する。
   let walkWithin = false;
+  // railWithinの初期値を定義する。
   let railWithin = false;
   if (maxMinutes && (flags.walkOk || flags.railOk)) {
+    // limitSecondsを用意する。
     const limitSeconds = maxMinutes * 60;
     walkWithin =
       typeof flags.walkSeconds === "number" &&
@@ -67,6 +72,7 @@ function applyRouteLimitMessage(
   flags
 ) {
   if (!walkWithin && !railWithin) {
+    // メッセージの初期値を定義する。
     const message = `上限${maxMinutes}分を超えています。別の候補を選んでください。`;
     if (destinationSource === "recommendation") {
       clearDestination(message);
@@ -84,7 +90,9 @@ function applyRouteLimitMessage(
  * @param {any} flags 進捗フラグ。
  */
 function applyStandardRouteLimits(flags) {
+  // maxMinutesを取得する。
   const maxMinutes = getMaxMinutes();
+  // 状態を取得する。
   const limitState = evaluateRouteLimit({ flags, maxMinutes });
   if (limitState.shouldCheck) {
     applyRouteLimitMessage(limitState, flags);
@@ -122,6 +130,7 @@ function fitBoundsIfNeeded(bounds) {
 function handleStandardCompletion(
   /** @type {{ flags: any, bounds: any }} */ { flags, bounds }
 ) {
+  // メッセージを取得する。
   const message = getStandardRouteStatusMessage(flags);
   if (message) {
     setRouteStatus(message);
@@ -139,6 +148,7 @@ function handleStandardCompletion(
 function finalizeRouteCompletion(
   /** @type {{ flags: any, bounds: any }} */ { flags, bounds }
 ) {
+  // 判定結果の初期値を定義する。
   let shouldFinalize = true;
   if (destinationSource === "walk_multi") {
     shouldFinalize = handleWalkMultiCompletion({ flags });
@@ -156,8 +166,10 @@ function finalizeRouteCompletion(
  * @param {{ type: string, result: any, status: any, bounds: any, flags: any, currentRequest: number }} options 結果オプション。
  */
 function handleRouteResult(options) {
+  // typeの参照を保持する。
   const { type, result, status, bounds, flags, currentRequest } = options;
   if (currentRequest === requestId) {
+    // evaluationを取得する。
     const evaluation = evaluateRouteSelection({ type, status, result });
     applyRouteResultState({
       type,
@@ -168,6 +180,7 @@ function handleRouteResult(options) {
       bounds,
       flags,
     });
+    // 判定結果を取得する。
     const isComplete = incrementRouteCompletion(flags);
     if (isComplete) {
       finalizeRouteCompletion({ flags, bounds });

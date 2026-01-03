@@ -3,8 +3,10 @@
  * @file
  */
 const { test, expect } = require("@playwright/test");
+// google-maps-stubからgetGoogleMapsStubScriptを取得する。
 const { getGoogleMapsStubScript } = require("../helpers/google-maps-stub");
 
+// mockGoogleMapsの処理を定義する。
 const mockGoogleMaps = async (page) => {
   await page.route(
     /https:\/\/maps\.googleapis\.com\/maps\/api\/js.*/,

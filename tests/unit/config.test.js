@@ -3,16 +3,21 @@
  * @file
  */
 const fs = require("fs");
+// pathモジュールを読み込む。
 const path = require("path");
 
+// パスを組み立てる。
 const configPath = path.join(__dirname, "../../server/config");
+// パスを組み立てる。
 const envPath = path.join(__dirname, "../../.env");
 
+// configを取得する処理を定義する。
 const loadConfig = () => {
   delete require.cache[require.resolve(configPath)];
   return require(configPath);
 };
 
+// snapshotEnvの処理を定義する。
 const snapshotEnv = () => ({
   NODE_ENV: process.env.NODE_ENV,
   PORT: process.env.PORT,
@@ -24,6 +29,7 @@ const snapshotEnv = () => ({
   MAPS_API_KEY: process.env.MAPS_API_KEY,
 });
 
+// restoreEnvValueの処理を定義する。
 const restoreEnvValue = (key, value) => {
   if (value === undefined) {
     delete process.env[key];
@@ -32,6 +38,7 @@ const restoreEnvValue = (key, value) => {
   }
 };
 
+// restoreEnvの処理を定義する。
 const restoreEnv = (snapshot) => {
   restoreEnvValue("NODE_ENV", snapshot.NODE_ENV);
   restoreEnvValue("PORT", snapshot.PORT);
@@ -43,9 +50,11 @@ const restoreEnv = (snapshot) => {
   restoreEnvValue("MAPS_API_KEY", snapshot.MAPS_API_KEY);
 };
 
+// snapshotEnvFileの処理を定義する。
 const snapshotEnvFile = () =>
   fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : null;
 
+// restoreEnvFileの処理を定義する。
 const restoreEnvFile = (snapshot) => {
   if (snapshot === null) {
     if (fs.existsSync(envPath)) {
@@ -56,13 +65,16 @@ const restoreEnvFile = (snapshot) => {
   }
 };
 
+// writeEnvFileの処理を定義する。
 const writeEnvFile = (content) => {
   fs.writeFileSync(envPath, content, "utf8");
 };
 
 // configの読み込み条件をまとめて検証する。
 describe("config", () => {
+  // snapshotを取得する。
   const snapshot = snapshotEnv();
+  // envSnapshotを取得する。
   const envSnapshot = snapshotEnvFile();
 
   afterEach(() => {
@@ -76,6 +88,7 @@ describe("config", () => {
     delete process.env.OPENAI_API_URL;
     delete process.env.OPENAI_MODEL;
     delete process.env.OPENAI_WEB_SEARCH_TOOL;
+    // 設定を読み込む。
     const defaultConfig = loadConfig();
 
     restoreEnv(snapshot);
@@ -84,6 +97,7 @@ describe("config", () => {
     process.env.OPENAI_API_URL = "https://example.test";
     process.env.OPENAI_MODEL = "test-model";
     process.env.OPENAI_WEB_SEARCH_TOOL = "off";
+    // 設定を読み込む。
     const overrideConfig = loadConfig();
 
     restoreEnv(snapshot);
@@ -106,6 +120,7 @@ describe("config", () => {
         "INVALID_LINE",
       ].join("\n")
     );
+    // 設定を読み込む。
     const envConfig = loadConfig();
 
     restoreEnv(snapshot);
@@ -113,6 +128,7 @@ describe("config", () => {
     delete process.env.GOOGLE_MAPS_API_KEY;
     delete process.env.MAPS_API_KEY;
     writeEnvFile("GOOGLE_MAPS_API_KEY=env-maps");
+    // 設定を読み込む。
     const productionConfig = loadConfig();
 
     expect({

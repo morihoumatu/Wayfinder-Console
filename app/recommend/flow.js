@@ -15,6 +15,7 @@
  * @param {any} place おすすめデータ。
  */
 function showRecommendResult(place) {
+  // 判定結果を条件で選ぶ。
   const isWalkRoute =
     place?.route_type === "walk_multi" || Array.isArray(place?.stops);
   recommendTitle.textContent =
@@ -22,6 +23,7 @@ function showRecommendResult(place) {
   recommendAddress.textContent =
     place?.address || place?.area || (isWalkRoute ? "出発地周辺" : "住所不明");
   recommendReason.textContent = place?.reason || "理由は取得できませんでした。";
+  // マップを取得する。
   const mapQuery = [place?.name, place?.address, place?.area]
     .filter(Boolean)
     .join(" ");
@@ -43,7 +45,9 @@ function showRecommendResult(place) {
  * @returns {any} 出発地情報。
  */
 function resolveRecommendationOrigin(originOverride) {
+  // originSourceを条件で選ぶ。
   const originSource = originOverride || originLatLng;
+  // originLiteralを取得する。
   const originLiteral = getLatLngLiteral(originSource);
   if (!originLiteral) {
     throw new Error("出発地の座標が不正です。");
@@ -58,6 +62,7 @@ function resolveRecommendationOrigin(originOverride) {
  * @returns {Promise<string>} 地域名のPromise。
  */
 async function resolveRecommendationRegion(originSource, originRegionOverride) {
+  // regionを条件で選ぶ。
   let region =
     typeof originRegionOverride === "string" ? originRegionOverride.trim() : "";
   if (!region) {
@@ -79,12 +84,14 @@ function resolveRecommendationSelections(
   originPrefectures,
   originAreaLabel
 ) {
+  // selectedPrefecturesを条件で選ぶ。
   const selectedPrefectures =
     Array.isArray(originPrefectures) && originPrefectures.length > 0
       ? originPrefectures
       : Array.isArray(context?.prefectures)
         ? context.prefectures
         : [];
+  // selectedAreaLabelを条件で選ぶ。
   const selectedAreaLabel =
     typeof originAreaLabel === "string" && originAreaLabel.trim()
       ? originAreaLabel.trim()
@@ -99,7 +106,9 @@ function resolveRecommendationSelections(
  * @returns {Promise<string>} ラベルのPromise。
  */
 async function resolveOriginLabelValue(originSource, region) {
+  // localitiesを解決する。
   const localities = await resolveLocalityCandidates(originSource);
+  // originLabelValueを条件で選ぶ。
   const originLabelValue =
     (Array.isArray(localities) && localities[0]) || region || "";
   return originLabelValue;
@@ -136,18 +145,24 @@ async function buildRecommendationPayload(
     originAreaLabel,
   }
 ) {
+  // maxMinutesを取得する。
   const maxMinutes = getMaxMinutes();
+  // originInfoを解決する。
   const originInfo = resolveRecommendationOrigin(originOverride);
+  // regionを解決する。
   const region = await resolveRecommendationRegion(
     originInfo.originSource,
     originRegionOverride
   );
+  // メッセージを取得する。
   const context = getSelectedRegionContext();
+  // selectionを解決する。
   const selection = resolveRecommendationSelections(
     context,
     originPrefectures,
     originAreaLabel
   );
+  // originLabelValueを解決する。
   const originLabelValue = await resolveOriginLabelValue(
     originInfo.originSource,
     region
@@ -211,6 +226,7 @@ async function requestRecommendation(
   originAreaLabel,
   }
 ) {
+  // ペイロードを作成する。
   const payload = await buildRecommendationPayload({
     query,
     mode,
@@ -222,6 +238,7 @@ async function requestRecommendation(
     originPrefectures,
     originAreaLabel,
   });
+  // レスポンスを取得する。
   const response = await fetch("/api/recommend", {
     method: "POST",
     headers: {
@@ -230,6 +247,7 @@ async function requestRecommendation(
     body: JSON.stringify(payload),
   });
 
+  // データを取得する。
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data?.error || "おすすめ地点の取得に失敗しました。");

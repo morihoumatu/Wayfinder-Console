@@ -10,6 +10,7 @@ const { buildDistanceHint } = require("./recommend-utils");
  * @returns {string} システムプロンプト。
  */
 function buildWalkRouteSystemPrompt(context) {
+  // distanceHintを作成する。
   const distanceHint = buildDistanceHint(
     context.distanceMinKm,
     context.distanceMaxKm
@@ -88,6 +89,7 @@ function formatOriginLine(originLabel, origin) {
  * @returns {string} 表示文言。
  */
 function formatAdjustmentLabel(adjustment) {
+  // labelの初期値を定義する。
   let label = "";
   if (adjustment === "longer") {
     label = "調整指示: 前回より長め";
@@ -103,7 +105,9 @@ function formatAdjustmentLabel(adjustment) {
  * @returns {string} ユーザー入力。
  */
 function buildWalkRouteUserContent(context) {
+  // adjustmentLabelを整形する。
   const adjustmentLabel = formatAdjustmentLabel(context.adjustment);
+  // linesの一覧を用意する。
   const lines = [
     formatOriginLine(context.originLabel, context.origin),
     context.searchRegion ? `出発地の地域: ${context.searchRegion}` : null,
@@ -129,6 +133,7 @@ function buildWalkRouteUserContent(context) {
  * @returns {string} ユーザー入力。
  */
 function buildSpotUserContent(context) {
+  // linesの一覧を用意する。
   const lines = [
     `出発地: ${context.origin.lat}, ${context.origin.lng}`,
     context.originRegion ? `出発地の地域: ${context.originRegion}` : null,

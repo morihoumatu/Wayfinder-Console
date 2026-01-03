@@ -13,15 +13,20 @@
  * @returns {boolean} 高速鉄道判定。
  */
 function routeHasHighSpeedTrain(route) {
+  // legsを条件で選ぶ。
   const legs = route?.legs || [];
+  // highSpeedTypeを条件で選ぶ。
   const highSpeedType =
     google.maps.TransitVehicleType?.HIGH_SPEED_TRAIN || "HIGH_SPEED_TRAIN";
   return legs.some((/** @type {any} */ leg) =>
     leg.steps?.some((/** @type {any} */ step) => {
+      // 移動手段を取得する。
       const travelMode = step.travel_mode;
+      // 判定結果を条件で選ぶ。
       const isTransit =
         travelMode === google.maps.TravelMode.TRANSIT ||
         travelMode === "TRANSIT";
+      // vehicleTypeを用意する。
       const vehicleType = step.transit?.line?.vehicle?.type;
       return isTransit && vehicleType === highSpeedType;
     })
@@ -34,11 +39,13 @@ function routeHasHighSpeedTrain(route) {
  * @returns {{ route: any, reason: string | null }} 選択結果と理由。
  */
 function selectLocalRailRoute(result) {
+  // routesを条件で選ぶ。
   const routes = result?.routes || [];
   /** @type {{ route: any, reason: string | null }} */
   let selection = { route: null, reason: "no_route" };
   if (routes.length) {
     selection = { route: null, reason: "high_speed" };
+    // routeをループ用に用意する。
     for (const route of routes) {
       if (!routeHasHighSpeedTrain(route)) {
         selection = { route, reason: null };
@@ -57,9 +64,12 @@ function selectLocalRailRoute(result) {
 function evaluateRouteSelection(
   /** @type {{ type: string, status: any, result: any }} */ { type, status, result }
 ) {
+  // 結果の参照を保持する。
   let routeResult = result;
+  // rejectReasonの初期値を定義する。
   let rejectReason = null;
   if (type === "rail" && status === "OK" && result?.routes?.length) {
+    // selectionを取得する。
     const selection = selectLocalRailRoute(result);
     if (!selection.route) {
       rejectReason = selection.reason;
@@ -67,6 +77,7 @@ function evaluateRouteSelection(
       routeResult = { ...result, routes: [selection.route] };
     }
   }
+  // 判定結果を条件で選ぶ。
   const isOk = status === "OK" && routeResult?.routes?.[0] && !rejectReason;
   return { routeResult, rejectReason, isOk };
 }
@@ -97,8 +108,11 @@ function applyRailRouteSuccess(
   /** @type {{ routeResult: any, durationText: string, durationSeconds: number | null, flags: any }} */
   { routeResult, durationText, durationSeconds, flags }
 ) {
+  // メッセージの参照を保持する。
   let adjustedText = durationText;
+  // adjustedSecondsの参照を保持する。
   let adjustedSeconds = durationSeconds;
+  // extraSecondsの参照を保持する。
   const extraSeconds = flags.railExtraSeconds;
   if (
     typeof durationSeconds === "number" &&
@@ -166,7 +180,9 @@ function applyRouteResultState(
   { type, isOk, routeResult, result, rejectReason, bounds, flags }
 ) {
   if (isOk) {
+    // legsを条件で選ぶ。
     const legs = routeResult.routes[0]?.legs || [];
+    // メッセージを取得する。
     const { text: durationText, seconds: durationSeconds } =
       getRouteDurationFromLegs(legs);
     if (type === "walk") {

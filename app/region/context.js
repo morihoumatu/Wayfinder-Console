@@ -12,15 +12,21 @@
  * @returns {string | null} 地域名またはnull。
  */
 function extractRegionFromComponents(components) {
+  // regionの初期値を定義する。
   let region = null;
   if (Array.isArray(components)) {
+    // partを取得する処理を定義する。
     const findPart = (/** @type {string} */ type) =>
       components.find((/** @type {any} */ component) =>
         component.types?.includes(type)
       )?.long_name;
+    // prefectureを取得する。
     const prefecture = findPart("administrative_area_level_1");
+    // localityを条件で選ぶ。
     const locality = findPart("locality") || findPart("sublocality_level_1");
+    // sublocalityを取得する。
     const sublocality = findPart("sublocality_level_2");
+    // partsを取得する。
     const parts = [prefecture, locality, sublocality].filter(Boolean);
     region = parts.length ? parts.join("") : null;
   }
@@ -33,6 +39,7 @@ function extractRegionFromComponents(components) {
  * @returns {string[]} フィルタ配列。
  */
 function normalizeRegionFilter(region) {
+  // filtersの一覧を用意する。
   let filters = [];
   if (region) {
     if (Array.isArray(region)) {
@@ -54,8 +61,10 @@ function normalizeRegionFilter(region) {
  * @returns {boolean} 一致判定。
  */
 function isRegionMatch(regionName, context) {
+  // 判定結果の初期値を定義する。
   let isMatch = true;
   if (regionName && context) {
+    // filtersを正規化する。
     const filters = normalizeRegionFilter(
       Array.isArray(context.prefectures) && context.prefectures.length > 0
         ? context.prefectures
@@ -75,8 +84,10 @@ function isRegionMatch(regionName, context) {
  * @returns {Promise<boolean>} 一致判定のPromise。
  */
 async function resolveIsOriginInRegion(latLng, context) {
+  // 判定結果の初期値を定義する。
   let isMatch = true;
   if (latLng && context) {
+    // regionNameを解決する。
     const regionName = await resolveOriginRegion(latLng);
     if (regionName) {
       isMatch = isRegionMatch(regionName, context);
@@ -95,8 +106,10 @@ async function resolveIsOriginInRegion(latLng, context) {
  * @returns {string} 選択された文字列。
  */
 function pickRandomItem(list) {
+  // pickedの初期値を定義する。
   let picked = "";
   if (Array.isArray(list) && list.length > 0) {
+    // インデックスを取得する。
     const index = Math.floor(Math.random() * list.length);
     picked = list[index];
   }
@@ -110,8 +123,10 @@ function pickRandomItem(list) {
  * @returns {string} アンカー文字列。
  */
 function getAreaAnchor(areaValue, refreshAnchor) {
+  // anchorの初期値を定義する。
   let anchor = "";
   if (areaValue && REGION_GROUPS[areaValue]) {
+    // groupの参照を保持する。
     const group = REGION_GROUPS[areaValue];
     if (areaValue !== areaAnchorSelection || refreshAnchor) {
       if (areaValue === "関東地方") {
@@ -132,10 +147,14 @@ function getAreaAnchor(areaValue, refreshAnchor) {
  * @returns {any} 地域コンテキスト。
  */
 function getSelectedRegionContext(options = {}) {
+  // refreshAnchorを取得する。
   const refreshAnchor = Boolean(options.refreshAnchor);
+  // areaValueを用意する。
   const areaValue = originAreaSelect?.value?.trim();
+  // メッセージの初期値を定義する。
   let context = null;
   if (areaValue && REGION_GROUPS[areaValue]) {
+    // groupの参照を保持する。
     const group = REGION_GROUPS[areaValue];
     context = {
       label: areaValue,
@@ -143,6 +162,7 @@ function getSelectedRegionContext(options = {}) {
       anchor: getAreaAnchor(areaValue, refreshAnchor),
     };
   } else {
+    // prefValueを用意する。
     const prefValue = originRegionSelect?.value?.trim();
     if (prefValue) {
       context = {
@@ -182,6 +202,7 @@ function resolveOriginRegion(latLng) {
         resolve(null);
         return;
       }
+      // regionを条件で選ぶ。
       const region =
         extractRegionFromComponents(results[0].address_components) ||
         results[0].formatted_address ||

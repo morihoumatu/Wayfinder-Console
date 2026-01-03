@@ -4,6 +4,7 @@
  */
 const path = require("path");
 
+// CONTENT_SECURITY_POLICYを取得する。
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -16,6 +17,7 @@ const CONTENT_SECURITY_POLICY = [
   "connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com",
 ].join("; ");
 
+// SECURITY_HEADERSをまとめる。
 const SECURITY_HEADERS = {
   "Content-Security-Policy": CONTENT_SECURITY_POLICY,
   "Cross-Origin-Opener-Policy": "same-origin",
@@ -33,7 +35,9 @@ const SECURITY_HEADERS = {
  * @returns {string | null} 安全なパスまたはnull。
  */
 function safeJoin(base, target) {
+  // パスを組み立てる。
   const targetPath = path.normalize(path.join(base, target));
+  // resolvedを条件で選ぶ。
   const resolved = targetPath.startsWith(base) ? targetPath : null;
   return resolved;
 }
@@ -59,6 +63,7 @@ function sendJson(res, status, payload) {
  */
 function readJson(req) {
   return new Promise((resolve, reject) => {
+    // bodyの初期値を定義する。
     let body = "";
     req.on(
       "data",

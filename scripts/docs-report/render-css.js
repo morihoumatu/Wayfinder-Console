@@ -4,6 +4,7 @@
  */
 "use strict";
 
+// utilsからescapeHtmlを取得する。
 const { escapeHtml } = require("./utils");
 
 /**
@@ -12,10 +13,13 @@ const { escapeHtml } = require("./utils");
  * @returns {string} HTML出力。
  */
 function renderCssBlock(block) {
+  // htmlの初期値を定義する。
   let html = "<div class=\"doc-block\">";
+  // メッセージを条件で選ぶ。
   const contextText = Array.isArray(block.context)
     ? block.context.join(" > ")
     : "";
+  // メッセージを条件で選ぶ。
   const selectorText = contextText.length > 0
     ? `${contextText} > ${block.selector}`
     : block.selector;
@@ -32,8 +36,11 @@ function renderCssBlock(block) {
   if (Array.isArray(block.declarations) && block.declarations.length > 0) {
     html += "<div class=\"doc-tags\"><div class=\"tag-title\">Declarations</div><ul>";
     block.declarations.forEach((/** @type {any} */ declaration) => {
+      // プロパティ名を取得する。
       const propertyText = declaration.property || "";
+      // メッセージを条件で選ぶ。
       const commentText = declaration.comment || "";
+      // labelを取得する。
       const label = `${propertyText}: ${commentText}`.trim();
       html += `<li>${escapeHtml(label)}</li>`;
     });
@@ -50,6 +57,7 @@ function renderCssBlock(block) {
  * @returns {string} HTML出力。
  */
 function renderCssFileSection(fileDoc) {
+  // htmlの初期値を定義する。
   let html = "<details class=\"file\">";
   html += `<summary>${escapeHtml(fileDoc.name)}`;
   html += ` <span class="path">${escapeHtml(fileDoc.path)}</span></summary>`;
@@ -80,6 +88,7 @@ function renderCssFileSection(fileDoc) {
  * @returns {string} HTML出力。
  */
 function renderCssSection(cssFiles) {
+  // htmlの初期値を定義する。
   let html = "";
   if (Array.isArray(cssFiles) && cssFiles.length > 0) {
     html = "<section class=\"dir\">";

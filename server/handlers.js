@@ -3,7 +3,9 @@
  * @file APIハンドラーの処理をまとめる。
  */
 const { extractOutputText, parseJsonFromText } = require("./json-utils");
+// stop-utilsからextractStopsFromResultを取得する。
 const { extractStopsFromResult } = require("./stop-utils");
+// recommend-utilsから必要な値を取得する。
 const {
   parseRecommendPayload,
   validateRecommendRequest,
@@ -12,13 +14,16 @@ const {
   buildPrefectureHint,
   buildSearchRegion,
 } = require("./recommend-utils");
+// promptsから必要な値を取得する。
 const {
   buildWalkRouteSystemPrompt,
   buildSpotSystemPrompt,
   buildWalkRouteUserContent,
   buildSpotUserContent,
 } = require("./prompts");
+// openai-requestからbuildOpenAIRequestPayloadを取得する。
 const { buildOpenAIRequestPayload } = require("./openai-request");
+// openai-clientからcallOpenAIを取得する。
 const { callOpenAI } = require("./openai-client");
 
 /**
@@ -37,12 +42,15 @@ function handleWalkRouteResult(
    */
   { result, originRegion, effectiveTargetMinutes, outputText, sendOnce }
 ) {
+  // stopsを取得する。
   const stops = extractStopsFromResult(result);
   if (stops.length < 2) {
     console.error("OpenAI raw output:", outputText);
     sendOnce(500, { error: "散歩ルートの地点が取得できませんでした。" });
   } else {
+    // parsedTargetMinutesを解析する。
     const parsedTargetMinutes = Number.parseInt(result.target_minutes, 10);
+    // targetMinutesを条件で選ぶ。
     const targetMinutes =
       Number.isFinite(parsedTargetMinutes) && parsedTargetMinutes > 0
         ? parsedTargetMinutes
@@ -93,6 +101,7 @@ function handleRecommendResult(
    */
   { outputText, isWalkRoute, originRegion, effectiveTargetMinutes, sendOnce }
 ) {
+  // 結果を解析する。
   const result = parseJsonFromText(outputText);
   if (!result) {
     console.error("OpenAI raw output:", outputText);
@@ -119,18 +128,26 @@ function handleRecommendResult(
  * @returns {Promise<void>} 処理完了のPromise。
  */
 async function handleRecommendPayload(payload, sendOnce) {
+  // メッセージを解析する。
   const context = parseRecommendPayload(payload);
+  // 判定結果を取得する。
   const isValid = validateRecommendRequest(context, sendOnce);
   if (isValid) {
+    // metricsを作成する。
     const metrics = buildWalkRouteMetrics(context);
+    // 判定結果を用意する。
     const isWalkRoute = context.mode === "walk_route";
+    // 一覧を正規化する。
     const prefectureList = normalizePrefectureList(context.originPrefectures);
+    // prefectureHintを作成する。
     const prefectureHint = buildPrefectureHint(prefectureList);
+    // searchRegionを作成する。
     const searchRegion = buildSearchRegion(
       context.originRegion,
       isWalkRoute,
       metrics.effectiveTargetMinutes
     );
+    // メッセージをまとめる。
     const promptContext = {
       ...context,
       ...metrics,
@@ -138,14 +155,19 @@ async function handleRecommendPayload(payload, sendOnce) {
       prefectureHint,
       searchRegion,
     };
+    // systemPromptを条件で選ぶ。
     const systemPrompt = isWalkRoute
       ? buildWalkRouteSystemPrompt(promptContext)
       : buildSpotSystemPrompt();
+    // userContentを条件で選ぶ。
     const userContent = isWalkRoute
       ? buildWalkRouteUserContent(promptContext)
       : buildSpotUserContent(promptContext);
+    // リクエストを作成する。
     const requestPayload = buildOpenAIRequestPayload(systemPrompt, userContent);
+    // レスポンスを取得する。
     const response = await callOpenAI(requestPayload);
+    // メッセージを取得する。
     const outputText = extractOutputText(response);
     handleRecommendResult({
       outputText,

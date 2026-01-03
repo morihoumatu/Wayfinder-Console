@@ -12,8 +12,10 @@
  * @returns {number | null} 距離上限(メートル)またはnull。
  */
 function buildOriginDistanceLimit(targetMinutes) {
+  // limitの初期値を定義する。
   let limit = null;
   if (typeof targetMinutes === "number" && Number.isFinite(targetMinutes) && targetMinutes > 0) {
+    // estimatedMetersを用意する。
     const estimatedMeters = targetMinutes * 80;
     limit = Math.max(4000, Math.round(estimatedMeters * 1.4));
   }
@@ -26,8 +28,11 @@ function buildOriginDistanceLimit(targetMinutes) {
  * @returns {number | null} 距離メートルまたはnull。
  */
 function resolveOriginDistanceMeters(startLocation) {
+  // distanceの初期値を定義する。
   let distance = null;
+  // originLiteralを取得する。
   const originLiteral = getLatLngLiteral(originLatLng);
+  // startLiteralを取得する。
   const startLiteral = getLatLngLiteral(startLocation);
   if (originLiteral && startLiteral) {
     distance = computeDistanceMeters(originLiteral, startLiteral);
@@ -49,13 +54,18 @@ function resolveOriginDistanceMeters(startLocation) {
  * }} 判定結果。
  */
 function buildOriginRelocationInfo(originMissing, startLocation, targetMinutes) {
+  // distanceLimitを作成する。
   const distanceLimit = buildOriginDistanceLimit(targetMinutes);
+  // originDistanceを解決する。
   const originDistance = resolveOriginDistanceMeters(startLocation);
+  // originTooFarを条件で選ぶ。
   const originTooFar =
     distanceLimit !== null &&
     originDistance !== null &&
     originDistance > distanceLimit;
+  // 判定結果を条件で選ぶ。
   const shouldRelocate = originMissing || originTooFar;
+  // prefixを条件で選ぶ。
   const prefix = originTooFar && !originMissing ? "出発地が遠いため、" : "";
   return {
     shouldRelocate,

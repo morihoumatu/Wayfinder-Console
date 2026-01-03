@@ -17,13 +17,17 @@ module.exports = {
     },
   },
   create(context) {
+    // functionStackの一覧を用意する。
     const functionStack = [];
 
+    // enterFunctionの処理を定義する。
     const enterFunction = (node) => {
       functionStack.push({ node, returnCount: 0 });
     };
 
+    // exitFunctionの処理を定義する。
     const exitFunction = () => {
+      // currentを取得する。
       const current = functionStack.pop();
       if (!current) {
         return;
@@ -36,7 +40,9 @@ module.exports = {
       }
     };
 
+    // countReturnの処理を定義する。
     const countReturn = () => {
+      // currentの参照を保持する。
       const current = functionStack[functionStack.length - 1];
       if (current) {
         current.returnCount += 1;

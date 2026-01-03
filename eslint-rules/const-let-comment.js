@@ -5,7 +5,9 @@
 /* eslint-env node */
 "use strict";
 
+// constOrLetかどうかを判定する処理を定義する。
 const isConstOrLet = (node) => {
+  // 結果の初期値を定義する。
   let result = false;
   if (node && node.type === "VariableDeclaration") {
     result = node.kind === "const" || node.kind === "let";
@@ -13,27 +15,33 @@ const isConstOrLet = (node) => {
   return result;
 };
 
+// loopDeclarationかどうかを判定する処理を定義する。
 const isLoopDeclaration = (node) => {
+  // 結果の初期値を定義する。
   let result = false;
-  if (!node || !node.parent) {
-    return result;
-  }
-  const parent = node.parent;
-  if (parent.type === "ForStatement") {
-    result = parent.init === node;
-  } else if (parent.type === "ForInStatement") {
-    result = parent.left === node;
-  } else if (parent.type === "ForOfStatement") {
-    result = parent.left === node;
+  if (node && node.parent) {
+    // parentの参照を保持する。
+    const parent = node.parent;
+    if (parent.type === "ForStatement") {
+      result = parent.init === node;
+    } else if (parent.type === "ForInStatement") {
+      result = parent.left === node;
+    } else if (parent.type === "ForOfStatement") {
+      result = parent.left === node;
+    }
   }
   return result;
 };
 
+// adjacentCommentを持つかどうかを判定する処理を定義する。
 const hasAdjacentComment = (node, sourceCode) => {
+  // 結果の初期値を定義する。
   let result = false;
   if (node && sourceCode && node.loc) {
+    // commentsを取得する。
     const comments = sourceCode.getCommentsBefore(node);
     if (comments.length > 0) {
+      // lastの参照を保持する。
       const last = comments[comments.length - 1];
       if (last && last.loc) {
         result = last.loc.end.line === node.loc.start.line - 1;
@@ -55,16 +63,21 @@ module.exports = {
     },
   },
   create(context) {
+    // sourceCodeを取得する。
     const sourceCode = context.getSourceCode();
 
+    // checkVariableDeclarationの処理を定義する。
     const checkVariableDeclaration = (node) => {
-      if (!isConstOrLet(node)) {
-        return;
+      // 判定結果の初期値を定義する。
+      let shouldReport = false;
+      if (isConstOrLet(node)) {
+        if (!isLoopDeclaration(node)) {
+          if (!hasAdjacentComment(node, sourceCode)) {
+            shouldReport = true;
+          }
+        }
       }
-      if (isLoopDeclaration(node)) {
-        return;
-      }
-      if (!hasAdjacentComment(node, sourceCode)) {
+      if (shouldReport) {
         context.report({ node, messageId: "missingComment" });
       }
     };

@@ -8,6 +8,7 @@
  * @returns {string} 抽出テキスト。
  */
 function extractOutputText(response) {
+  // メッセージの初期値を定義する。
   let outputText = "";
   if (typeof response.output_text === "string") {
     outputText = response.output_text;
@@ -49,12 +50,19 @@ function isEscapedChar(text, index) {
  * @returns {number} 閉じ括弧位置。
  */
 function findMatchingBracket(text, startIndex) {
+  // openCharの参照を保持する。
   const openChar = text[startIndex];
+  // closeCharを条件で選ぶ。
   const closeChar = openChar === "{" ? "}" : "]";
+  // depthの初期値を定義する。
   let depth = 0;
+  // inStringの初期値を定義する。
   let inString = false;
+  // インデックスを用意する。
   let matchIndex = -1;
+  // iをループ用に用意する。
   for (let i = startIndex; i < text.length; i += 1) {
+    // chの参照を保持する。
     const ch = text[i];
     if (inString) {
       if (isEscapedChar(text, i)) {
@@ -89,16 +97,21 @@ function findMatchingBracket(text, startIndex) {
  * @returns {any} 解析結果。
  */
 function findJsonInText(text) {
+  // parsedの初期値を定義する。
   let parsed = null;
+  // iをループ用に用意する。
   for (let i = 0; i < text.length; i += 1) {
+    // chの参照を保持する。
     const ch = text[i];
     if (ch !== "{" && ch !== "[") {
       continue;
     }
+    // インデックスを取得する。
     const endIndex = findMatchingBracket(text, i);
     if (endIndex === -1) {
       continue;
     }
+    // snippetを取得する。
     const snippet = text.slice(i, endIndex + 1);
     try {
       parsed = JSON.parse(snippet);
@@ -117,8 +130,10 @@ function findJsonInText(text) {
  * @returns {any} 解析結果。
  */
 function parseJsonFromText(text) {
+  // parsedの初期値を定義する。
   let parsed = null;
   if (text) {
+    // trimmedを取得する。
     const trimmed = text.trim();
     try {
       parsed = JSON.parse(trimmed);

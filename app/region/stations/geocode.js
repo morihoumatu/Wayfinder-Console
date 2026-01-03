@@ -39,11 +39,16 @@ function geocodeByAddress(address) {
  * @returns {any[]} 駅候補配列。
  */
 function filterStationResults(results, region) {
+  // 一覧を条件で選ぶ。
   const list = Array.isArray(results) ? results : [];
+  // filteredの一覧を用意する。
   let filtered = [];
   if (list.length) {
+    // 判定結果を用意する。
     const hasRegionFilter = normalizeRegionFilter(region).length > 0;
+    // 結果を取得する。
     const stationResults = list.filter(isStationResult);
+    // regionStationsを取得する。
     const regionStations = stationResults.filter((result) =>
       isResultInRegion(result, region)
     );
@@ -52,7 +57,9 @@ function filterStationResults(results, region) {
     } else if (!hasRegionFilter && stationResults.length) {
       filtered = stationResults;
     } else {
+      // 結果を取得する。
       const keywordResults = list.filter(resultHasStationKeyword);
+      // キーを取得する。
       const regionKeywords = keywordResults.filter((result) =>
         isResultInRegion(result, region)
       );
@@ -73,6 +80,7 @@ function filterStationResults(results, region) {
  * @returns {any} 選択された駅候補。
  */
 function selectStationResult(results, region) {
+  // filteredを取得する。
   const filtered = filterStationResults(results, region);
   return filtered[0] || null;
 }
@@ -83,11 +91,16 @@ function selectStationResult(results, region) {
  * @returns {Promise<any>} 駅候補のPromise。
  */
 async function findStationInRegion(region) {
+  // stationの初期値を定義する。
   let station = null;
   if (geocoder && region) {
+    // queriesを作成する。
     const queries = buildRegionStationQueries(region);
+    // queryをループ用に用意する。
     for (const query of queries) {
+      // 結果を取得する。
       const results = await geocodeByAddress(query);
+      // selectedを取得する。
       const selected = selectStationResult(results, region);
       if (selected?.geometry?.location) {
         station = {
@@ -108,6 +121,7 @@ async function findStationInRegion(region) {
  * @returns {string} 駅名。
  */
 function getStationNameFromResult(result) {
+  // nameの初期値を定義する。
   let name = "";
   if (result) {
     name =
@@ -125,6 +139,7 @@ function getStationNameFromResult(result) {
  * @returns {Promise<any>} 座標のPromise。
  */
 async function resolveRegionAnchor(region) {
+  // locationの初期値を定義する。
   let location = null;
   if (region) {
     try {
@@ -145,23 +160,32 @@ async function findNearestStationToLocation(
   /** @type {{ startLocation?: any, stopName?: any, region?: any }} */
   { startLocation, stopName, region }
 ) {
+  // stationの初期値を定義する。
   let station = null;
   if (geocoder && startLocation) {
+    // localitiesを解決する。
     const localities = await resolveLocalityCandidates(startLocation);
+    // queriesを取得する。
     const queries = buildStartStationQueries({
       region,
       stopName,
       localities,
     }).slice(0, MAX_STATION_QUERIES);
+    // startLiteralを取得する。
     const startLiteral = getLatLngLiteral(startLocation);
     if (queries.length && startLiteral) {
       /** @type {Array<{ result: any, distance: number }>} */
       const candidates = [];
+      // queryをループ用に用意する。
       for (const query of queries) {
+        // 結果を取得する。
         const results = await geocodeByAddress(query);
+        // filteredを取得する。
         const filtered = filterStationResults(results, region);
         filtered.forEach((result) => {
+          // locationLiteralを取得する。
           const locationLiteral = getLatLngLiteral(result?.geometry?.location);
+          // distanceを条件で選ぶ。
           const distance =
             locationLiteral &&
             computeDistanceMeters(startLiteral, locationLiteral);
@@ -173,6 +197,7 @@ async function findNearestStationToLocation(
 
       if (candidates.length) {
         candidates.sort((a, b) => a.distance - b.distance);
+        // bestの参照を保持する。
         const best = candidates[0];
         if (best) {
           station = {

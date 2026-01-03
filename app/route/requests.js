@@ -73,9 +73,12 @@ function buildTransitRequest(
  * @returns {{ origin: any, destination: any, originName: string, destinationName: string } | null} 駅情報。
  */
 function resolveWalkMultiRailFallback() {
+  // fallbackの初期値を定義する。
   let fallback = null;
   if (destinationSource === "walk_multi" && walkRouteRailStations) {
+    // originStationを条件で選ぶ。
     const originStation = walkRouteRailStations.origin?.location || null;
+    // destinationStationを条件で選ぶ。
     const destinationStation = walkRouteRailStations.destination?.location || null;
     if (originStation && destinationStation) {
       fallback = {
@@ -95,11 +98,16 @@ function resolveWalkMultiRailFallback() {
  * @returns {number | null} 追加徒歩時間（秒）。
  */
 function resolveWalkMultiRailExtraSeconds(fallback) {
+  // extraSecondsの初期値を定義する。
   let extraSeconds = null;
   if (fallback) {
+    // originLiteralを取得する。
     const originLiteral = getLatLngLiteral(originLatLng);
+    // destinationLiteralを取得する。
     const destinationLiteral = getLatLngLiteral(destinationLatLng);
+    // railOriginLiteralを取得する。
     const railOriginLiteral = getLatLngLiteral(fallback.origin);
+    // railDestinationLiteralを取得する。
     const railDestinationLiteral = getLatLngLiteral(fallback.destination);
     if (
       originLiteral &&
@@ -107,13 +115,17 @@ function resolveWalkMultiRailExtraSeconds(fallback) {
       railOriginLiteral &&
       railDestinationLiteral
     ) {
+      // originDistanceを計算する。
       const originDistance = computeDistanceMeters(originLiteral, railOriginLiteral);
+      // destinationDistanceを計算する。
       const destinationDistance = computeDistanceMeters(
         destinationLiteral,
         railDestinationLiteral
       );
       if (originDistance !== null && destinationDistance !== null) {
+        // 件数を用意する。
         const totalMeters = originDistance + destinationDistance;
+        // walkMinutesを用意する。
         const walkMinutes = totalMeters / 80;
         extraSeconds = Math.round(walkMinutes * 60);
       }
@@ -137,10 +149,15 @@ function resolveWalkingWaypoints() {
  * @returns {{ origin: any, destination: any, useFallback: boolean, extraSeconds: number | null }} 情報。
  */
 function buildRailFallbackContext() {
+  // fallbackを解決する。
   const fallback = resolveWalkMultiRailFallback();
+  // useFallbackを取得する。
   const useFallback = Boolean(fallback);
+  // originを条件で選ぶ。
   const origin = fallback ? fallback.origin : originLatLng;
+  // destinationを条件で選ぶ。
   const destination = fallback ? fallback.destination : destinationLatLng;
+  // extraSecondsを解決する。
   const extraSeconds = resolveWalkMultiRailExtraSeconds(fallback);
   if (fallback) {
     console.warn("[walk_multi] rail fallback stations", {
@@ -193,16 +210,22 @@ function calculateRoutes() {
     return;
   }
 
+  // includeTransitの初期値を定義する。
   const includeTransit = true;
+  // waypointsを解決する。
   const waypoints = resolveWalkingWaypoints();
 
   requestId += 1;
+  // リクエストの参照を保持する。
   const currentRequest = requestId;
+  // boundsのインスタンスを作成する。
   const bounds = new google.maps.LatLngBounds();
   bounds.extend(originLatLng);
   bounds.extend(destinationLatLng);
 
+  // フラグを作成する。
   const flags = buildRouteFlags(includeTransit);
+  // railFallbackを作成する。
   const railFallback = buildRailFallbackContext();
   flags.railUsesStationFallback = railFallback.useFallback;
   flags.railExtraSeconds = railFallback.extraSeconds;
@@ -213,6 +236,7 @@ function calculateRoutes() {
   clearRouteBreakdown();
   updateRouteLinks();
 
+  // リクエストを作成する。
   const walkingRequest = buildWalkingRequest({
     origin: originLatLng,
     destination: destinationLatLng,
@@ -232,6 +256,7 @@ function calculateRoutes() {
       })
   );
 
+  // リクエストを条件で選ぶ。
   const transitRequest = includeTransit
     ? buildTransitRequest({
         origin: railFallback.origin,

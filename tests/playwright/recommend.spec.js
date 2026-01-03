@@ -3,8 +3,10 @@
  * @file
  */
 const { test, expect } = require("@playwright/test");
+// google-maps-stubからgetGoogleMapsStubScriptを取得する。
 const { getGoogleMapsStubScript } = require("../helpers/google-maps-stub");
 
+// mockGoogleMapsの処理を定義する。
 const mockGoogleMaps = async (page) => {
   await page.route(
     /https:\/\/maps\.googleapis\.com\/maps\/api\/js.*/,
@@ -17,6 +19,7 @@ const mockGoogleMaps = async (page) => {
   );
 };
 
+// mockRecommendApiの処理を定義する。
 const mockRecommendApi = async (page) => {
   await page.route("**/api/recommend", async (route) => {
     await route.fulfill({
@@ -55,18 +58,29 @@ test("おすすめ検索が結果を表示する", async ({ page }) => {
   await page.fill("#recommendQuery", "景色の良い公園");
   await page.click("#recommendButton");
 
+  // 結果を取得する。
   const result = page.locator("#recommendResult");
+  // titleを取得する。
   const title = page.locator("#recommendTitle");
+  // addressを取得する。
   const address = page.locator("#recommendAddress");
+  // reasonを取得する。
   const reason = page.locator("#recommendReason");
+  // stopsSectionを取得する。
   const stopsSection = page.locator("#recommendStopsSection");
+  // stopsを取得する。
   const stops = page.locator("#recommendStops li");
+  // マップを取得する。
   const mapLink = page.locator("#recommendMapLink");
 
   await expect.poll(async () => {
+    // メッセージを条件で選ぶ。
     const titleText = (await title.textContent()) || "";
+    // メッセージを条件で選ぶ。
     const addressText = (await address.textContent()) || "";
+    // メッセージを条件で選ぶ。
     const reasonText = (await reason.textContent()) || "";
+    // hrefを取得する。
     const href = await mapLink.getAttribute("href");
     return {
       resultVisible: await result.isVisible(),

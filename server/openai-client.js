@@ -4,6 +4,7 @@
  */
 const https = require("https");
 
+// configからOPENAI_API_KEYとOPENAI_API_URLを取得する。
 const { OPENAI_API_KEY, OPENAI_API_URL } = require("./config");
 
 /**
@@ -13,8 +14,11 @@ const { OPENAI_API_KEY, OPENAI_API_URL } = require("./config");
  */
 function callOpenAI(payload) {
   return new Promise((resolve, reject) => {
+    // URLのインスタンスを作成する。
     const url = new URL(OPENAI_API_URL);
+    // JSON文字列を生成する。
     const data = JSON.stringify(payload);
+    // オプションをまとめる。
     const options = {
       method: "POST",
       hostname: url.hostname,
@@ -26,9 +30,11 @@ function callOpenAI(payload) {
       },
     };
 
+    // リクエストを取得する。
     const request = https.request(
       options,
       (/** @type {import("http").IncomingMessage} */ response) => {
+        // レスポンス本文を蓄積する。
         let body = "";
         response.on(
           "data",
@@ -37,7 +43,9 @@ function callOpenAI(payload) {
           }
         );
         response.on("end", () => {
+          // parsedを後で設定するために用意する。
           let parsed;
+          // 判定結果の初期値を定義する。
           let shouldResolve = true;
           try {
             parsed = JSON.parse(body);
@@ -46,6 +54,7 @@ function callOpenAI(payload) {
             shouldResolve = false;
           }
           if (shouldResolve && response.statusCode && response.statusCode >= 400) {
+            // メッセージを条件で選ぶ。
             const message =
               parsed?.error?.message || "OpenAI API request failed.";
             reject(new Error(message));

@@ -18,15 +18,18 @@
  * @returns {number | null} 補正後分数。
  */
 function getAdjustedTargetMinutes(targetMinutes, durationMinutes) {
+  // adjustedの参照を保持する。
   let adjusted = targetMinutes;
   if (targetMinutes && durationMinutes) {
     if (durationMinutes < targetMinutes) {
+      // diffを用意する。
       const diff = targetMinutes - durationMinutes;
       adjusted = Math.min(
         Math.round(targetMinutes * 1.5),
         targetMinutes + Math.max(20, Math.round(diff * 0.8))
       );
     } else {
+      // diffを用意する。
       const diff = durationMinutes - targetMinutes;
       adjusted = Math.max(
         20,
@@ -43,14 +46,19 @@ function getAdjustedTargetMinutes(targetMinutes, durationMinutes) {
  * @returns {any} 地域情報。
  */
 function buildWalkRouteRegionInfo(auto) {
+  // メッセージを取得する。
   const regionContext = getSelectedRegionContext({ refreshAnchor: !auto });
+  // regionLabelを条件で選ぶ。
   const regionLabel = regionContext?.label || originRegion || "";
+  // regionFilterを条件で選ぶ。
   const regionFilter = Array.isArray(regionContext?.prefectures)
     ? regionContext.prefectures
     : regionLabel
       ? [regionLabel]
       : [];
+  // regionForPromptを条件で選ぶ。
   const regionForPrompt = formatRegionForPrompt(regionContext) || regionLabel;
+  // regionAnchorを条件で選ぶ。
   const regionAnchor = regionContext?.anchor || regionLabel;
   return {
     regionContext,
@@ -67,10 +75,12 @@ function buildWalkRouteRegionInfo(auto) {
  * @returns {Promise<any>} 判定結果のPromise。
  */
 async function resolveWalkRouteOriginStatus(regionContext) {
+  // originMismatchの初期値を定義する。
   let originMismatch = false;
   if (originLatLng && regionContext) {
     originMismatch = !(await resolveIsOriginInRegion(originLatLng, regionContext));
   }
+  // originMissingを条件で選ぶ。
   const originMissing = !originLatLng || originMismatch;
   return { originMissing, originMismatch };
 }
@@ -92,7 +102,9 @@ async function resolveWalkRouteOriginOverride(
    */
   { originMissing, originMismatch, regionForPrompt, regionAnchor, regionLabel }
 ) {
+  // IDの初期値を定義する。
   let originOverride = null;
+  // IDの初期値を定義する。
   let originRegionOverride = null;
   if (originMissing) {
     if (originMismatch) {
@@ -144,6 +156,7 @@ async function fetchWalkRouteRecommendation(
     regionContext,
   }
 ) {
+  // データを取得する。
   const data = await requestRecommendation({
     query,
     mode: "walk_route",
@@ -167,12 +180,16 @@ async function fetchWalkRouteRecommendation(
  * @returns {Promise<any>} 地点情報のPromise。
  */
 async function resolveWalkRouteLocations(place) {
+  // locationsを取得する。
   const locations = await geocodeStops(place?.stops);
   if (locations.length < 2) {
     throw new Error("散歩ルートの地点を見つけられませんでした。");
   }
+  // startLocationの参照を保持する。
   const startLocation = locations[0];
+  // startStopを条件で選ぶ。
   const startStop = Array.isArray(place?.stops) ? place.stops[0] : null;
+  // startStopNameを条件で選ぶ。
   const startStopName =
     typeof startStop === "string"
       ? startStop
@@ -207,7 +224,9 @@ async function applyWalkRouteOriginFromStops(
     targetMinutes,
   }
 ) {
+  // originUsesStartLocationの初期値を定義する。
   let originUsesStartLocation = false;
+  // relocationを作成する。
   const relocation = buildOriginRelocationInfo(
     originMissing,
     startLocation,
@@ -224,7 +243,9 @@ async function applyWalkRouteOriginFromStops(
     originRegionOverride,
   });
   if (relocation.shouldRelocate) {
+    // regionValueを条件で選ぶ。
     const regionValue = regionFilter.length ? regionFilter : originRegionOverride;
+    // stationを取得する。
     const station = await findNearestStationToLocation({
       startLocation,
       stopName: startStopName,

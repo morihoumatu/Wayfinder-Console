@@ -13,7 +13,9 @@
  * @returns {boolean} 駅判定。
  */
 function isStationResult(result) {
+  // typesを用意する。
   const types = result?.types;
+  // 判定結果の初期値を定義する。
   let isStation = false;
   if (Array.isArray(types)) {
     isStation = types.some((type) => STATION_TYPES.has(type));
@@ -28,9 +30,12 @@ function isStationResult(result) {
  * @returns {boolean} 一致判定。
  */
 function isResultInRegion(result, region) {
+  // regionFiltersを正規化する。
   const regionFilters = normalizeRegionFilter(region);
+  // 判定結果の初期値を定義する。
   let isMatch = true;
   if (regionFilters.length) {
+    // regionNameを取得する。
     const regionName = extractRegionFromComponents(
       result?.address_components || []
     );
@@ -40,6 +45,7 @@ function isResultInRegion(result, region) {
     ) {
       isMatch = true;
     } else {
+      // formattedを条件で選ぶ。
       const formatted = result?.formatted_address || "";
       isMatch = regionFilters.some((filter) => formatted.includes(filter));
     }
@@ -53,7 +59,9 @@ function isResultInRegion(result, region) {
  * @returns {string} 駅ラベル。
  */
 function extractStationLabel(result) {
+  // componentsを条件で選ぶ。
   const components = result?.address_components || [];
+  // labelComponentを取得する。
   const labelComponent = components.find((/** @type {any} */ component) =>
     component.types?.some((/** @type {string} */ type) =>
       ["transit_station", "point_of_interest", "establishment", "premise"].includes(
@@ -70,8 +78,10 @@ function extractStationLabel(result) {
  * @returns {string} 整形済み地域名。
  */
 function stripRegionSuffix(region) {
+  // strippedの初期値を定義する。
   let stripped = "";
   if (region) {
+    // valueを条件で選ぶ。
     const value = Array.isArray(region) ? region.find(Boolean) : region;
     if (typeof value === "string" && value) {
       stripped = value === "北海道" ? value : value.replace(/[都府県]$/, "");
@@ -86,6 +96,7 @@ function stripRegionSuffix(region) {
  * @returns {string} 地域ラベル。
  */
 function getRegionLabel(region) {
+  // labelの初期値を定義する。
   let label = "";
   if (region) {
     if (Array.isArray(region)) {
@@ -103,15 +114,19 @@ function getRegionLabel(region) {
  * @returns {string[]} 検索クエリ配列。
  */
 function buildRegionStationQueries(region) {
+  // trimmedを取得する。
   const trimmed = region.trim();
   /** @type {string[]} */
   let queries = [];
   if (trimmed) {
+    // variantsの一覧を用意する。
     const variants = [trimmed];
+    // exceptionの参照を保持する。
     const exception = REGION_QUERY_EXCEPTIONS[trimmed];
     if (exception) {
       variants.push(exception);
     }
+    // strippedを取得する。
     const stripped = stripRegionSuffix(trimmed);
     if (stripped && stripped !== trimmed) {
       variants.push(stripped);
@@ -135,13 +150,16 @@ function buildRegionStationQueries(region) {
  * @returns {boolean} 駅キーワード判定。
  */
 function resultHasStationKeyword(result) {
+  // labelを取得する。
   const label = extractStationLabel(result);
+  // 判定結果の初期値を定義する。
   let hasKeyword = false;
   if (label && label.includes("駅")) {
     hasKeyword = true;
   } else if (result?.formatted_address?.includes("駅")) {
     hasKeyword = true;
   } else {
+    // componentsを条件で選ぶ。
     const components = result?.address_components || [];
     hasKeyword = components.some(
       (/** @type {any} */ component) => component.long_name?.includes("駅")
@@ -159,6 +177,7 @@ function extractLocalityCandidates(components) {
   /** @type {string[]} */
   let names = [];
   if (Array.isArray(components)) {
+    // typesの一覧を用意する。
     const types = [
       "locality",
       "administrative_area_level_2",
@@ -168,6 +187,7 @@ function extractLocalityCandidates(components) {
     /** @type {string[]} */
     const collected = [];
     types.forEach((type) => {
+      // nameを用意する。
       const name = components.find((/** @type {any} */ component) =>
         component.types?.includes(type)
       )?.long_name;
@@ -214,6 +234,7 @@ function buildStartStationQueries(
 ) {
   /** @type {Set<string>} */
   const queries = new Set();
+  // addStationQueryの処理を定義する。
   const addStationQuery = (/** @type {string} */ value) => {
     if (!value) {
       return;
@@ -228,9 +249,11 @@ function buildStartStationQueries(
   /** @type {string[]} */
   const localityList = Array.isArray(localities) ? localities : [];
   localityList.forEach(addStationQuery);
+  // regionLabelを取得する。
   const regionLabel = getRegionLabel(region);
   if (regionLabel) {
     addStationQuery(regionLabel);
+    // strippedを取得する。
     const stripped = stripRegionSuffix(regionLabel);
     if (stripped && stripped !== regionLabel) {
       addStationQuery(stripped);

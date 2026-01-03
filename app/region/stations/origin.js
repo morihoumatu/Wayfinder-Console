@@ -16,6 +16,7 @@
 function canUseOriginRegionContext(
   /** @type {{ context: any, source?: string }} */ { context, source }
 ) {
+  // canProceedの初期値を定義する。
   let canProceed = true;
   if (!originRegionHint) {
     if (source === "recommend") {
@@ -40,11 +41,15 @@ function canUseOriginRegionContext(
  * @returns {Promise<any>} 駅候補のPromise。
  */
 async function resolveStationFromContext(context) {
+  // stationの初期値を定義する。
   let station = null;
   if (context?.label) {
+    // regionLabelの参照を保持する。
     const regionLabel = context.label;
+    // regionFilterを条件で選ぶ。
     const regionFilter = context.prefectures || context.label;
     if (context.anchor) {
+      // anchorLocationを解決する。
       const anchorLocation = await resolveRegionAnchor(context.anchor);
       if (anchorLocation) {
         station = await findNearestStationToLocation({
@@ -73,7 +78,9 @@ function applyOriginFromStation(
   /** @type {{ station: any, context: any, source?: string }} */
   { station, context, source }
 ) {
+  // 判定結果の初期値を定義する。
   let isReady = false;
+  // regionLabelを条件で選ぶ。
   const regionLabel = context?.label || "";
   if (!station?.location) {
     setOriginRegionHint("地域内の駅が見つかりませんでした。");
@@ -88,6 +95,7 @@ function applyOriginFromStation(
       map.panTo(station.location);
       map.setZoom(Math.max(DEFAULT_ZOOM, map.getZoom() || DEFAULT_ZOOM));
     }
+    // stationLabelを条件で選ぶ。
     const stationLabel = station.name
       ? `${station.name}から開始しました。`
       : "駅から開始しました。";
@@ -108,16 +116,23 @@ function applyOriginFromStation(
 async function ensureOriginFromRegion(
   /** @type {{ source?: string }} */ { source } = {}
 ) {
+  // 判定結果を取得する。
   let isReady = Boolean(originLatLng);
   if (!isReady) {
+    // メッセージを取得する。
     const context = getSelectedRegionContext({ refreshAnchor: true });
+    // オプションを条件で選ぶ。
     const contextOptions =
       typeof source === "string" ? { context, source } : { context };
+    // canProceedを取得する。
     const canProceed = canUseOriginRegionContext(contextOptions);
     if (canProceed) {
+      // regionLabelの参照を保持する。
       const regionLabel = context.label;
       setOriginRegionHint(`${regionLabel}の駅を探しています...`);
+      // stationを解決する。
       const station = await resolveStationFromContext(context);
+      // オプションを条件で選ぶ。
       const stationOptions =
         typeof source === "string"
           ? { station, context, source }

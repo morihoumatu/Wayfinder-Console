@@ -3,7 +3,9 @@
  * @file 動的検証の品質ゲートを判定する。
  */
 const fs = require("fs");
+// pathモジュールを読み込む。
 const path = require("path");
+// coverageから必要な値を取得する。
 const {
   COVERAGE_RULES,
   FILE_COVERAGE_RULES,
@@ -12,6 +14,7 @@ const {
   evaluateCoverage,
   evaluateFileCoverageGate,
 } = require("./test-gate/coverage");
+// summaryから必要な値を取得する。
 const {
   readJson,
   summarizeVitest,
@@ -23,15 +26,25 @@ const {
   evaluateGate,
 } = require("./test-gate/summary");
 
+// パスを組み立てる。
 const ROOT_DIR = path.join(__dirname, "..");
+// パスを組み立てる。
 const REPORT_DIR = path.join(ROOT_DIR, "reports");
+// パスを組み立てる。
 const VITEST_JSON_PATH = path.join(REPORT_DIR, "vitest-report.json");
+// パスを組み立てる。
 const PLAYWRIGHT_JSON_PATH = path.join(REPORT_DIR, "playwright-report.json");
+// パスを組み立てる。
 const CYPRESS_JSON_PATH = path.join(REPORT_DIR, "cypress", "index.json");
+// パスを組み立てる。
 const LIGHTHOUSE_JSON_PATH = path.join(REPORT_DIR, "lighthouse-report.json");
+// パスを組み立てる。
 const LOAD_JSON_PATH = path.join(REPORT_DIR, "load-test-report.json");
+// パスを組み立てる。
 const SECURITY_JSON_PATH = path.join(REPORT_DIR, "security-report.json");
+// パスを組み立てる。
 const GATE_JSON_PATH = path.join(REPORT_DIR, "test-gate.json");
+// パスを組み立てる。
 const COVERAGE_JSON_PATH = path.join(
   REPORT_DIR,
   "vitest-coverage",
@@ -91,6 +104,7 @@ function buildGateReport(
    */
   { summaries, allIssues, coverageSummary, coverageResult, fileCoverageResult }
 ) {
+  // toolsを取得する。
   const tools = summaries.map((entry) => ({
     name: entry.summary.name,
     status: entry.summary.status,
@@ -101,11 +115,13 @@ function buildGateReport(
     rule: entry.rule,
     reportPath: entry.path,
   }));
+  // 状態を条件で選ぶ。
   const coverageStatus = coverageSummary
     ? coverageResult.ok && fileCoverageResult.ok
       ? "pass"
       : "fail"
     : "missing";
+  // coverageをまとめる。
   const coverage = {
     status: coverageStatus,
     summary: coverageSummary,
@@ -115,7 +131,9 @@ function buildGateReport(
     reportPath: COVERAGE_JSON_PATH,
     issues: coverageResult.issues,
   };
+  // 状態を条件で選ぶ。
   const status = allIssues.length > 0 ? "fail" : "pass";
+  // reportをまとめる。
   const report = {
     generatedAt: new Date().toISOString(),
     status,
@@ -130,14 +148,22 @@ function buildGateReport(
  * 品質ゲートを実行する。
  */
 function main() {
+  // データを読み込む。
   const vitestData = readJson(VITEST_JSON_PATH);
+  // データを読み込む。
   const playwrightData = readJson(PLAYWRIGHT_JSON_PATH);
+  // データを読み込む。
   const cypressData = readJson(CYPRESS_JSON_PATH);
+  // データを読み込む。
   const lighthouseData = readJson(LIGHTHOUSE_JSON_PATH);
+  // データを読み込む。
   const loadData = readJson(LOAD_JSON_PATH);
+  // データを読み込む。
   const securityData = readJson(SECURITY_JSON_PATH);
+  // データを読み込む。
   const coverageData = readJson(COVERAGE_JSON_PATH);
 
+  // summariesの一覧を用意する。
   const summaries = [
     {
       summary: summarizeVitest(vitestData),
@@ -174,15 +200,21 @@ function main() {
   /** @type {string[]} */
   const allIssues = [];
   summaries.forEach((entry) => {
+    // 結果を取得する。
     const result = evaluateGate(entry.summary, entry.rule, entry.path);
     result.issues.forEach((issue) => {
       allIssues.push(issue);
     });
   });
+  // coverageSummaryを取得する。
   const coverageSummary = summarizeCoverage(coverageData);
+  // fileCoverageSummariesを取得する。
   const fileCoverageSummaries = summarizeFileCoverages(coverageData);
+  // normalizedFileCoverageSummariesを取得する。
   const normalizedFileCoverageSummaries = fileCoverageSummaries.map((summary) => {
+    // パスの参照を保持する。
     const filePath = summary.file;
+    // パスを条件で選ぶ。
     const relativePath = path.isAbsolute(filePath)
       ? path.relative(ROOT_DIR, filePath)
       : filePath;
@@ -191,6 +223,7 @@ function main() {
       file: relativePath,
     };
   });
+  // 結果を取得する。
   const coverageResult = evaluateCoverage(
     coverageSummary,
     COVERAGE_RULES,
@@ -199,6 +232,7 @@ function main() {
   coverageResult.issues.forEach((issue) => {
     allIssues.push(issue);
   });
+  // 結果を取得する。
   const fileCoverageResult = evaluateFileCoverageGate({
     summaries: normalizedFileCoverageSummaries,
     rules: FILE_COVERAGE_RULES,
@@ -207,6 +241,7 @@ function main() {
   fileCoverageResult.issues.forEach((issue) => {
     allIssues.push(issue);
   });
+  // gateReportを作成する。
   const gateReport = buildGateReport({
     summaries,
     allIssues,

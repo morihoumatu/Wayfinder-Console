@@ -16,6 +16,7 @@
  * @returns {string | null} 直前の優先モード。
  */
 function setWalkRoutePreferredMode(mode) {
+  // previousModeの参照を保持する。
   const previousMode = walkRoutePreferredMode;
   walkRoutePreferredMode = mode;
   return previousMode;
@@ -49,6 +50,7 @@ function selectWalkMultiMode(
    */
   { walkMinutes, railMinutes, tolerance, safeWalkDiff, safeRailDiff, targetMinutes, flags }
 ) {
+  // selectedModeを解決する。
   let selectedMode = resolveToleranceMode({
     walkMinutes,
     railMinutes,
@@ -78,15 +80,20 @@ function selectWalkMultiMode(
 function buildWalkMultiSelection(
   /** @type {{ flags: any, targetMinutes: number }} */ { flags, targetMinutes }
 ) {
+  // metricsを作成する。
   const metrics = buildWalkMultiMetrics(flags, targetMinutes);
+  // selectedModeを取得する。
   const selectedMode = selectWalkMultiMode({
     ...metrics,
     targetMinutes,
     flags,
   });
+  // selectedMinutesを条件で選ぶ。
   const selectedMinutes =
     selectedMode === "rail" ? metrics.railMinutes : metrics.walkMinutes;
+  // メッセージを条件で選ぶ。
   const selectedText = selectedMode === "rail" ? flags.railText : flags.walkText;
+  // selectedLabelを条件で選ぶ。
   const selectedLabel =
     selectedMode === "rail" ? "散歩ルート（在来線併用）" : "散歩ルート";
   logWalkMultiDecision("selection", {
@@ -115,6 +122,7 @@ function buildWalkMultiSelection(
 function applyWalkMultiSelection(
   /** @type {{ selection: any, flags: any }} */ { selection, flags }
 ) {
+  // selectedModeの参照を保持する。
   const selectedMode = selection.selectedMode;
   setWalkRoutePreferredMode(selectedMode || "walk");
   if (selectedMode === "rail") {
@@ -147,10 +155,14 @@ function applyWalkMultiSelection(
 function handleWalkMultiTiming(
   /** @type {{ selection: any, targetMinutes: number }} */ { selection, targetMinutes }
 ) {
+  // 判定結果の初期値を定義する。
   let shouldFinalize = true;
+  // selectedMinutesの参照を保持する。
   const selectedMinutes = selection.selectedMinutes;
   if (selectedMinutes !== null) {
+    // diffを取得する。
     const diff = Math.abs(selectedMinutes - targetMinutes);
+    // diffRoundedを用意する。
     const diffRounded = Math.round(diff * 10) / 10;
     logWalkMultiDecision("timing check", {
       selectedMode: selection.selectedMode,
@@ -169,7 +181,9 @@ function handleWalkMultiTiming(
       walkRouteRetryCount = 0;
     } else if (walkRouteRetryCount < WALK_ROUTE_MAX_RETRIES) {
       walkRouteRetryCount += 1;
+      // adjustmentを条件で選ぶ。
       const adjustment = selectedMinutes < targetMinutes ? "longer" : "shorter";
+      // リクエストを取得する。
       const requestTargetMinutes = getAdjustedTargetMinutes(
         targetMinutes,
         selectedMinutes
@@ -213,6 +227,7 @@ function handleWalkMultiTiming(
 function handleWalkMultiCompletion(
   /** @type {{ flags: any }} */ { flags }
 ) {
+  // 判定結果の初期値を定義する。
   let shouldFinalize = true;
   logWalkMultiDecision("route flags", {
     walkOk: flags.walkOk,
@@ -225,7 +240,9 @@ function handleWalkMultiCompletion(
     retryCount: walkRouteRetryCount,
   });
   if (flags.walkOk) {
+    // targetMinutesを取得する。
     const targetMinutes = getWalkMultiTargetMinutes();
+    // selectionを作成する。
     const selection = buildWalkMultiSelection({ flags, targetMinutes });
     applyWalkMultiSelection({ selection, flags });
     shouldFinalize = handleWalkMultiTiming({ selection, targetMinutes });

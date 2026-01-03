@@ -4,9 +4,12 @@
  */
 "use strict";
 
+// pathモジュールを読み込む。
 const path = require("path");
 
+// configからROOT_DIRを取得する。
 const { ROOT_DIR } = require("./config");
+// utilsからreadTextとnormalizeCommentLineを取得する。
 const { readText, normalizeCommentLine } = require("./utils");
 
 /**
@@ -15,6 +18,7 @@ const { readText, normalizeCommentLine } = require("./utils");
  * @returns {boolean} 表示対象かどうか。
  */
 function isDocMeaningful(doc) {
+  // 結果の初期値を定義する。
   let result = false;
   if (doc) {
     result =
@@ -31,6 +35,7 @@ function isDocMeaningful(doc) {
  * @returns {any} 解析済みコメント。
  */
 function parseJsDocBlock(blockText) {
+  // rawLinesを取得する。
   const rawLines = blockText
     .split(/\r?\n/)
     .map(normalizeCommentLine)
@@ -41,6 +46,7 @@ function parseJsDocBlock(blockText) {
   const params = [];
   /** @type {string[]} */
   const returns = [];
+  // tagStartedの初期値を定義する。
   let tagStarted = false;
   /** @type {("param" | "returns" | null)} */
   let currentTag = null;
@@ -53,6 +59,7 @@ function parseJsDocBlock(blockText) {
    * @returns {string} 正規化済みタグ文字列。
    */
   function normalizeTagValue(lines) {
+    // normalizedの初期値を定義する。
     let normalized = "";
     if (Array.isArray(lines) && lines.length > 0) {
       normalized = lines.join(" ").replace(/\s+/g, " ").trim();
@@ -67,6 +74,7 @@ function parseJsDocBlock(blockText) {
     if (!currentTag) {
       return;
     }
+    // valueを正規化する。
     const value = normalizeTagValue(currentTagLines);
     if (value) {
       if (currentTag === "param") {
@@ -80,7 +88,9 @@ function parseJsDocBlock(blockText) {
   }
 
   rawLines.forEach((line) => {
+    // paramMatchを取得する。
     const paramMatch = line.match(/^@param\b\s*(.*)$/);
+    // returnsMatchを取得する。
     const returnsMatch = line.match(/^@returns?\b\s*(.*)$/);
     if (paramMatch) {
       flushTag();
@@ -107,6 +117,7 @@ function parseJsDocBlock(blockText) {
   });
   flushTag();
 
+  // parsedをまとめる。
   const parsed = {
     description: descriptionLines,
     params,
@@ -122,8 +133,11 @@ function parseJsDocBlock(blockText) {
  * @returns {string[]} 抽出済みブロック。
  */
 function extractJsDocBlocks(source) {
+  // blocksの一覧を用意する。
   const blocks = [];
+  // 正規表現の初期値を定義する。
   const regex = /^\s*\/\*\*([\s\S]*?)\*\//gm;
+  // matchを取得する。
   let match = regex.exec(source);
   while (match) {
     if (typeof match[1] === "string") {
@@ -140,7 +154,9 @@ function extractJsDocBlocks(source) {
  * @returns {string} 先頭ブロックまたは空文字列。
  */
 function getTopJsDocBlock(source) {
+  // blockの初期値を定義する。
   let block = "";
+  // matchを取得する。
   const match = source.match(/^\s*\/\*\*([\s\S]*?)\*\//);
   if (match && typeof match[1] === "string") {
     block = match[1];
@@ -154,26 +170,34 @@ function getTopJsDocBlock(source) {
  * @returns {any} 解析済みファイル情報。
  */
 function buildFileDoc(filePath) {
+  // contentを読み込む。
   const content = readText(filePath);
+  // topBlockを取得する。
   const topBlock = getTopJsDocBlock(content);
+  // allBlocksを取得する。
   const allBlocks = extractJsDocBlocks(content);
+  // remainingBlocksの参照を保持する。
   let remainingBlocks = allBlocks;
   if (topBlock && allBlocks.length > 0 && allBlocks[0] === topBlock) {
     remainingBlocks = allBlocks.slice(1);
   }
 
+  // topCommentの初期値を定義する。
   let topComment = null;
   if (topBlock) {
+    // parsedTopを解析する。
     const parsedTop = parseJsDocBlock(topBlock);
     if (isDocMeaningful(parsedTop)) {
       topComment = parsedTop;
     }
   }
 
+  // docsを取得する。
   const docs = remainingBlocks
     .map(parseJsDocBlock)
     .filter(isDocMeaningful);
 
+  // 結果をまとめる。
   const result = {
     name: path.basename(filePath),
     path: path.relative(ROOT_DIR, filePath),

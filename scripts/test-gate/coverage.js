@@ -48,6 +48,7 @@ const FILE_METRICS = [
  * @returns {number} 正規化後の数値。
  */
 function toNumber(value) {
+  // 結果の初期値を定義する。
   let result = 0;
   if (typeof value === "number" && Number.isFinite(value)) {
     result = value;
@@ -65,6 +66,7 @@ function summarizeCoverage(data) {
   /** @type {{ lines: number, statements: number, functions: number, branches: number } | null} */
   let summary = null;
   if (data && data.total) {
+    // 件数の参照を保持する。
     const total = data.total;
     summary = {
       lines: toNumber(total.lines?.pct),
@@ -89,6 +91,7 @@ function summarizeFileCoverages(data) {
     summaries = Object.keys(data)
       .filter((key) => key !== "total")
       .map((key) => {
+        // entryを条件で選ぶ。
         const entry = data[key] || {};
         return {
           file: key,
@@ -111,8 +114,11 @@ function summarizeFileCoverages(data) {
  * @returns {string} 課題メッセージ。
  */
 function buildFileCoverageIssue(fileLabel, metricLabel, actual, limit) {
+  // メッセージを整形する。
   const actualText = actual.toFixed(2);
+  // メッセージを整形する。
   const limitText = limit.toFixed(2);
+  // 判定結果の初期値を定義する。
   const issue = `Coverage (${fileLabel}): ${metricLabel} ${actualText}% が下限 ${limitText}% 未満です`;
   return issue;
 }
@@ -127,7 +133,9 @@ function evaluateFileCoverage(summary, rules) {
   /** @type {string[]} */
   const issues = [];
   FILE_METRICS.forEach((metric) => {
+    // actualの参照を保持する。
     const actual = summary[metric.key];
+    // limitの参照を保持する。
     const limit = rules[metric.key];
     if (typeof actual === "number" && typeof limit === "number") {
       if (actual < limit) {
@@ -158,7 +166,9 @@ function evaluateFileCoverageGate({ summaries, rules, reportPath }) {
     issues.push(`Coverage: ファイル別レポートが見つかりません (${reportPath})`);
   } else {
     summaries.forEach((summary) => {
+      // fileIssuesを取得する。
       const fileIssues = evaluateFileCoverage(summary, rules);
+      // 状態を条件で選ぶ。
       const status = fileIssues.length > 0 ? "fail" : "pass";
       files.push({
         file: summary.file,
@@ -174,6 +184,7 @@ function evaluateFileCoverageGate({ summaries, rules, reportPath }) {
       });
     });
   }
+  // okを用意する。
   const ok = issues.length === 0;
   return { ok, issues, files };
 }
@@ -187,6 +198,7 @@ function evaluateFileCoverageGate({ summaries, rules, reportPath }) {
  * @returns {{ ok: boolean, issues: string[] }} 評価結果。
  */
 function evaluateCoverage(summary, rules, reportPath) {
+  // 判定結果の一覧を用意する。
   const issues = [];
   if (!summary) {
     issues.push(`Coverage: レポートが見つかりません (${reportPath})`);
@@ -212,6 +224,7 @@ function evaluateCoverage(summary, rules, reportPath) {
       );
     }
   }
+  // okの初期値を定義する。
   let ok = true;
   if (issues.length > 0) {
     ok = false;

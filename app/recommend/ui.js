@@ -14,6 +14,7 @@
  * @returns {number | null} 上限分数またはnull。
  */
 function getMaxMinutes() {
+  // valueを解析する。
   const value = Number.parseInt(maxTimeInput.value, 10);
   return Number.isFinite(value) && value > 0 ? value : null;
 }
@@ -30,6 +31,7 @@ function getTargetMinutes() {
  * 所要時間上限のヒントを更新する。
  */
 function updateLimitHint() {
+  // maxMinutesを取得する。
   const maxMinutes = getMaxMinutes();
   limitHint.textContent = maxMinutes
     ? `所要時間の上限は${maxMinutes}分です。`
@@ -82,8 +84,10 @@ function renderStops(stops) {
     return;
   }
   stops.forEach((stop) => {
+    // DOM要素を生成する。
     const item = document.createElement("li");
     if (typeof stop === "string") {
+      // DOM要素を生成する。
       const link = document.createElement("a");
       link.href = buildMapsLink(stop);
       link.target = "_blank";
@@ -92,9 +96,13 @@ function renderStops(stops) {
       link.textContent = stop;
       item.appendChild(link);
     } else if (stop && typeof stop === "object") {
+      // nameを条件で選ぶ。
       const name = stop.name || stop.title || "";
+      // addressを条件で選ぶ。
       const address = stop.address || "";
+      // labelを取得する。
       const label = [name, address].filter(Boolean).join(" ");
+      // DOM要素を生成する。
       const link = document.createElement("a");
       link.href = buildMapsLink(label);
       link.target = "_blank";
@@ -117,6 +125,7 @@ function renderStops(stops) {
 function renderSources(sources) {
   recommendSources.textContent = "";
   if (!Array.isArray(sources) || sources.length === 0) {
+    // DOM要素を生成する。
     const item = document.createElement("li");
     item.textContent = "参照なし";
     recommendSources.appendChild(item);
@@ -124,9 +133,13 @@ function renderSources(sources) {
   }
 
   sources.forEach((source) => {
+    // DOM要素を生成する。
     const item = document.createElement("li");
+    // DOM要素を生成する。
     const link = document.createElement("a");
+    // URLを条件で選ぶ。
     const url = typeof source === "string" ? source : source.url;
+    // titleを条件で選ぶ。
     const title =
       typeof source === "string" ? source : source.title || source.url;
     if (!url) {

@@ -3,6 +3,7 @@
  * @file
  */
 const isCI = Boolean(process.env["CI"]);
+// オプションをまとめる。
 const reporterOptions = {
   reportDir: "reports/cypress",
   reportFilename: "index",

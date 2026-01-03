@@ -5,6 +5,7 @@
 /* eslint-env node */
 "use strict";
 
+// Setのインスタンスを作成する。
 const DESCRIBE_MODIFIERS = new Set([
   "only",
   "skip",
@@ -14,7 +15,9 @@ const DESCRIBE_MODIFIERS = new Set([
   "concurrent",
 ]);
 
+// identifierNamedかどうかを判定する処理を定義する。
 const isIdentifierNamed = (node, name) => {
+  // 結果の初期値を定義する。
   let result = false;
   if (node && node.type === "Identifier") {
     result = node.name === name;
@@ -22,14 +25,19 @@ const isIdentifierNamed = (node, name) => {
   return result;
 };
 
+// describeCallかどうかを判定する処理を定義する。
 const isDescribeCall = (node) => {
+  // 結果の初期値を定義する。
   let result = false;
   if (node && node.type === "CallExpression") {
+    // calleeの参照を保持する。
     const callee = node.callee;
     if (isIdentifierNamed(callee, "describe")) {
       result = true;
     } else if (callee && callee.type === "MemberExpression" && !callee.computed) {
+      // objectの参照を保持する。
       const object = callee.object;
+      // propertyの参照を保持する。
       const property = callee.property;
       if (isIdentifierNamed(object, "describe") && property && property.type === "Identifier") {
         result = DESCRIBE_MODIFIERS.has(property.name);
@@ -39,10 +47,14 @@ const isDescribeCall = (node) => {
   return result;
 };
 
+// describeCallbackを取得する処理を定義する。
 const findDescribeCallback = (node) => {
+  // callbackの初期値を定義する。
   let callback = null;
   if (node && Array.isArray(node.arguments)) {
+    // indexをループ用に用意する。
     for (let index = node.arguments.length - 1; index >= 0; index -= 1) {
+      // argの参照を保持する。
       const arg = node.arguments[index];
       if (
         arg &&
@@ -56,13 +68,17 @@ const findDescribeCallback = (node) => {
   return callback;
 };
 
+// expectCallかどうかを判定する処理を定義する。
 const isExpectCall = (node) => {
+  // 結果の初期値を定義する。
   let result = false;
   if (node && node.type === "CallExpression") {
+    // calleeの参照を保持する。
     const callee = node.callee;
     if (isIdentifierNamed(callee, "expect")) {
       result = true;
     } else if (callee && callee.type === "MemberExpression" && !callee.computed) {
+      // objectの参照を保持する。
       const object = callee.object;
       if (isIdentifierNamed(object, "expect")) {
         result = true;
@@ -72,11 +88,15 @@ const isExpectCall = (node) => {
   return result;
 };
 
+// countExpectCallsの処理を定義する。
 const countExpectCalls = (node) => {
+  // 件数の初期値を定義する。
   let count = 0;
   if (node) {
+    // stackの一覧を用意する。
     const stack = [node];
     while (stack.length > 0) {
+      // currentを取得する。
       const current = stack.pop();
       if (!current || typeof current !== "object") {
         continue;
@@ -88,6 +108,7 @@ const countExpectCalls = (node) => {
         if (key === "parent") {
           return;
         }
+        // valueの参照を保持する。
         const value = current[key];
         if (Array.isArray(value)) {
           value.forEach((item) => {
@@ -104,11 +125,15 @@ const countExpectCalls = (node) => {
   return count;
 };
 
+// adjacentCommentを持つかどうかを判定する処理を定義する。
 const hasAdjacentComment = (node, sourceCode) => {
+  // 結果の初期値を定義する。
   let result = false;
   if (node && sourceCode && node.loc) {
+    // commentsを取得する。
     const comments = sourceCode.getCommentsBefore(node);
     if (comments.length > 0) {
+      // lastの参照を保持する。
       const last = comments[comments.length - 1];
       if (last && last.loc) {
         result = last.loc.end.line === node.loc.start.line - 1;
@@ -132,12 +157,15 @@ module.exports = {
     },
   },
   create(context) {
+    // sourceCodeを取得する。
     const sourceCode = context.getSourceCode();
 
+    // checkDescribeCallの処理を定義する。
     const checkDescribeCall = (node) => {
       if (!isDescribeCall(node)) {
         return;
       }
+      // 状態を条件で選ぶ。
       const statement =
         node.parent && node.parent.type === "ExpressionStatement"
           ? node.parent
@@ -145,9 +173,12 @@ module.exports = {
       if (!hasAdjacentComment(statement, sourceCode)) {
         context.report({ node: statement, messageId: "missingComment" });
       }
+      // callbackを取得する。
       const callback = findDescribeCallback(node);
       if (callback) {
+        // bodyNodeを条件で選ぶ。
         const bodyNode = callback.body || callback;
+        // 件数を取得する。
         const expectCount = countExpectCalls(bodyNode);
         if (expectCount !== 1) {
           context.report({ node: callback, messageId: "expectCount" });

@@ -15,7 +15,9 @@ const {
  * @returns {any} 解析済みレポート。
  */
 function parseEslintOutput(result) {
+  // rawOutputを取得する。
   const rawOutput = combineOutput(result.stdout, result.stderr);
+  // reportを後で設定するために用意する。
   let report;
   if (result.hasError) {
     report = {
@@ -26,6 +28,7 @@ function parseEslintOutput(result) {
       rawOutput,
     };
   } else {
+    // parsedを解析する。
     const parsed = parseJsonOutput(result.stdout);
     if (!parsed) {
       if (rawOutput.length === 0) {
@@ -56,15 +59,20 @@ function parseEslintOutput(result) {
     } else {
       /** @type {any[]} */
       const files = [];
+      // エラーの初期値を定義する。
       let errors = 0;
+      // warningsの初期値を定義する。
       let warnings = 0;
 
       parsed.forEach((entry) => {
+        // 一覧を条件で選ぶ。
         const messageList = Array.isArray(entry.messages) ? entry.messages : [];
         if (messageList.length === 0) {
           return;
         }
+        // メッセージを取得する。
         const messages = messageList.map((/** @type {any} */ message) => {
+          // 重大度を判定する。
           const severity = message.severity === 2 ? "error" : "warning";
           if (severity === "error") {
             errors += 1;

@@ -3,16 +3,21 @@
  * @file サーバー本体の起動処理をまとめる。
  */
 const http = require("http");
+// fsモジュールを読み込む。
 const fs = require("fs");
+// pathモジュールを読み込む。
 const path = require("path");
 
+// configから必要な値を取得する。
 const { PORT, ROOT, MAPS_API_KEY, OPENAI_API_KEY, MIME_TYPES } = require("./config");
+// http-utilsから必要な値を取得する。
 const {
   safeJoin,
   sendJson,
   readJson,
   SECURITY_HEADERS,
 } = require("./http-utils");
+// handlersからhandleRecommendPayloadを取得する。
 const { handleRecommendPayload } = require("./handlers");
 
 /**
@@ -44,7 +49,9 @@ const handleRecommendRequest = (req, res) => {
   } else {
     readJson(req)
       .then(async (payload) => {
+        // レスポンスの初期値を定義する。
         let responseSent = false;
+        // sendOnceの処理を定義する。
         const sendOnce = (
           /** @type {number} */ status,
           /** @type {any} */ responseBody
@@ -70,7 +77,9 @@ const handleRecommendRequest = (req, res) => {
  * @param {string} requestPath リクエストパス。
  */
 const handleStaticRequest = (res, requestPath) => {
+  // パスを条件で選ぶ。
   const relativePath = requestPath === "/" ? "/index.html" : requestPath;
+  // パスを取得する。
   const filePath = safeJoin(ROOT, relativePath);
 
   if (!filePath) {
@@ -82,6 +91,7 @@ const handleStaticRequest = (res, requestPath) => {
   } else {
     fs.readFile(filePath, (err, data) => {
       if (err) {
+        // 状態を条件で選ぶ。
         const status = err.code === "ENOENT" ? 404 : 500;
         res.writeHead(status, {
           "Content-Type": "text/plain; charset=utf-8",
@@ -89,6 +99,7 @@ const handleStaticRequest = (res, requestPath) => {
         });
         res.end(status === 404 ? "Not Found" : "Server Error");
       } else {
+        // extを整形する。
         const ext = path.extname(filePath).toLowerCase();
         res.writeHead(200, {
           "Content-Type": MIME_TYPES[ext] || "application/octet-stream",
@@ -100,8 +111,11 @@ const handleStaticRequest = (res, requestPath) => {
   }
 };
 
+// serverを作成する。
 const server = http.createServer((req, res) => {
+  // リクエストを条件で選ぶ。
   const requestUrl = req.url || "/";
+  // リクエストを取得する。
   const requestPath = decodeURIComponent(requestUrl.split("?")[0] || "/");
   if (requestPath === "/api/config") {
     handleConfigRequest(req, res);
@@ -112,6 +126,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
+// startServerの処理を定義する。
 const startServer = () => {
   server.listen(PORT, () => {
     process.stdout.write(`Server running at http://localhost:${PORT}\n`);

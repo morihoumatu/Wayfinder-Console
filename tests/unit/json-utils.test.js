@@ -13,7 +13,9 @@ const {
 // extractOutputTextの挙動をまとめて検証する。
 describe("extractOutputText", () => {
   it("出力テキストの抽出結果をまとめて確認する", () => {
+    // directを取得する。
     const direct = extractOutputText({ output_text: "hello" });
+    // joinedを取得する。
     const joined = extractOutputText({
       output: [
         {
@@ -24,6 +26,7 @@ describe("extractOutputText", () => {
         },
       ],
     });
+    // filteredを取得する。
     const filtered = extractOutputText({
       output: [
         { content: "skip" },
@@ -41,6 +44,7 @@ describe("extractOutputText", () => {
 // parseJsonFromTextの挙動をまとめて検証する。
 describe("parseJsonFromText", () => {
   it("JSON抽出の結果をまとめて確認する", () => {
+    // parsedをまとめる。
     const parsed = {
       plain: parseJsonFromText('{"ok":true}'),
       fenced: parseJsonFromText("```json\n{\"value\":1}\n```"),
@@ -61,22 +65,36 @@ describe("parseJsonFromText", () => {
 // findMatchingBracketの挙動をまとめて検証する。
 describe("findMatchingBracket", () => {
   it("括弧探索の結果をまとめて確認する", () => {
+    // メッセージの初期値を定義する。
     const nestedText = "{ \"a\": { \"b\": 1 } } trailing";
+    // nestedStartを取得する。
     const nestedStart = nestedText.indexOf("{");
+    // nestedEndを取得する。
     const nestedEnd = findMatchingBracket(nestedText, nestedStart);
+    // nestedExpectedを取得する。
     const nestedExpected = nestedText.indexOf("}", nestedText.indexOf("} ") + 1);
 
+    // メッセージの初期値を定義する。
     const quotedText = "{ \"a\": \"{ }\" } after";
+    // quotedStartを取得する。
     const quotedStart = quotedText.indexOf("{");
+    // quotedEndを取得する。
     const quotedEnd = findMatchingBracket(quotedText, quotedStart);
+    // quotedSliceを取得する。
     const quotedSlice = quotedText.slice(quotedStart, quotedEnd + 1);
 
+    // メッセージの初期値を定義する。
     const escapedText = "{ \"a\": \"value with \\\" quote\" } trailing";
+    // escapedStartを取得する。
     const escapedStart = escapedText.indexOf("{");
+    // escapedEndを取得する。
     const escapedEnd = findMatchingBracket(escapedText, escapedStart);
 
+    // メッセージの初期値を定義する。
     const missingText = "{ \"a\": 1";
+    // missingStartを取得する。
     const missingStart = missingText.indexOf("{");
+    // missingEndを取得する。
     const missingEnd = findMatchingBracket(missingText, missingStart);
 
     expect({
@@ -100,8 +118,11 @@ describe("findMatchingBracket", () => {
 // findJsonInText/isEscapedCharの挙動をまとめて検証する。
 describe("findJsonInText/isEscapedChar", () => {
   it("JSON抽出とエスケープ判定をまとめて確認する", () => {
+    // parsedを取得する。
     const parsed = findJsonInText("{invalid} then {\"ok\":true}");
+    // escapedStartを取得する。
     const escapedStart = isEscapedChar("\\\"", 0);
+    // escapedNextを取得する。
     const escapedNext = isEscapedChar("\\\"", 1);
     expect({ parsed, escapedStart, escapedNext }).toEqual({
       parsed: { ok: true },

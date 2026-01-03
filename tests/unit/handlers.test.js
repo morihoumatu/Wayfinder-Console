@@ -3,7 +3,9 @@
  * @file
  */
 const openaiClient = require("../../server/openai-client");
+// callOpenAISpyを取得する。
 const callOpenAISpy = vi.spyOn(openaiClient, "callOpenAI");
+// handlersから必要な値を取得する。
 const {
   handleRecommendResult,
   handleSpotResult,
@@ -11,9 +13,11 @@ const {
   handleRecommendPayload,
 } = require("../../server/handlers");
 
+// senderを作成する処理を定義する。
 const createSender = () => {
   /** @type {{ status: number, body: any }[]} */
   const calls = [];
+  // sendOnceの処理を定義する。
   const sendOnce = (status, body) => {
     calls.push({ status, body });
   };
@@ -23,6 +27,7 @@ const createSender = () => {
 // handleRecommendResultの結果をまとめて検証する。
 describe("handleRecommendResult", () => {
   it("入力パターンごとの応答をまとめて確認する", () => {
+    // IDを作成する。
     const invalid = createSender();
     handleRecommendResult({
       outputText: "invalid",
@@ -32,6 +37,7 @@ describe("handleRecommendResult", () => {
       sendOnce: invalid.sendOnce,
     });
 
+    // エラーを作成する。
     const errorCase = createSender();
     handleRecommendResult({
       outputText: "{\"error\":\"oops\"}",
@@ -41,7 +47,9 @@ describe("handleRecommendResult", () => {
       sendOnce: errorCase.sendOnce,
     });
 
+    // walkCaseを作成する。
     const walkCase = createSender();
+    // JSON文字列を生成する。
     const outputText = JSON.stringify({
       route_name: "散歩ルート",
       area: "",
@@ -84,6 +92,7 @@ describe("handleRecommendResult", () => {
 // handleWalkRouteResultとhandleSpotResultの結果をまとめて検証する。
 describe("handleWalkRouteResult/handleSpotResult", () => {
   it("散歩ルートとスポットの応答をまとめて確認する", () => {
+    // insufficientを作成する。
     const insufficient = createSender();
     handleWalkRouteResult({
       result: { route_name: "walk", stops: [{ name: "A", address: "X" }] },
@@ -93,6 +102,7 @@ describe("handleWalkRouteResult/handleSpotResult", () => {
       sendOnce: insufficient.sendOnce,
     });
 
+    // byTargetを作成する。
     const byTarget = createSender();
     handleWalkRouteResult({
       result: {
@@ -112,6 +122,7 @@ describe("handleWalkRouteResult/handleSpotResult", () => {
       sendOnce: byTarget.sendOnce,
     });
 
+    // fallbackを作成する。
     const fallback = createSender();
     handleWalkRouteResult({
       result: {
@@ -129,6 +140,7 @@ describe("handleWalkRouteResult/handleSpotResult", () => {
       sendOnce: fallback.sendOnce,
     });
 
+    // spotを作成する。
     const spot = createSender();
     handleSpotResult(
       {
@@ -140,6 +152,7 @@ describe("handleWalkRouteResult/handleSpotResult", () => {
       spot.sendOnce
     );
 
+    // spotFallbackを作成する。
     const spotFallback = createSender();
     handleSpotResult(
       {
@@ -205,11 +218,13 @@ describe("handleRecommendPayload", () => {
 
   it("入力検証とレスポンスをまとめて確認する", async () => {
     callOpenAISpy.mockReset();
+    // IDを作成する。
     const invalid = createSender();
     await handleRecommendPayload(
       { query: "", origin: { lat: 1, lng: 2 } },
       invalid.sendOnce
     );
+    // 結果をまとめる。
     const invalidResult = {
       status: invalid.calls[0].status,
       callCount: callOpenAISpy.mock.calls.length,
@@ -220,6 +235,7 @@ describe("handleRecommendPayload", () => {
       output_text:
         "{\"place_name\":\"Spot\",\"place_address\":\"Tokyo\",\"reason\":\"Ok\",\"source_urls\":[]}",
     });
+    // normalを作成する。
     const normal = createSender();
     await handleRecommendPayload(
       { query: "cafe", origin: { lat: 1, lng: 2 } },
@@ -240,6 +256,7 @@ describe("handleRecommendPayload", () => {
         source_urls: [],
       }),
     });
+    // walkを作成する。
     const walk = createSender();
     await handleRecommendPayload(
       { query: "", mode: "walk_route", origin: { lat: 1, lng: 2 } },

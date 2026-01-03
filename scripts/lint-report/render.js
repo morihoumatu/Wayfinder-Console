@@ -10,6 +10,7 @@ const { REPORT_STYLE } = require("./styles");
  * @returns {string} エスケープ済み文字列。
  */
 function escapeHtml(value) {
+  // メッセージを取得する。
   const text = String(value);
   return text
     .replace(/&/g, "&amp;")
@@ -36,6 +37,7 @@ function formatNumber(value) {
 function renderMessageRows(messages) {
   return messages
     .map((/** @type {any} */ message) => {
+      // 重大度のクラスを決める。
       const severityClass =
         message.severity === "error" ? "severity-error" : "severity-warning";
       return `<tr class="${severityClass}">
@@ -56,6 +58,7 @@ function renderMessageRows(messages) {
  * @returns {string} HTML文字列。
  */
 function renderFileSection(fileEntry, openByDefault) {
+  // openAttrを条件で選ぶ。
   const openAttr = openByDefault ? " open" : "";
   return `<details class="file-block"${openAttr}>
   <summary>${escapeHtml(fileEntry.path)} (${fileEntry.messages.length})</summary>
@@ -82,8 +85,11 @@ function renderFileSection(fileEntry, openByDefault) {
  * @returns {string} HTML文字列。
  */
 function renderToolSection(tool) {
+  // 状態を条件で選ぶ。
   const statusLabel = tool.status === "ok" ? "OK" : "FAIL";
+  // 状態を条件で選ぶ。
   const statusClass = tool.status === "ok" ? "status-ok" : "status-fail";
+  // headerの初期値を定義する。
   const header = `<div class="tool-header">
   <div>
     <h2>${escapeHtml(tool.name)}</h2>
@@ -97,8 +103,10 @@ function renderToolSection(tool) {
   <span>Files: ${tool.files.length}</span>
 </div>`;
 
+  // sectionの初期値を定義する。
   let section = "";
   if (tool.toolError) {
+    // outputを条件で選ぶ。
     const output = tool.rawOutput.length > 0 ? tool.rawOutput : tool.toolError;
     section = `<section class="tool">
 ${header}
@@ -111,8 +119,10 @@ ${header}
 <p class="clean">No issues.</p>
 </section>`;
   } else {
+    // fileSectionsを取得する。
     const fileSections = tool.files
       .map((/** @type {any} */ fileEntry) => {
+        // エラー有無を判定する。
         const hasError = fileEntry.messages.some(
           (/** @type {any} */ message) => message.severity === "error"
         );
@@ -134,8 +144,10 @@ ${fileSections}
  * @returns {string} HTML文字列。
  */
 function renderReport(reportData) {
+  // summaryRowsを取得する。
   const summaryRows = reportData.tools
     .map((/** @type {any} */ tool) => {
+      // ステータスのクラスを決める。
       const statusClass = tool.status === "ok" ? "status-ok" : "status-fail";
       return `<tr class="${statusClass}">
   <td>${escapeHtml(tool.name)}</td>
@@ -147,6 +159,7 @@ function renderReport(reportData) {
     })
     .join("");
 
+  // toolSectionsを取得する。
   const toolSections = reportData.tools.map(renderToolSection).join("");
 
   return `<!doctype html>

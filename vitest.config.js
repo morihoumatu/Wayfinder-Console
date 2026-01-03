@@ -4,6 +4,7 @@
  */
 const { defineConfig } = require("vitest/config");
 
+// 設定を取得する。
 const config = defineConfig({
   test: {
     include: ["tests/unit/**/*.test.js"],

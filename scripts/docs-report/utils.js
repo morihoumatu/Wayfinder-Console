@@ -4,8 +4,10 @@
  */
 "use strict";
 
+// fsモジュールを読み込む。
 const fs = require("fs");
 
+// configからIGNORE_DIRSを取得する。
 const { IGNORE_DIRS } = require("./config");
 
 /**
@@ -14,6 +16,7 @@ const { IGNORE_DIRS } = require("./config");
  * @returns {boolean} 存在確認結果。
  */
 function ensureDirectory(dirPath) {
+  // ensuredの初期値を定義する。
   const ensured = true;
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -27,6 +30,7 @@ function ensureDirectory(dirPath) {
  * @returns {string} 読み込み内容または空文字列。
  */
 function readText(filePath) {
+  // メッセージの初期値を定義する。
   let text = "";
   try {
     text = fs.readFileSync(filePath, "utf8");
@@ -42,7 +46,9 @@ function readText(filePath) {
  * @returns {string} エスケープ後のHTML文字列。
  */
 function escapeHtml(value) {
+  // メッセージを取得する。
   const text = String(value);
+  // escapedを取得する。
   const escaped = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -58,6 +64,7 @@ function escapeHtml(value) {
  * @returns {string} 正規化済みの行。
  */
 function normalizeCommentLine(line) {
+  // normalizedを取得する。
   const normalized = line.replace(/^\s*\*?/, "").trim();
   return normalized;
 }
@@ -68,6 +75,7 @@ function normalizeCommentLine(line) {
  * @returns {boolean} 除外するかどうか。
  */
 function shouldIgnoreDir(dirName) {
+  // ignoredを条件で選ぶ。
   const ignored = dirName.startsWith(".") || IGNORE_DIRS.has(dirName);
   return ignored;
 }

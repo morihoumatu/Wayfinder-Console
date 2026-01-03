@@ -4,9 +4,12 @@
  */
 "use strict";
 
+// fsモジュールを読み込む。
 const fs = require("fs");
+// pathモジュールを読み込む。
 const path = require("path");
 
+// configから必要な値を取得する。
 const {
   ROOT_DIR,
   ROOTS,
@@ -16,8 +19,11 @@ const {
   CSS_ROOTS,
   CSS_FILES,
 } = require("./config");
+// utilsからreadTextとreadDirectoryとshouldIgnoreDirを取得する。
 const { readText, readDirectory, shouldIgnoreDir } = require("./utils");
+// parserからbuildFileDocを取得する。
 const { buildFileDoc } = require("./parser");
+// css-parserからbuildCssFileDocを取得する。
 const { buildCssFileDoc } = require("./css-parser");
 
 /**
@@ -26,9 +32,12 @@ const { buildCssFileDoc } = require("./css-parser");
  * @returns {string} 整形後の内容。
  */
 function normalizeAboutText(aboutText) {
+  // normalizedの初期値を定義する。
   let normalized = "";
   if (typeof aboutText === "string" && aboutText.length > 0) {
+    // linesを取得する。
     const lines = aboutText.split(/\r?\n/);
+    // インデックスを取得する。
     let startIndex = skipBlankLines(lines, 0);
     if (isAboutHeaderLine(lines[startIndex])) {
       startIndex = skipBlankLines(lines, startIndex + 1);
@@ -45,8 +54,10 @@ function normalizeAboutText(aboutText) {
  * @returns {number} 空行を飛ばした次の行番号。
  */
 function skipBlankLines(lines, startIndex) {
+  // インデックスの参照を保持する。
   let index = startIndex;
   while (index < lines.length) {
+    // lineの参照を保持する。
     const line = lines[index];
     if (typeof line !== "string" || line.trim().length !== 0) {
       break;
@@ -62,6 +73,7 @@ function skipBlankLines(lines, startIndex) {
  * @returns {boolean} ABOUT見出しかどうか。
  */
 function isAboutHeaderLine(line) {
+  // 結果の初期値を定義する。
   let result = false;
   if (typeof line === "string") {
     result = /^#\s*ABOUT\b/i.test(line.trim());
@@ -75,10 +87,13 @@ function isAboutHeaderLine(line) {
  * @returns {any | null} ディレクトリノード。
  */
 function buildDirNode(dirPath) {
+  // nodeの初期値を定義する。
   let node = null;
   if (fs.existsSync(dirPath)) {
+    // statを取得する。
     const stat = fs.statSync(dirPath);
     if (stat.isDirectory()) {
+      // entriesを読み込む。
       const entries = readDirectory(dirPath);
       /** @type {any[]} */
       const files = [];
@@ -88,6 +103,7 @@ function buildDirNode(dirPath) {
       entries.forEach((entry) => {
         if (entry.isDirectory()) {
           if (!shouldIgnoreDir(entry.name)) {
+            // childを作成する。
             const child = buildDirNode(path.join(dirPath, entry.name));
             if (child) {
               subdirs.push(child);
@@ -101,7 +117,9 @@ function buildDirNode(dirPath) {
       files.sort((a, b) => a.name.localeCompare(b.name));
       subdirs.sort((a, b) => a.name.localeCompare(b.name));
 
+      // パスを組み立てる。
       const aboutPath = path.join(dirPath, ABOUT_FILENAME);
+      // aboutの初期値を定義する。
       let about = "";
       if (fs.existsSync(aboutPath)) {
         about = normalizeAboutText(readText(aboutPath));
@@ -125,6 +143,7 @@ function buildDirNode(dirPath) {
  * @param {any[]} files 収集先配列。
  */
 function collectCssFilesFromDir(dirPath, files) {
+  // entriesを読み込む。
   const entries = readDirectory(dirPath);
   entries.forEach((entry) => {
     if (entry.isDirectory()) {
@@ -144,8 +163,10 @@ function collectCssFilesFromDir(dirPath, files) {
  */
 function collectCssFilesFromRoots(roots, files) {
   roots.forEach((rootName) => {
+    // パスを組み立てる。
     const rootPath = path.join(ROOT_DIR, rootName);
     if (fs.existsSync(rootPath)) {
+      // statを取得する。
       const stat = fs.statSync(rootPath);
       if (stat.isDirectory()) {
         collectCssFilesFromDir(rootPath, files);
@@ -161,8 +182,10 @@ function collectCssFilesFromRoots(roots, files) {
  */
 function collectCssFilesFromList(fileNames, files) {
   fileNames.forEach((fileName) => {
+    // パスを組み立てる。
     const filePath = path.join(ROOT_DIR, fileName);
     if (fs.existsSync(filePath)) {
+      // statを取得する。
       const stat = fs.statSync(filePath);
       if (stat.isFile() && filePath.endsWith(CSS_EXTENSION)) {
         files.push(buildCssFileDoc(filePath));
@@ -191,14 +214,18 @@ function buildCssFileList() {
 function buildReportData() {
   /** @type {any[]} */
   const roots = [];
+  // cssFilesを作成する。
   const cssFiles = buildCssFileList();
   ROOTS.forEach((rootName) => {
+    // パスを組み立てる。
     const rootPath = path.join(ROOT_DIR, rootName);
+    // nodeを作成する。
     const node = buildDirNode(rootPath);
     if (node) {
       roots.push(node);
     }
   });
+  // データをまとめる。
   const reportData = {
     generatedAt: new Date().toISOString(),
     roots,

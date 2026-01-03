@@ -3,9 +3,12 @@
  * @file テスト用のサーバー制御をまとめる。
  */
 const http = require("http");
+// child_processからspawnを取得する。
 const { spawn } = require("child_process");
 
+// DEFAULT_TIMEOUT_MSの定数を定義する。
 const DEFAULT_TIMEOUT_MS = 30_000;
+// POLL_INTERVAL_MSの定数を定義する。
 const POLL_INTERVAL_MS = 300;
 
 /**
@@ -15,15 +18,20 @@ const POLL_INTERVAL_MS = 300;
  */
 function checkServer(urlString) {
   return new Promise((resolve) => {
+    // セットの初期値を定義する。
     let settled = false;
+    // finishの処理を定義する。
     const finish = (/** @type {boolean} */ value) => {
       if (!settled) {
         settled = true;
         resolve(value);
       }
     };
+    // リクエストを取得する。
     const request = http.get(urlString, (res) => {
+      // 状態を条件で選ぶ。
       const status = res.statusCode || 0;
+      // okを条件で選ぶ。
       const ok = status >= 200 && status < 500;
       res.resume();
       finish(ok);
@@ -46,14 +54,18 @@ function checkServer(urlString) {
  */
 function waitForServer(urlString, timeoutMs) {
   return new Promise((resolve) => {
+    // セットの初期値を定義する。
     let settled = false;
+    // startedAtを取得する。
     const startedAt = Date.now();
+    // finishの処理を定義する。
     const finish = (/** @type {boolean} */ value) => {
       if (!settled) {
         settled = true;
         resolve(value);
       }
     };
+    // pollの処理を定義する。
     const poll = () => {
       checkServer(urlString).then((ready) => {
         if (ready) {
@@ -88,11 +100,15 @@ function startServer() {
  *   起動結果。
  */
 async function ensureServer(urlString, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  // childの初期値を定義する。
   let child = null;
+  // startedの初期値を定義する。
   let started = false;
+  // alreadyReadyを取得する。
   const alreadyReady = await checkServer(urlString);
   if (!alreadyReady) {
     child = startServer();
+    // readyを取得する。
     const ready = await waitForServer(urlString, timeoutMs);
     if (!ready) {
       if (child) {

@@ -31,27 +31,33 @@ function renderRouteBreakdown(segments) {
         if (!segment) {
           return;
         }
+        // DOM要素を生成する。
         const item = document.createElement("li");
         item.className = "segment-item";
 
+        // DOM要素を生成する。
         const header = document.createElement("div");
         header.className = "segment-header";
 
+        // DOM要素を生成する。
         const title = document.createElement("p");
         title.className = "segment-title";
         title.textContent = segment.title || "区間";
         header.appendChild(title);
 
         if (segment.meta) {
+          // DOM要素を生成する。
           const meta = document.createElement("p");
           meta.className = "segment-meta";
           meta.textContent = segment.meta;
           header.appendChild(meta);
         }
 
+        // DOM要素を生成する。
         const links = document.createElement("div");
         links.className = "segment-links";
 
+        // directionsLinkを作成する。
         const directionsLink = buildDirectionsLink({
           origin: segment.origin,
           destination: segment.destination,
@@ -61,6 +67,7 @@ function renderRouteBreakdown(segments) {
         });
 
         if (directionsLink) {
+          // DOM要素を生成する。
           const link = document.createElement("a");
           link.className = "map-link";
           link.href = directionsLink;
@@ -70,6 +77,7 @@ function renderRouteBreakdown(segments) {
           links.appendChild(link);
         }
 
+        // searchQueryを作成する。
         const searchQuery = buildSegmentSearchQuery({
           fromLabel: segment.fromLabel,
           toLabel: segment.toLabel,
@@ -77,6 +85,7 @@ function renderRouteBreakdown(segments) {
           to: segment.destination,
         });
         if (searchQuery) {
+          // DOM要素を生成する。
           const searchLink = document.createElement("a");
           searchLink.className = "map-link";
           searchLink.href = buildMapsLink(searchQuery);
@@ -114,30 +123,38 @@ function buildRailBreakdownSegments(
     railResult,
   }
 ) {
+  // segmentsの一覧を用意する。
   let segments = [];
   if (origin && destination) {
+    // transitStopsを取得する。
     const transitStops = extractTransitStops(railResult);
     if (transitStops) {
+      // departureLabelを条件で選ぶ。
       const departureLabel = transitStops.departure?.name || "出発駅";
+      // arrivalLabelを条件で選ぶ。
       const arrivalLabel = transitStops.arrival?.name || "到着駅";
+      // firstWalkを作成する。
       const firstWalk = buildWalkSegment({
         origin,
         destination: transitStops.departure.location,
         fromLabel: originLabelText,
         toLabel: departureLabel,
       });
+      // railSegmentを作成する。
       const railSegment = buildRailSegment({
         origin: transitStops.departure.location,
         destination: transitStops.arrival.location,
         fromLabel: departureLabel,
         toLabel: arrivalLabel,
       });
+      // lastWalkを作成する。
       const lastWalk = buildWalkSegment({
         origin: transitStops.arrival.location,
         destination,
         fromLabel: arrivalLabel,
         toLabel: destinationLabelText,
       });
+      // railSegmentsを取得する。
       const railSegments = [firstWalk, railSegment, lastWalk].filter(Boolean);
       if (railSegments.length) {
         segments = railSegments;
@@ -166,8 +183,10 @@ function buildWalkBreakdownSegments(
   /** @type {any[]} */
   let segments = [];
   if (origin && destination) {
+    // waypointsを条件で選ぶ。
     const waypoints =
       mode === "walk" && waypointPoints.length ? waypointPoints : null;
+    // walkSegmentを作成する。
     const walkSegment = buildWalkSegment({
       origin,
       destination,
@@ -190,10 +209,14 @@ function buildWalkBreakdownSegments(
 function buildRouteBreakdownSegments(
   /** @type {{ mode?: any, railResult?: any }} */ { mode, railResult }
 ) {
+  // segmentsの一覧を用意する。
   let segments = [];
   if (originLatLng && destinationLatLng) {
+    // originDisplayLabelを取得する。
     const originDisplayLabel = getOriginDisplayLabel();
+    // destinationDisplayLabelを取得する。
     const destinationDisplayLabel = getDestinationDisplayLabel();
+    // waypointPointsを条件で選ぶ。
     const waypointPoints = Array.isArray(walkingWaypoints)
       ? walkingWaypoints.map((waypoint) => waypoint.location).filter(Boolean)
       : [];
@@ -229,6 +252,7 @@ function buildRouteBreakdownSegments(
 function updateRouteBreakdown(
   /** @type {{ mode?: any, railResult?: any }} */ { mode, railResult }
 ) {
+  // segmentsを作成する。
   const segments = buildRouteBreakdownSegments({ mode, railResult });
   if (!segments.length) {
     clearRouteBreakdown();

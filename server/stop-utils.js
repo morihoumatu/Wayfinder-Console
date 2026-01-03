@@ -8,6 +8,7 @@
  * @returns {boolean} 判定結果。
  */
 function isStopLike(entry) {
+  // 判定結果の初期値を定義する。
   let isLike = false;
   if (entry && typeof entry === "object") {
     isLike =
@@ -24,6 +25,7 @@ function isStopLike(entry) {
  * @returns {string} 整形済み行。
  */
 function cleanStopLine(line) {
+  // cleanedの初期値を定義する。
   let cleaned = "";
   if (line) {
     cleaned = line.replace(/^[\s*・\-–—•\d+.、)]+/, "").trim();
@@ -37,10 +39,12 @@ function cleanStopLine(line) {
  * @returns {Array<{ name: string, address: string }>} 立ち寄り配列。
  */
 function parseStopString(value) {
+  // trimmedを取得する。
   const trimmed = value.trim();
   /** @type {Array<{ name: string, address: string }>} */
   let stops = [];
   if (trimmed) {
+    // partsを取得する。
     let parts = trimmed
       .split(/\r?\n/)
       .map(cleanStopLine)
@@ -59,8 +63,11 @@ function parseStopString(value) {
     }
     stops = parts
       .map((part) => {
+        // segmentsを取得する。
         const segments = part.split(/\s+|、|,/);
+        // nameを条件で選ぶ。
         const name = segments[0] || "";
+        // addressを取得する。
         const address = segments.slice(1).join(" ");
         return { name, address };
       })
@@ -129,6 +136,7 @@ function selectStopsFromCandidates(candidates) {
  * @returns {Array<{ name: string, address: string }>} 立ち寄り配列。
  */
 function extractStopsFromResult(result) {
+  // stopValueを条件で選ぶ。
   const stopValue = result?.stops ?? result?.points ?? result?.places;
   /** @type {Array<{ name: string, address: string }>} */
   let stops = [];

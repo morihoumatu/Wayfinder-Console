@@ -3,15 +3,22 @@
  * @file セキュリティヘッダーを検証する。
  */
 const fs = require("fs");
+// pathモジュールを読み込む。
 const path = require("path");
+// httpモジュールを読み込む。
 const http = require("http");
 
+// test-serverからensureServerとstopServerを取得する。
 const { ensureServer, stopServer } = require("./test-server");
 
+// SERVER_URLの定数を定義する。
 const SERVER_URL = "http://localhost:3000";
+// パスを組み立てる。
 const REPORT_DIR = path.join(__dirname, "..", "reports");
+// パスを組み立てる。
 const REPORT_JSON_PATH = path.join(REPORT_DIR, "security-report.json");
 
+// HEADER_RULESの一覧を用意する。
 const HEADER_RULES = [
   { name: "x-content-type-options", expected: "nosniff" },
   { name: "x-frame-options", expected: "DENY" },
@@ -39,6 +46,7 @@ const HEADER_RULES = [
  * @returns {string} 正規化値。
  */
 function normalizeHeaderValue(value) {
+  // normalizedの初期値を定義する。
   let normalized = "";
   if (Array.isArray(value)) {
     normalized = value.join(", ");
@@ -55,6 +63,7 @@ function normalizeHeaderValue(value) {
  */
 function fetchHeaders(urlString) {
   return new Promise((resolve, reject) => {
+    // リクエストを取得する。
     const request = http.get(urlString, (res) => {
       /** @type {Record<string, string>} */
       const headers = {};
@@ -81,7 +90,9 @@ function evaluateHeaders(headers) {
   /** @type {string[]} */
   const issues = [];
   HEADER_RULES.forEach((rule) => {
+    // actualを条件で選ぶ。
     const actual = headers[rule.name] || "";
+    // okの初期値を定義する。
     let ok = true;
     if (rule.expected && actual !== rule.expected) {
       ok = false;
@@ -121,16 +132,23 @@ function writeReport(report) {
  * セキュリティチェックを実行する。
  */
 async function main() {
+  // serverChildの初期値を定義する。
   let serverChild = null;
+  // serverStartedの初期値を定義する。
   let serverStarted = false;
+  // startedAtを取得する。
   const startedAt = Date.now();
   try {
+    // serverを取得する。
     const server = await ensureServer(SERVER_URL);
     serverChild = server.child;
     serverStarted = server.started;
 
+    // headersを取得する。
     const headers = await fetchHeaders(SERVER_URL);
+    // evaluationを取得する。
     const evaluation = evaluateHeaders(headers);
+    // reportをまとめる。
     const report = {
       generatedAt: new Date().toISOString(),
       durationMs: Date.now() - startedAt,
@@ -150,7 +168,9 @@ async function main() {
       process.exitCode = 0;
     }
   } catch (error) {
+    // メッセージを条件で選ぶ。
     const message = error instanceof Error ? error.message : "Unexpected error.";
+    // reportをまとめる。
     const report = {
       generatedAt: new Date().toISOString(),
       durationMs: Date.now() - startedAt,
@@ -167,6 +187,7 @@ async function main() {
 }
 
 main().catch((error) => {
+  // メッセージを条件で選ぶ。
   const message = error instanceof Error ? error.message : "Unexpected error.";
   process.stderr.write(`[security-check] ${message}\n`);
   process.exitCode = 1;

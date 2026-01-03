@@ -3,21 +3,29 @@
  * @file 負荷テストを実行する。
  */
 const fs = require("fs");
+// pathモジュールを読み込む。
 const path = require("path");
+// autocannonモジュールを読み込む。
 const autocannon = require("autocannon");
 
+// test-serverからensureServerとstopServerを取得する。
 const { ensureServer, stopServer } = require("./test-server");
 
+// SERVER_URLの定数を定義する。
 const SERVER_URL = "http://localhost:3000";
+// パスを組み立てる。
 const REPORT_DIR = path.join(__dirname, "..", "reports");
+// パスを組み立てる。
 const REPORT_JSON_PATH = path.join(REPORT_DIR, "load-test-report.json");
 
+// LOAD_THRESHOLDSをまとめる。
 const LOAD_THRESHOLDS = {
   p95: 800,
   errorRate: 0,
   requestsPerSecond: 50,
 };
 
+// オプションをまとめる。
 const LOAD_OPTIONS = {
   connections: 10,
   duration: 5,
@@ -53,7 +61,9 @@ function runAutocannon(options) {
  * @returns {number} エラーレート。
  */
 function getErrorRate(result) {
+  // 件数を条件で選ぶ。
   const total = result?.requests?.total || 0;
+  // エラーを用意する。
   const errors = (result?.errors || 0) + (result?.timeouts || 0);
   return total > 0 ? errors / total : 0;
 }
@@ -97,26 +107,34 @@ function writeReport(report) {
  * 負荷テストを実行する。
  */
 async function main() {
+  // serverChildの初期値を定義する。
   let serverChild = null;
+  // serverStartedの初期値を定義する。
   let serverStarted = false;
+  // startedAtを取得する。
   const startedAt = Date.now();
   try {
+    // serverを取得する。
     const server = await ensureServer(SERVER_URL);
     serverChild = server.child;
     serverStarted = server.started;
 
+    // 結果を取得する。
     const result = await runAutocannon({
       url: SERVER_URL,
       ...LOAD_OPTIONS,
     });
 
+    // metricsをまとめる。
     const metrics = {
       p95: result?.latency?.p95 || 0,
       errorRate: getErrorRate(result),
       requestsPerSecond: result?.requests?.average || 0,
       totalRequests: result?.requests?.total || 0,
     };
+    // evaluationを取得する。
     const evaluation = evaluateLoad(metrics);
+    // reportをまとめる。
     const report = {
       generatedAt: new Date().toISOString(),
       durationMs: Date.now() - startedAt,
@@ -139,7 +157,9 @@ async function main() {
       process.exitCode = 0;
     }
   } catch (error) {
+    // メッセージを条件で選ぶ。
     const message = error instanceof Error ? error.message : "Unexpected error.";
+    // reportをまとめる。
     const report = {
       generatedAt: new Date().toISOString(),
       durationMs: Date.now() - startedAt,
@@ -158,6 +178,7 @@ async function main() {
 }
 
 main().catch((error) => {
+  // メッセージを条件で選ぶ。
   const message = error instanceof Error ? error.message : "Unexpected error.";
   process.stderr.write(`[load-test] ${message}\n`);
   process.exitCode = 1;

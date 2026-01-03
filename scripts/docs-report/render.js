@@ -4,9 +4,12 @@
  */
 "use strict";
 
+// utilsからescapeHtmlを取得する。
 const { escapeHtml } = require("./utils");
+// render-cssからrenderCssSectionを取得する。
 const { renderCssSection } = require("./render-css");
 
+// STYLEの定数を定義する。
 const STYLE = `
 :root {
   color-scheme: light;
@@ -117,9 +120,11 @@ h1 {
  * @returns {string} HTML出力。
  */
 function renderDocBlock(doc) {
+  // htmlの初期値を定義する。
   let html = "<div class=\"doc-block\">";
 
   if (doc.description.length > 0) {
+    // メッセージを取得する。
     const descText = doc.description.join(" ");
     html += `<div class="doc-desc">${escapeHtml(descText)}</div>`;
   }
@@ -148,6 +153,7 @@ function renderDocBlock(doc) {
  * @returns {string} HTML出力。
  */
 function renderFileSection(fileDoc) {
+  // htmlの初期値を定義する。
   let html = "<details class=\"file\">";
   html += `<summary>${escapeHtml(fileDoc.name)}`;
   html += ` <span class="path">${escapeHtml(fileDoc.path)}</span></summary>`;
@@ -178,6 +184,7 @@ function renderFileSection(fileDoc) {
  * @returns {string} HTML出力。
  */
 function renderDirSection(dirNode) {
+  // htmlの初期値を定義する。
   let html = "<section class=\"dir\">";
   html += `<h2>${escapeHtml(dirNode.name)}</h2>`;
   html += `<div class="dir-path">${escapeHtml(dirNode.path)}</div>`;
@@ -214,8 +221,11 @@ function renderDirSection(dirNode) {
  * @returns {string} HTML出力。
  */
 function renderHtml(reportData) {
+  // dirSectionsを取得する。
   const dirSections = reportData.roots.map(renderDirSection).join("");
+  // cssSectionsを取得する。
   const cssSections = renderCssSection(reportData.cssFiles);
+  // htmlの初期値を定義する。
   const html = `<!doctype html>
 <html lang="en">
   <head>

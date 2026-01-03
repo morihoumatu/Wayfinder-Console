@@ -3,9 +3,12 @@
  * @file 動的検証ツールを一括実行する。
  */
 const { spawn } = require("child_process");
+// test-serverからensureServerとstopServerを取得する。
 const { ensureServer, stopServer } = require("./test-server");
 
+// SERVER_URLの定数を定義する。
 const SERVER_URL = "http://localhost:3000";
+// SERVER_TIMEOUT_MSの定数を定義する。
 const SERVER_TIMEOUT_MS = 30_000;
 
 /**
@@ -23,8 +26,11 @@ function resolveNpmCommand() {
  * @returns {{ command: string, args: string[], windowsHide: boolean }} 実行情報。
  */
 function buildSpawnSpec(command, args) {
+  // resolvedCommandの参照を保持する。
   let resolvedCommand = command;
+  // resolvedArgsの参照を保持する。
   let resolvedArgs = args;
+  // IDの初期値を定義する。
   let windowsHide = false;
 
   if (process.platform === "win32") {
@@ -48,10 +54,13 @@ function buildSpawnSpec(command, args) {
  * @returns {Promise<number>} 終了コード。
  */
 function runCommand(label, command, args) {
+  // exitCodeの初期値を定義する。
   let exitCode = 1;
   return new Promise((resolve) => {
     process.stdout.write(`[test-all] ${label}\n`);
+    // spawnSpecを作成する。
     const spawnSpec = buildSpawnSpec(command, args);
+    // childを取得する。
     const child = spawn(spawnSpec.command, spawnSpec.args, {
       stdio: "inherit",
       env: process.env,
@@ -76,8 +85,10 @@ function runCommand(label, command, args) {
  * @returns {Promise<number>} 更新後の終了コード。
  */
 async function runStepIfOk(currentCode, step) {
+  // nextCodeの参照を保持する。
   let nextCode = currentCode;
   if (currentCode === 0) {
+    // stepCodeを取得する。
     const stepCode = await step();
     if (stepCode !== 0) {
       nextCode = stepCode;
@@ -92,11 +103,15 @@ async function runStepIfOk(currentCode, step) {
  * @returns {Promise<number>} 終了コード。
  */
 async function runCypress(npmCommand) {
+  // exitCodeの初期値を定義する。
   let exitCode = 1;
+  // serverChildの初期値を定義する。
   let serverChild = null;
+  // serverStartedの初期値を定義する。
   let serverStarted = false;
 
   try {
+    // 結果を取得する。
     const serverResult = await ensureServer(SERVER_URL, SERVER_TIMEOUT_MS);
     serverChild = serverResult.child;
     serverStarted = serverResult.started;
@@ -106,6 +121,7 @@ async function runCypress(npmCommand) {
       ["run", "test:cypress"]
     );
   } catch (error) {
+    // メッセージを条件で選ぶ。
     const message =
       error instanceof Error ? error.message : "Unexpected error.";
     process.stderr.write(`[test-all] ${message}\n`);
@@ -124,7 +140,9 @@ async function runCypress(npmCommand) {
  * @returns {Promise<number>} 更新後の終了コード。
  */
 async function runReportAndGate(npmCommand, currentCode) {
+  // nextCodeの参照を保持する。
   let nextCode = currentCode;
+  // gateCodeを取得する。
   const gateCode = await runCommand(
     "gate",
     npmCommand,
@@ -133,6 +151,7 @@ async function runReportAndGate(npmCommand, currentCode) {
   if (nextCode === 0 && gateCode !== 0) {
     nextCode = gateCode;
   }
+  // reportCodeを取得する。
   const reportCode = await runCommand(
     "report",
     npmCommand,
@@ -149,7 +168,9 @@ async function runReportAndGate(npmCommand, currentCode) {
  * @returns {Promise<number>} 終了コード。
  */
 async function runAll() {
+  // npmCommandを解決する。
   const npmCommand = resolveNpmCommand();
+  // exitCodeの初期値を定義する。
   let exitCode = 0;
 
   try {
@@ -171,6 +192,7 @@ async function runAll() {
     );
   } catch (error) {
     exitCode = 1;
+    // メッセージを条件で選ぶ。
     const message =
       error instanceof Error ? error.message : "Unexpected error.";
     process.stderr.write(`[test-all] ${message}\n`);
@@ -186,6 +208,7 @@ runAll()
     process.exitCode = code;
   })
   .catch((error) => {
+    // メッセージを条件で選ぶ。
     const message =
       error instanceof Error ? error.message : "Unexpected error.";
     process.stderr.write(`[test-all] ${message}\n`);

@@ -20,7 +20,9 @@ function formatCommand(command, args) {
  * @returns {any} ツールレポート。
  */
 function buildToolReport(name, result, parser) {
+  // parsedを解析する。
   const parsed = parser(result);
+  // 状態を条件で選ぶ。
   const status =
     parsed.toolError || parsed.errors > 0 || parsed.warnings > 0
       ? "fail"

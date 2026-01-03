@@ -35,13 +35,20 @@ function summarizeLighthouse(data, reportLink) {
     reportLink,
   };
   if (data) {
+    // thresholdsを条件で選ぶ。
     const thresholds = data.thresholds || {};
+    // scoresを条件で選ぶ。
     const scores = data.scores || {};
+    // キーを取得する。
     const keys = Object.keys(thresholds);
+    // passedの初期値を定義する。
     let passed = 0;
+    // failedの初期値を定義する。
     let failed = 0;
     keys.forEach((key) => {
+      // thresholdを整形する。
       const threshold = toNumber(thresholds[key]);
+      // scoreを整形する。
       const score = toNumber(scores[key]);
       if (score >= threshold) {
         passed += 1;
@@ -49,7 +56,9 @@ function summarizeLighthouse(data, reportLink) {
         failed += 1;
       }
     });
+    // 件数の参照を保持する。
     const total = keys.length;
+    // 状態を条件で選ぶ。
     const status = failed > 0 ? "fail" : total > 0 ? "pass" : "missing";
     summary = {
       name: "Lighthouse",
@@ -84,14 +93,22 @@ function summarizeLoadTest(data, reportLink) {
     reportLink,
   };
   if (data) {
+    // thresholdsを条件で選ぶ。
     const thresholds = data.thresholds || {};
+    // metricsを条件で選ぶ。
     const metrics = data.metrics || {};
+    // キーを取得する。
     const keys = Object.keys(thresholds);
+    // passedの初期値を定義する。
     let passed = 0;
+    // failedの初期値を定義する。
     let failed = 0;
     keys.forEach((key) => {
+      // limitを整形する。
       const limit = toNumber(thresholds[key]);
+      // actualを整形する。
       const actual = toNumber(metrics[key]);
+      // okを条件で選ぶ。
       const ok =
         key === "requestsPerSecond" ? actual >= limit : actual <= limit;
       if (ok) {
@@ -100,7 +117,9 @@ function summarizeLoadTest(data, reportLink) {
         failed += 1;
       }
     });
+    // 件数の参照を保持する。
     const total = keys.length;
+    // 状態を条件で選ぶ。
     const status = failed > 0 ? "fail" : total > 0 ? "pass" : "missing";
     summary = {
       name: "Load Test",
@@ -135,7 +154,9 @@ function summarizeSecurity(data, reportLink) {
     reportLink,
   };
   if (data && Array.isArray(data.checks)) {
+    // passedの初期値を定義する。
     let passed = 0;
+    // failedの初期値を定義する。
     let failed = 0;
     data.checks.forEach((/** @type {{ status?: string }} */ check) => {
       if (check?.status === "pass") {
@@ -144,7 +165,9 @@ function summarizeSecurity(data, reportLink) {
         failed += 1;
       }
     });
+    // 件数の参照を保持する。
     const total = data.checks.length;
+    // 状態を条件で選ぶ。
     const status = failed > 0 ? "fail" : total > 0 ? "pass" : "missing";
     summary = {
       name: "Security",

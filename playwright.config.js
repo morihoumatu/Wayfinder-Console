@@ -4,8 +4,10 @@
  */
 const { defineConfig, devices } = require("@playwright/test");
 
+// 判定結果を取得する。
 const isCI = Boolean(process.env["CI"]);
 
+// 設定を取得する。
 const config = defineConfig({
   testDir: "./tests/playwright",
   timeout: 30_000,

@@ -4,6 +4,7 @@
  */
 const { spawn } = require("child_process");
 
+// TASKSの一覧を用意する。
 const TASKS = [
   { label: "lint", args: ["run", "lint"] },
   { label: "test", args: ["run", "test:all"] },
@@ -24,8 +25,11 @@ function resolveNpmCommand() {
  * @returns {{ command: string, args: string[], windowsHide: boolean }} 実行情報。
  */
 function buildSpawnSpec(command, args) {
+  // resolvedCommandの参照を保持する。
   let resolvedCommand = command;
+  // resolvedArgsの参照を保持する。
   let resolvedArgs = args;
+  // IDの初期値を定義する。
   let windowsHide = false;
 
   if (process.platform === "win32") {
@@ -48,13 +52,16 @@ function buildSpawnSpec(command, args) {
  * @param {NodeJS.WriteStream} target 書き込み先。
  */
 function pipeOutput(stream, prefix, target) {
+  // bufferの初期値を定義する。
   let buffer = "";
+  // 判定結果の初期値を定義する。
   let isBrokenPipe = false;
   /**
    * パイプ切断エラーを無視する。
    * @param {unknown} error エラー。
    */
   const handleTargetError = (error) => {
+    // エラーを条件で選ぶ。
     const maybeError =
       error && typeof error === "object" && "code" in error
         ? error
@@ -67,6 +74,7 @@ function pipeOutput(stream, prefix, target) {
   stream.setEncoding("utf8");
   stream.on("data", (chunk) => {
     buffer += chunk;
+    // linesを取得する。
     const lines = buffer.split(/\r?\n/);
     buffer = lines.pop() || "";
     lines.forEach((line) => {
@@ -99,9 +107,12 @@ function pipeOutput(stream, prefix, target) {
  * @returns {Promise<number>} 終了コード。
  */
 function runTask(task, npmCommand) {
+  // exitCodeの初期値を定義する。
   let exitCode = 1;
   return new Promise((resolve) => {
+    // spawnSpecを作成する。
     const spawnSpec = buildSpawnSpec(npmCommand, task.args);
+    // childを取得する。
     const child = spawn(spawnSpec.command, spawnSpec.args, {
       stdio: ["ignore", "pipe", "pipe"],
       env: process.env,
@@ -126,10 +137,13 @@ function runTask(task, npmCommand) {
  * @returns {Promise<void>} 実行完了のPromise。
  */
 async function runAll() {
+  // npmCommandを解決する。
   const npmCommand = resolveNpmCommand();
+  // 結果を取得する。
   const results = await Promise.all(
     TASKS.map((task) => runTask(task, npmCommand))
   );
+  // 判定結果を取得する。
   const hasFailure = results.some((code) => code !== 0);
   process.exitCode = hasFailure ? 1 : 0;
 }

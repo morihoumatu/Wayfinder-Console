@@ -41,6 +41,7 @@ function geocodeAddress(address) {
  * @returns {Promise<any>} 座標のPromise。
  */
 function geocodeDestination(place) {
+  // addressを取得する。
   const address = [place?.name, place?.address].filter(Boolean).join(" ");
   return geocodeAddress(address);
 }
@@ -51,6 +52,7 @@ function geocodeDestination(place) {
  * @returns {any} 正規化済みの立ち寄り。
  */
 function normalizeStop(stop) {
+  // normalizedの初期値を定義する。
   let normalized = null;
   if (typeof stop === "string") {
     normalized = { name: stop, address: "" };
@@ -71,7 +73,9 @@ function normalizeStop(stop) {
  * @returns {string} 表示ラベル。
  */
 function getStopLabel(stop) {
+  // normalizedを正規化する。
   const normalized = normalizeStop(stop);
+  // labelの初期値を定義する。
   let label = "";
   if (normalized) {
     label = [normalized.name, normalized.address].filter(Boolean).join(" ");
@@ -88,8 +92,11 @@ async function geocodeStops(stops) {
   /** @type {any[]} */
   const locations = [];
   if (Array.isArray(stops)) {
+    // limitを取得する。
     const limit = Math.min(stops.length, 6);
+    // iをループ用に用意する。
     for (let i = 0; i < limit; i += 1) {
+      // normalizedを正規化する。
       const normalized = normalizeStop(stops[i]);
       if (!normalized) {
         continue;
@@ -101,10 +108,12 @@ async function geocodeStops(stops) {
         locations.push(new google.maps.LatLng(normalized.lat, normalized.lng));
         continue;
       }
+      // addressを取得する。
       const address = [normalized.name, normalized.address]
         .filter(Boolean)
         .join(" ");
       try {
+        // locationを取得する。
         const location = await geocodeAddress(address);
         locations.push(location);
       } catch (error) {
@@ -120,6 +129,7 @@ async function geocodeStops(stops) {
  * @returns {boolean} 確認結果。
  */
 function canStartWalkRoute() {
+  // canStartの初期値を定義する。
   let canStart = true;
   if (!originLatLng && !getSelectedRegionContext()?.label) {
     setRecommendHint(
@@ -144,12 +154,15 @@ async function runSpotRecommendation(
   clearRecommendResult();
 
   try {
+    // データを取得する。
     const data = await requestRecommendation({ query, mode, targetMinutes });
     if (!data?.place) {
       throw new Error("おすすめ地点の取得に失敗しました。");
     }
     showRecommendResult(data.place);
+    // locationを取得する。
     const location = await geocodeDestination(data.place);
+    // destinationLabelValueを取得する。
     const destinationLabelValue = [data.place?.name, data.place?.address]
       .filter(Boolean)
       .join(" ");
@@ -160,6 +173,7 @@ async function runSpotRecommendation(
     calculateRoutes();
     setRecommendHint("おすすめ地点を目的地に設定しました。");
   } catch (error) {
+    // メッセージを条件で選ぶ。
     const message = error instanceof Error ? error.message : String(error);
     setRecommendHint(message || "おすすめ地点の取得に失敗しました。");
   } finally {
@@ -192,13 +206,19 @@ function updateWalkRouteSearchState(query, targetMinutes) {
 async function handleRecommendSubmit(event) {
   event.preventDefault();
 
+  // queryを取得する。
   const query = recommendQuery.value.trim();
+  // 判定結果を用意する。
   const isWalkRoute = !query;
+  // modeを条件で選ぶ。
   const mode = isWalkRoute ? "walk_route" : "spot";
+  // targetMinutesを条件で選ぶ。
   const targetMinutes = isWalkRoute ? getTargetMinutes() : null;
+  // 判定結果の初期値を定義する。
   let shouldProceed = true;
 
   if (!originLatLng && !isWalkRoute) {
+    // readyを取得する。
     const ready = await ensureOriginFromRegion({ source: "recommend" });
     if (!ready) {
       shouldProceed = false;
@@ -207,6 +227,7 @@ async function handleRecommendSubmit(event) {
 
   if (shouldProceed) {
     if (isWalkRoute) {
+      // canStartを取得する。
       const canStart = canStartWalkRoute();
       if (canStart) {
         updateWalkRouteSearchState(query, targetMinutes);

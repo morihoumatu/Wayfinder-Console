@@ -3,9 +3,12 @@
  * @file
  */
 const { test, expect } = require("@playwright/test");
+// playwrightからAxeBuilderを取得する。
 const { AxeBuilder } = require("@axe-core/playwright");
+// google-maps-stubからgetGoogleMapsStubScriptを取得する。
 const { getGoogleMapsStubScript } = require("../helpers/google-maps-stub");
 
+// mockGoogleMapsの処理を定義する。
 const mockGoogleMaps = async (page) => {
   await page.route(
     /https:\/\/maps\.googleapis\.com\/maps\/api\/js.*/,
@@ -25,7 +28,9 @@ test.beforeEach(async ({ page }) => {
 // アクセシビリティ重大違反が発生していないことを確認する。
 test("アクセシビリティ重大違反がない", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  // 結果を取得する。
   const results = await new AxeBuilder({ page }).analyze();
+  // severeを取得する。
   const severe = results.violations.filter((violation) =>
     ["critical", "serious"].includes(violation.impact)
   );
@@ -35,8 +40,11 @@ test("アクセシビリティ重大違反がない", async ({ page }) => {
 // ページ読み込み時間が許容範囲に収まることを確認する。
 test("ページの読み込み時間が許容範囲", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  // timingを取得する。
   const timing = await page.evaluate(() => {
+    // entryを取得する。
     const [entry] = performance.getEntriesByType("navigation");
+    // 結果を条件で選ぶ。
     const result = entry
       ? {
           domContentLoaded: entry.domContentLoadedEventEnd - entry.startTime,
@@ -45,9 +53,12 @@ test("ページの読み込み時間が許容範囲", async ({ page }) => {
       : null;
     return result;
   });
+  // 判定結果を取得する。
   const hasTiming = Boolean(timing);
+  // domContentLoadedOkを条件で選ぶ。
   const domContentLoadedOk =
     hasTiming && timing.domContentLoaded < 3000;
+  // loadOkを条件で選ぶ。
   const loadOk = hasTiming && timing.load < 5000;
   expect({ hasTiming, domContentLoadedOk, loadOk }).toEqual({
     hasTiming: true,
@@ -58,9 +69,13 @@ test("ページの読み込み時間が許容範囲", async ({ page }) => {
 
 // セキュリティヘッダーが付与されることを確認する。
 test("セキュリティヘッダーが付与される", async ({ page }) => {
+  // レスポンスを取得する。
   const response = await page.goto("/", { waitUntil: "domcontentloaded" });
+  // headersを取得する。
   const headers = response.headers();
+  // contentSecurityを条件で選ぶ。
   const contentSecurity = headers["content-security-policy"] || "";
+  // checksをまとめる。
   const checks = {
     contentTypeOptions: headers["x-content-type-options"] === "nosniff",
     frameOptions: headers["x-frame-options"] === "DENY",

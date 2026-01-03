@@ -5,9 +5,12 @@
 /* eslint-env node */
 "use strict";
 
+// stylelintモジュールを読み込む。
 const stylelint = require("stylelint");
 
+// RULE_NAMEの定数を定義する。
 const RULE_NAME = "project/file-purpose-comment";
+// メッセージを取得する。
 const messages = stylelint.utils.ruleMessages(RULE_NAME, {
   missing: "CSSファイルの先頭に用途コメントを記述してください。",
   empty: "CSSファイルの先頭コメントに用途を記述してください。",
@@ -19,6 +22,7 @@ const messages = stylelint.utils.ruleMessages(RULE_NAME, {
  * @returns {string} BOM除去済み文字列。
  */
 function stripBom(value) {
+  // メッセージの参照を保持する。
   let text = value;
   if (typeof text === "string" && text.charCodeAt(0) === 0xfeff) {
     text = text.slice(1);
@@ -32,6 +36,7 @@ function stripBom(value) {
  * @returns {number} インデックス。
  */
 function findFirstNonWhitespace(value) {
+  // インデックスを用意する。
   let index = -1;
   if (typeof value === "string") {
     index = value.search(/\S/);
@@ -46,10 +51,13 @@ function findFirstNonWhitespace(value) {
  * @returns {{ content: string, endIndex: number } | null} コメント情報。
  */
 function extractLeadingComment(value, startIndex) {
+  // infoの初期値を定義する。
   let info = null;
   if (value.startsWith("/*", startIndex)) {
+    // インデックスを取得する。
     const endIndex = value.indexOf("*/", startIndex + 2);
     if (endIndex !== -1) {
+      // contentを取得する。
       const content = value.slice(startIndex + 2, endIndex).trim();
       info = { content, endIndex };
     }
@@ -63,11 +71,14 @@ function extractLeadingComment(value, startIndex) {
  * @returns {"ok" | "missing" | "empty"} 判定結果。
  */
 function evaluatePurposeComment(text) {
+  // 状態の初期値を定義する。
   let status = "ok";
+  // インデックスを取得する。
   const firstIndex = findFirstNonWhitespace(text);
   if (firstIndex === -1) {
     status = "missing";
   } else {
+    // commentInfoを取得する。
     const commentInfo = extractLeadingComment(text, firstIndex);
     if (!commentInfo) {
       status = "missing";
@@ -85,6 +96,7 @@ function evaluatePurposeComment(text) {
  */
 function createRule(primaryOption) {
   return (root, result) => {
+    // オプションを取得する。
     const validOptions = stylelint.utils.validateOptions(result, RULE_NAME, {
       actual: primaryOption,
       possible: [true],
@@ -92,11 +104,14 @@ function createRule(primaryOption) {
     });
 
     if (validOptions && primaryOption !== null) {
+      // メッセージを条件で選ぶ。
       const rawText =
         root && root.source && root.source.input
           ? root.source.input.css
           : "";
+      // メッセージを取得する。
       const text = stripBom(rawText);
+      // 状態を取得する。
       const status = evaluatePurposeComment(text);
       if (status === "missing") {
         stylelint.utils.report({

@@ -21,10 +21,12 @@ function resolveToolsConfig() {
  * @returns {any} リクエストペイロード。
  */
 function buildOpenAIRequestPayload(systemPrompt, userContent) {
+  // inputの一覧を用意する。
   const input = [
     { role: "system", content: systemPrompt },
     { role: "user", content: userContent },
   ];
+  // toolsを解決する。
   const tools = resolveToolsConfig();
   /**
    * @type {{

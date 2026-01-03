@@ -3,6 +3,7 @@
  * @file 動的検証レポートのHTMLを描画する。
  */
 const { escapeHtml } = require("./utils");
+// gateからrenderGateSectionを取得する。
 const { renderGateSection } = require("./gate");
 
 /**
@@ -23,13 +24,17 @@ const { renderGateSection } = require("./gate");
  * @returns {string} 整形結果。
  */
 function formatDuration(durationMs) {
+  // 結果の初期値を定義する。
   let result = "-";
   if (typeof durationMs === "number" && Number.isFinite(durationMs)) {
+    // 件数を取得する。
     const totalSeconds = Math.max(0, Math.round(durationMs / 1000));
     if (totalSeconds < 60) {
       result = `${totalSeconds}s`;
     } else {
+      // minutesを取得する。
       const minutes = Math.floor(totalSeconds / 60);
+      // secondsを用意する。
       const seconds = totalSeconds % 60;
       result = `${minutes}m ${seconds}s`;
     }
@@ -52,14 +57,17 @@ function formatDuration(durationMs) {
  * @returns {string} HTML文字列。
  */
 function renderReport(tools, generatedAt, links, gate) {
+  // rowsを取得する。
   const rows = tools
     .map((tool) => {
+      // 状態を条件で選ぶ。
       const statusLabel =
         tool.status === "pass"
           ? "PASS"
           : tool.status === "fail"
             ? "FAIL"
             : "MISSING";
+      // reportLinkを条件で選ぶ。
       const reportLink = tool.reportLink
         ? `<a href="${tool.reportLink}">Open</a>`
         : "-";
@@ -78,6 +86,7 @@ function renderReport(tools, generatedAt, links, gate) {
     })
     .join("");
 
+  // gateSectionを取得する。
   const gateSection = renderGateSection(gate);
   /** @type {Array<{ label: string, href: string }>} */
   const linkItems = [
@@ -93,6 +102,7 @@ function renderReport(tools, generatedAt, links, gate) {
   if (links.security) {
     linkItems.push({ label: "Security JSON", href: links.security });
   }
+  // linkHtmlを取得する。
   const linkHtml = linkItems
     .map((link) => `${escapeHtml(link.label)}: <a href="${link.href}">open</a>`)
     .join(" | ");

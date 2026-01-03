@@ -53,6 +53,7 @@ function updateRouteLabels() {
  * ルート選択のヒントを更新する。
  */
 function updateRouteHint() {
+  // メッセージの初期値を定義する。
   let message =
     "2点が選択されています。必要ならリセットで再選択できます。";
   if (!originLatLng) {
@@ -80,6 +81,7 @@ function updateRegionControls() {
   if (!originRegionButton || !originRegionHint) {
     return;
   }
+  // 判定結果を取得する。
   const hasOrigin = Boolean(originLatLng);
   if (originAreaSelect) {
     originAreaSelect.disabled = hasOrigin;
@@ -117,6 +119,7 @@ function updateRouteLinks() {
     return;
   }
 
+  // waypointPointsを条件で選ぶ。
   const waypointPoints = Array.isArray(walkingWaypoints)
     ? walkingWaypoints.map((waypoint) => waypoint.location).filter(Boolean)
     : [];
@@ -129,9 +132,11 @@ function updateRouteLinks() {
   });
   walkingRouteLink.hidden = false;
 
+  // showRailLinkを条件で選ぶ。
   const showRailLink =
     destinationSource !== "walk_multi" || walkRoutePreferredMode === "rail";
   if (showRailLink) {
+    // railWaypointsを条件で選ぶ。
     const railWaypoints =
       destinationSource === "walk_multi" ? waypointPoints : null;
     railRouteLink.href = buildDirectionsLink({

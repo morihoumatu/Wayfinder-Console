@@ -7,6 +7,7 @@ const {
   TSC_REGEX_COLON,
   TSC_REGEX_GLOBAL,
 } = require("../config");
+// utilsから必要な値を取得する。
 const {
   combineOutput,
   toRelativePath,
@@ -21,9 +22,12 @@ const {
  * @returns {RegExpMatchArray | null} 利用可能なグループ。
  */
 function getMatchGroups(match, expectedCount) {
+  // groupsの初期値を定義する。
   let groups = null;
   if (match) {
+    // IDの初期値を定義する。
     let valid = true;
+    // iをループ用に用意する。
     for (let i = 1; i <= expectedCount; i += 1) {
       if (typeof match[i] !== "string") {
         valid = false;
@@ -43,7 +47,9 @@ function getMatchGroups(match, expectedCount) {
  * @returns {any | null} 診断情報またはnull。
  */
 function parseTscLine(line) {
+  // matchParenを取得する。
   const matchParen = getMatchGroups(line.match(TSC_REGEX_PAREN), 6);
+  // parsedの初期値を定義する。
   let parsed = null;
   if (matchParen) {
     parsed = {
@@ -55,6 +61,7 @@ function parseTscLine(line) {
       message: String(matchParen[6]).trim(),
     };
   } else {
+    // matchColonを取得する。
     const matchColon = getMatchGroups(line.match(TSC_REGEX_COLON), 6);
     if (matchColon) {
       parsed = {
@@ -66,6 +73,7 @@ function parseTscLine(line) {
         message: String(matchColon[6]).trim(),
       };
     } else {
+      // matchGlobalを取得する。
       const matchGlobal = getMatchGroups(line.match(TSC_REGEX_GLOBAL), 3);
       if (matchGlobal) {
         parsed = {
@@ -88,7 +96,9 @@ function parseTscLine(line) {
  * @returns {any} 解析済みレポート。
  */
 function parseTscOutput(result) {
+  // rawOutputを取得する。
   const rawOutput = combineOutput(result.stdout, result.stderr);
+  // reportを後で設定するために用意する。
   let report;
   if (result.hasError) {
     report = {
@@ -101,6 +111,7 @@ function parseTscOutput(result) {
   } else if (rawOutput.length === 0) {
     report = { errors: 0, warnings: 0, files: [], toolError: null, rawOutput };
   } else {
+    // linesを取得する。
     const lines = rawOutput
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -109,6 +120,7 @@ function parseTscOutput(result) {
     const diagnostics = [];
 
     lines.forEach((line) => {
+      // parsedを解析する。
       const parsed = parseTscLine(line);
       if (parsed) {
         diagnostics.push(parsed);
@@ -124,8 +136,11 @@ function parseTscOutput(result) {
         rawOutput,
       };
     } else {
+      // エラーの初期値を定義する。
       let errors = 0;
+      // warningsの初期値を定義する。
       let warnings = 0;
+      // Mapのインスタンスを作成する。
       const fileMap = new Map();
 
       diagnostics.forEach((diagnostic) => {
@@ -134,7 +149,9 @@ function parseTscOutput(result) {
         } else {
           warnings += 1;
         }
+        // パスを整形する。
         const filePathValue = toRelativePath(diagnostic.filePath);
+        // entryを取得する。
         let entry = fileMap.get(filePathValue);
         if (!entry) {
           entry = { path: filePathValue, messages: [] };

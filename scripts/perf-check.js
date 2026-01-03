@@ -2,19 +2,30 @@
  * Lighthouseのパフォーマンスチェックを実行する。
  * @file Lighthouseのパフォーマンスチェックを実行する。
  */
+// fsモジュールを読み込む。
 const fs = require("fs");
+// pathモジュールを読み込む。
 const path = require("path");
+// lighthouseモジュールを読み込む。
 const lighthouseModule = /** @type {any} */ (require("lighthouse"));
+// Lighthouse本体を取得する。
 const lighthouse = lighthouseModule.default || lighthouseModule;
+// chrome-launcherモジュールを読み込む。
 const chromeLauncher = require("chrome-launcher");
 
+// test-serverからensureServerとstopServerを取得する。
 const { ensureServer, stopServer } = require("./test-server");
 
+// SERVER_URLの定数を定義する。
 const SERVER_URL = "http://localhost:3000";
+// パスを組み立てる。
 const REPORT_DIR = path.join(__dirname, "..", "reports");
+// パスを組み立てる。
 const REPORT_JSON_PATH = path.join(REPORT_DIR, "lighthouse-report.json");
+// パスを組み立てる。
 const REPORT_HTML_PATH = path.join(REPORT_DIR, "lighthouse-report.html");
 
+// CATEGORY_THRESHOLDSをまとめる。
 const CATEGORY_THRESHOLDS = {
   performance: 0.9,
   accessibility: 0.95,
@@ -22,6 +33,7 @@ const CATEGORY_THRESHOLDS = {
   seo: 0.9,
 };
 
+// 設定を条件で選ぶ。
 const LIGHTHOUSE_CONFIG =
   lighthouseModule.desktopConfig || lighthouseModule.defaultConfig || null;
 
@@ -31,6 +43,7 @@ const LIGHTHOUSE_CONFIG =
  * @returns {number} 正規化スコア。
  */
 function normalizeScore(value) {
+  // scoreの初期値を定義する。
   let score = 0;
   if (typeof value === "number" && Number.isFinite(value)) {
     score = value;
@@ -46,7 +59,9 @@ function normalizeScore(value) {
  * @returns {string} 課題メッセージ。
  */
 function buildIssue(key, score, threshold) {
+  // actualを整形する。
   const actual = (score * 100).toFixed(1);
+  // limitを整形する。
   const limit = (threshold * 100).toFixed(1);
   return `Lighthouse(${key}): ${actual} が下限 ${limit} を下回っています`;
 }
@@ -61,7 +76,9 @@ function evaluateScores(scores, thresholds) {
   /** @type {string[]} */
   const issues = [];
   Object.keys(thresholds).forEach((key) => {
+    // thresholdを正規化する。
     const threshold = normalizeScore(thresholds[key]);
+    // scoreを正規化する。
     const score = normalizeScore(scores[key]);
     if (score < threshold) {
       issues.push(buildIssue(key, score, threshold));
@@ -101,11 +118,16 @@ function writeReport(report, html) {
  * Lighthouseチェックを実行する。
  */
 async function main() {
+  // serverChildの初期値を定義する。
   let serverChild = null;
+  // serverStartedの初期値を定義する。
   let serverStarted = false;
+  // chromeの初期値を定義する。
   let chrome = null;
+  // startedAtを取得する。
   const startedAt = Date.now();
   try {
+    // serverを取得する。
     const server = await ensureServer(SERVER_URL);
     serverChild = server.child;
     serverStarted = server.started;
@@ -114,6 +136,7 @@ async function main() {
       chromeFlags: ["--headless=new", "--disable-gpu", "--no-sandbox"],
     });
 
+    // 結果を取得する。
     const runnerResult = await lighthouse(
       SERVER_URL,
       {
@@ -125,8 +148,11 @@ async function main() {
       LIGHTHOUSE_CONFIG || undefined
     );
 
+    // scoresを取得する。
     const scores = extractScores(runnerResult.lhr);
+    // evaluationを取得する。
     const evaluation = evaluateScores(scores, CATEGORY_THRESHOLDS);
+    // reportをまとめる。
     const report = {
       generatedAt: new Date().toISOString(),
       durationMs: Date.now() - startedAt,
@@ -149,7 +175,9 @@ async function main() {
       process.exitCode = 0;
     }
   } catch (error) {
+    // メッセージを条件で選ぶ。
     const message = error instanceof Error ? error.message : "Unexpected error.";
+    // reportをまとめる。
     const report = {
       generatedAt: new Date().toISOString(),
       durationMs: Date.now() - startedAt,
@@ -171,6 +199,7 @@ async function main() {
 }
 
 main().catch((error) => {
+  // メッセージを条件で選ぶ。
   const message = error instanceof Error ? error.message : "Unexpected error.";
   process.stderr.write(`[perf-check] ${message}\n`);
   process.exitCode = 1;

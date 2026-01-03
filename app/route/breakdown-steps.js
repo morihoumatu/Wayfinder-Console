@@ -33,11 +33,16 @@ function collectTransitSteps(route, transitMode) {
  * @returns {any} 乗降駅情報。
  */
 function buildTransitStopsFromSteps(transitSteps) {
+  // stopsの初期値を定義する。
   let stops = null;
   if (Array.isArray(transitSteps) && transitSteps.length) {
+    // firstの参照を保持する。
     const first = transitSteps[0].transit;
+    // lastの参照を保持する。
     const last = transitSteps[transitSteps.length - 1].transit;
+    // departureを条件で選ぶ。
     const departure = first?.departure_stop || null;
+    // arrivalを条件で選ぶ。
     const arrival = last?.arrival_stop || null;
     if (departure?.location && arrival?.location) {
       stops = { departure, arrival };
@@ -52,14 +57,18 @@ function buildTransitStopsFromSteps(transitSteps) {
  * @returns {any} 乗降駅情報。
  */
 function extractTransitStops(result) {
+  // routeを用意する。
   const route = result?.routes?.[0];
+  // transitModeを条件で選ぶ。
   const transitMode =
     (typeof google !== "undefined" &&
       google.maps &&
       google.maps.TravelMode &&
       google.maps.TravelMode.TRANSIT) ||
     "TRANSIT";
+  // transitStepsを取得する。
   const transitSteps = collectTransitSteps(route, transitMode);
+  // stopsを作成する。
   const stops = buildTransitStopsFromSteps(transitSteps);
   return stops;
 }
@@ -73,8 +82,10 @@ function buildWalkSegment(
   /** @type {{ origin: any, destination: any, fromLabel?: any, toLabel?: any, waypoints?: any }} */
   { origin, destination, fromLabel, toLabel, waypoints }
 ) {
+  // segmentの初期値を定義する。
   let segment = null;
   if (origin && destination) {
+    // metaを条件で選ぶ。
     const meta =
       fromLabel && toLabel ? `${fromLabel} → ${toLabel}` : "";
     segment = {
@@ -101,8 +112,10 @@ function buildRailSegment(
   /** @type {{ origin: any, destination: any, fromLabel?: any, toLabel?: any }} */
   { origin, destination, fromLabel, toLabel }
 ) {
+  // segmentの初期値を定義する。
   let segment = null;
   if (origin && destination) {
+    // titleを条件で選ぶ。
     const title =
       fromLabel && toLabel ? `${fromLabel}〜${toLabel}` : "在来線ルート";
     segment = {

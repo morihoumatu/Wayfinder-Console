@@ -27,14 +27,17 @@ function applyWalkRouteDestination(
    */
   { locations, originUsesStartLocation, place, desiredTargetMinutes }
 ) {
+  // インデックスを条件で選ぶ。
   const waypointStartIndex = originUsesStartLocation ? 1 : 0;
   walkingWaypoints = locations.slice(waypointStartIndex, -1).map((location) => ({
     location,
     stopover: true,
   }));
+  // endStopを条件で選ぶ。
   const endStop = Array.isArray(place?.stops)
     ? place.stops[place.stops.length - 1]
     : null;
+  // endStopLabelを条件で選ぶ。
   const endStopLabel =
     getStopLabel(endStop) || place?.address || place?.area || "";
   walkRouteTargetMinutes = desiredTargetMinutes;
@@ -58,6 +61,7 @@ function applyWalkRouteDestination(
  * @returns {string | null} 直前の優先モード。
  */
 function resetWalkRoutePreferredMode() {
+  // previousModeの参照を保持する。
   const previousMode = walkRoutePreferredMode;
   walkRoutePreferredMode = null;
   return previousMode;
@@ -117,17 +121,23 @@ async function resolveWalkRouteRailStations(
   { place, locationInfo, regionFilter, originRegionOverride }
 ) {
   walkRouteRailStations = null;
+  // endLocationの参照を保持する。
   const endLocation = locationInfo.locations[locationInfo.locations.length - 1];
+  // regionValueを条件で選ぶ。
   const regionValue = regionFilter.length ? regionFilter : originRegionOverride;
+  // endStopを条件で選ぶ。
   const endStop = Array.isArray(place?.stops)
     ? place.stops[place.stops.length - 1]
     : null;
+  // endStopNameを取得する。
   const endStopName = getStopLabel(endStop);
+  // startStationを取得する。
   const startStation = await findNearestStationToLocation({
     startLocation: locationInfo.startLocation,
     stopName: locationInfo.startStopName,
     region: regionValue,
   });
+  // endStationを取得する。
   const endStation = await findNearestStationToLocation({
     startLocation: endLocation,
     stopName: endStopName,
@@ -203,6 +213,7 @@ async function runWalkRouteSearch(
   resetWalkRoutePreferredMode();
 
   try {
+    // regionInfoを作成する。
     const regionInfo = buildWalkRouteRegionInfo(Boolean(auto));
     logWalkRouteSearchState("region", {
       label: regionInfo.regionLabel,
@@ -210,6 +221,7 @@ async function runWalkRouteSearch(
       anchor: regionInfo.regionAnchor,
       prefectureCount: resolveListCount(regionInfo.regionFilter),
     });
+    // 状態を解決する。
     const originStatus = await resolveWalkRouteOriginStatus(
       regionInfo.regionContext
     );
@@ -217,6 +229,7 @@ async function runWalkRouteSearch(
       originMissing: originStatus.originMissing,
       originMismatch: originStatus.originMismatch,
     });
+    // IDを解決する。
     const originOverrides = await resolveWalkRouteOriginOverride({
       originMissing: originStatus.originMissing,
       originMismatch: originStatus.originMismatch,
@@ -228,6 +241,7 @@ async function runWalkRouteSearch(
       hasOverride: Boolean(originOverrides.originOverride),
       regionOverride: originOverrides.originRegionOverride,
     });
+    // placeを取得する。
     const place = await fetchWalkRouteRecommendation({
       query,
       requestTargetMinutes,
@@ -245,6 +259,7 @@ async function runWalkRouteSearch(
     });
     showRecommendResult(place);
 
+    // locationInfoを解決する。
     const locationInfo = await resolveWalkRouteLocations(place);
     logWalkRouteSearchState("geocode", {
       stopCount: resolveListCount(place?.stops),
@@ -257,10 +272,12 @@ async function runWalkRouteSearch(
       regionFilter: regionInfo.regionFilter,
       originRegionOverride: originOverrides.originRegionOverride,
     });
+    // targetMinutesを解決する。
     const targetMinutes = resolveWalkRouteTargetMinutes(
       desiredTargetMinutes,
       requestTargetMinutes
     );
+    // originUsesStartLocationを取得する。
     const originUsesStartLocation = await applyWalkRouteOriginFromStops({
       originMissing: originStatus.originMissing,
       startLocation: locationInfo.startLocation,
@@ -274,6 +291,7 @@ async function runWalkRouteSearch(
       originUsesStartLocation,
       targetMinutes,
     });
+    // 状態を取得する。
     const destinationState = applyWalkRouteDestination({
       locations: locationInfo.locations,
       originUsesStartLocation,
@@ -287,6 +305,7 @@ async function runWalkRouteSearch(
     });
     setRecommendHint(getWalkRouteSearchSuccessHint(Boolean(auto)));
   } catch (error) {
+    // メッセージを条件で選ぶ。
     const message = error instanceof Error ? error.message : String(error);
     setRecommendHint(message || "おすすめ地点の取得に失敗しました。");
   } finally {

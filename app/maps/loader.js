@@ -17,6 +17,7 @@
  * @param {string} apiKey APIキー。
  */
 function loadGoogleMaps(apiKey) {
+  // DOM要素を取得する。
   const existingScript = document.querySelector(
     'script[src^="https://maps.googleapis.com/maps/api/js"]'
   );
@@ -24,6 +25,7 @@ function loadGoogleMaps(apiKey) {
     return;
   }
 
+  // DOM要素を生成する。
   const script = document.createElement("script");
   script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
   script.async = true;
@@ -172,12 +174,14 @@ window.initMap = function initMap() {
  * @returns {Promise<string>} APIキー。
  */
 function resolveMapsApiKey() {
+  // resolverを解決する。
   let resolver = Promise.resolve("");
   if (MAPS_API_KEY) {
     resolver = Promise.resolve(MAPS_API_KEY);
   } else {
     resolver = fetch("/api/config")
       .then((response) => {
+        // ペイロードを条件で選ぶ。
         const payload = response.ok ? response.json() : null;
         return payload;
       })

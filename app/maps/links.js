@@ -23,6 +23,7 @@ function buildMapsLink(query) {
  * @returns {string} URL用文字列。
  */
 function formatLatLngForUrl(latLng) {
+  // valueの初期値を定義する。
   let value = "";
   if (latLng) {
     if (typeof latLng === "string") {
@@ -42,13 +43,17 @@ function formatLatLngForUrl(latLng) {
  * @returns {string} 表示用文字列。
  */
 function formatDurationText(totalSeconds) {
+  // メッセージの初期値を定義する。
   let text = "不明";
   if (Number.isFinite(totalSeconds)) {
+    // 件数を取得する。
     const totalMinutes = Math.max(0, Math.round(totalSeconds / 60));
     if (totalMinutes < 60) {
       text = `${totalMinutes}分`;
     } else {
+      // hoursを取得する。
       const hours = Math.floor(totalMinutes / 60);
+      // minutesを用意する。
       const minutes = totalMinutes % 60;
       text = minutes === 0 ? `${hours}時間` : `${hours}時間${minutes}分`;
     }
@@ -65,9 +70,12 @@ function getRouteDurationFromLegs(legs) {
   /** @type {{ text: string, seconds: number | null }} */
   let summary = { text: "不明", seconds: null };
   if (Array.isArray(legs) && legs.length > 0) {
+    // 件数の初期値を定義する。
     let totalSeconds = 0;
+    // 判定結果の初期値を定義する。
     let hasSeconds = false;
     legs.forEach((leg) => {
+      // valueを用意する。
       const value = leg?.duration?.value;
       if (typeof value === "number") {
         totalSeconds += value;
@@ -77,6 +85,7 @@ function getRouteDurationFromLegs(legs) {
     if (hasSeconds) {
       summary = { text: formatDurationText(totalSeconds), seconds: totalSeconds };
     } else {
+      // メッセージを用意する。
       const fallbackText = legs[0]?.duration?.text;
       summary = { text: fallbackText || "不明", seconds: null };
     }
@@ -90,6 +99,7 @@ function getRouteDurationFromLegs(legs) {
  * @returns {{ lat: number, lng: number } | null} 座標リテラルまたはnull。
  */
 function getLatLngLiteral(latLng) {
+  // literalの初期値を定義する。
   let literal = null;
   if (latLng) {
     if (typeof latLng.lat === "function") {
@@ -111,15 +121,24 @@ function getLatLngLiteral(latLng) {
  * @returns {number | null} 距離メートルまたはnull。
  */
 function computeDistanceMeters(a, b) {
+  // distanceの初期値を定義する。
   let distance = null;
   if (a && b) {
+    // toRadiansの処理を定義する。
     const toRadians = (/** @type {number} */ value) => (value * Math.PI) / 180;
+    // 座標Aの緯度をラジアンに変換する。
     const lat1 = toRadians(a.lat);
+    // lat2を整形する。
     const lat2 = toRadians(b.lat);
+    // deltaLatを用意する。
     const deltaLat = lat2 - lat1;
+    // deltaLngを整形する。
     const deltaLng = toRadians(b.lng - a.lng);
+    // sinLatを取得する。
     const sinLat = Math.sin(deltaLat / 2);
+    // sinLngを取得する。
     const sinLng = Math.sin(deltaLng / 2);
+    // hを用意する。
     const h =
       sinLat * sinLat +
       Math.cos(lat1) * Math.cos(lat2) * sinLng * sinLng;
@@ -137,8 +156,11 @@ function buildDirectionsLink(
   /** @type {{ origin: any, destination: any, travelMode?: any, waypoints?: any, transitMode?: any }} */
   { origin, destination, travelMode, waypoints, transitMode }
 ) {
+  // URLSearchParamsのインスタンスを作成する。
   const params = new URLSearchParams({ api: "1" });
+  // originValueを整形する。
   const originValue = formatLatLngForUrl(origin);
+  // destinationValueを整形する。
   const destinationValue = formatLatLngForUrl(destination);
   if (originValue) {
     params.set("origin", originValue);
@@ -153,6 +175,7 @@ function buildDirectionsLink(
     params.set("transit_mode", transitMode);
   }
   if (Array.isArray(waypoints) && waypoints.length > 0) {
+    // waypointValuesを取得する。
     const waypointValues = waypoints
       .map((point) => formatLatLngForUrl(point))
       .filter(Boolean);
@@ -163,6 +186,7 @@ function buildDirectionsLink(
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
+// Setのインスタンスを作成する。
 const GENERIC_POINT_LABELS = new Set(["出発地", "目的地", "未選択", "不明"]);
 
 /**
@@ -171,8 +195,10 @@ const GENERIC_POINT_LABELS = new Set(["出発地", "目的地", "未選択", "�
  * @returns {string} 正規化ラベル。
  */
 function normalizePointLabel(label) {
+  // normalizedの初期値を定義する。
   let normalized = "";
   if (typeof label === "string") {
+    // trimmedを取得する。
     const trimmed = label.trim();
     if (trimmed && !GENERIC_POINT_LABELS.has(trimmed)) {
       normalized = trimmed;
@@ -190,14 +216,18 @@ function buildSegmentSearchQuery(
   /** @type {{ fromLabel?: any, toLabel?: any, from?: any, to?: any }} */
   { fromLabel, toLabel, from, to }
 ) {
+  // labelsを取得する。
   const labels = [normalizePointLabel(fromLabel), normalizePointLabel(toLabel)].filter(
     Boolean
   );
+  // queryの初期値を定義する。
   let query = "";
   if (labels.length) {
     query = labels.join(" ");
   } else {
+    // fromValueを整形する。
     const fromValue = formatLatLngForUrl(from);
+    // toValueを整形する。
     const toValue = formatLatLngForUrl(to);
     query = [fromValue, toValue].filter(Boolean).join(" ");
   }
@@ -217,6 +247,7 @@ function getOriginDisplayLabel() {
  * @returns {string} 表示ラベル。
  */
 function getDestinationDisplayLabel() {
+  // labelを条件で選ぶ。
   let label = destinationLatLng ? "目的地" : "";
   if (destinationName) {
     label = destinationName;

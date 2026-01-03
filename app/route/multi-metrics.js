@@ -11,6 +11,7 @@
  * @returns {number} 許容差（分）。
  */
 function resolveWalkMultiTolerance(targetMinutes) {
+  // toleranceの初期値を定義する。
   let tolerance = 8;
   if (Number.isFinite(targetMinutes) && targetMinutes > 0) {
     tolerance = Math.max(8, Math.round(targetMinutes * 0.1));
@@ -38,16 +39,23 @@ function getWalkMultiTargetMinutes() {
  * @returns {any} 評価値。
  */
 function buildWalkMultiMetrics(flags, targetMinutes) {
+  // walkMinutesを条件で選ぶ。
   const walkMinutes =
     typeof flags.walkSeconds === "number" ? flags.walkSeconds / 60 : null;
+  // railMinutesを条件で選ぶ。
   const railMinutes =
     typeof flags.railSeconds === "number" ? flags.railSeconds / 60 : null;
+  // toleranceを解決する。
   const tolerance = resolveWalkMultiTolerance(targetMinutes);
+  // walkDiffを条件で選ぶ。
   const walkDiff =
     walkMinutes !== null ? Math.abs(walkMinutes - targetMinutes) : null;
+  // railDiffを条件で選ぶ。
   const railDiff =
     railMinutes !== null ? Math.abs(railMinutes - targetMinutes) : null;
+  // safeWalkDiffを条件で選ぶ。
   const safeWalkDiff = walkDiff ?? Number.POSITIVE_INFINITY;
+  // safeRailDiffを条件で選ぶ。
   const safeRailDiff = railDiff ?? Number.POSITIVE_INFINITY;
   return {
     walkMinutes,
@@ -75,6 +83,7 @@ function resolveToleranceMode(
    */
   { walkMinutes, railMinutes, tolerance, safeWalkDiff, safeRailDiff }
 ) {
+  // selectedModeの初期値を定義する。
   let selectedMode = null;
   if (walkMinutes !== null && safeWalkDiff <= tolerance) {
     selectedMode = "walk";
@@ -111,6 +120,7 @@ function resolveFallbackMode(
     flags,
   }
 ) {
+  // selectedModeの初期値を定義する。
   let selectedMode = null;
   if (walkMinutes !== null && railMinutes !== null) {
     if (walkMinutes < targetMinutes - tolerance && flags.railOk) {

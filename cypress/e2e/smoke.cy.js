@@ -4,6 +4,7 @@
  */
 const { getGoogleMapsStubScript } = require("../../tests/helpers/google-maps-stub");
 
+// stubGoogleMapsの処理を定義する。
 const stubGoogleMaps = () => {
   cy.intercept(
     "GET",

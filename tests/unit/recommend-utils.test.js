@@ -19,9 +19,11 @@ const {
   buildDistanceHint,
 } = require("../../server/recommend-utils");
 
+// senderを作成する処理を定義する。
 const createSender = () => {
   /** @type {{ status: number, body: any }[]} */
   const calls = [];
+  // sendOnceの処理を定義する。
   const sendOnce = (status, body) => {
     calls.push({ status, body });
   };
@@ -31,7 +33,9 @@ const createSender = () => {
 // extractPrefectureの挙動をまとめて検証する。
 describe("extractPrefecture", () => {
   it("都道府県抽出の結果をまとめて確認する", () => {
+    // hitを取得する。
     const hit = extractPrefecture("東京都新宿区");
+    // fallbackを取得する。
     const fallback = extractPrefecture("札幌市");
     expect({ hit, fallback }).toEqual({
       hit: "東京都",
@@ -43,10 +47,15 @@ describe("extractPrefecture", () => {
 // normalizeText/normalizeAdjustmentの挙動をまとめて検証する。
 describe("normalizeText/normalizeAdjustment", () => {
   it("文字列正規化の結果をまとめて確認する", () => {
+    // trimmedを正規化する。
     const trimmed = normalizeText("  text ");
+    // nonStringを正規化する。
     const nonString = normalizeText(123);
+    // adjustmentLongerを正規化する。
     const adjustmentLonger = normalizeAdjustment("longer");
+    // adjustmentShorterを正規化する。
     const adjustmentShorter = normalizeAdjustment("shorter");
+    // adjustmentOtherを正規化する。
     const adjustmentOther = normalizeAdjustment("other");
     expect({
       trimmed,
@@ -67,7 +76,9 @@ describe("normalizeText/normalizeAdjustment", () => {
 // normalizeStringArray/parseRecommendPayloadの挙動をまとめて検証する。
 describe("normalizeStringArray/parseRecommendPayload", () => {
   it("配列とペイロード正規化の結果をまとめて確認する", () => {
+    // 一覧を正規化する。
     const arrayResult = normalizeStringArray(["a", 1, "b"]);
+    // ペイロードを解析する。
     const payload = parseRecommendPayload({
       query: " cafe ",
       mode: "spot",
@@ -80,6 +91,7 @@ describe("normalizeStringArray/parseRecommendPayload", () => {
       originAreaLabel: "関東地方",
       originPrefectures: ["東京都", 12],
     });
+    // ペイロードをまとめる。
     const payloadSummary = {
       query: payload.query,
       mode: payload.mode,
@@ -107,13 +119,17 @@ describe("normalizeStringArray/parseRecommendPayload", () => {
 // validateRecommendRequestの挙動をまとめて検証する。
 describe("validateRecommendRequest", () => {
   it("入力検証の結果をまとめて確認する", () => {
+    // emptyQueryを作成する。
     const emptyQuery = createSender();
+    // 結果を取得する。
     const emptyResult = validateRecommendRequest(
       { query: "", mode: "spot", origin: { lat: 1, lng: 2 } },
       emptyQuery.sendOnce
     );
 
+    // IDを作成する。
     const invalidOrigin = createSender();
+    // 結果を取得する。
     const invalidResult = validateRecommendRequest(
       { query: "cafe", mode: "spot", origin: null },
       invalidOrigin.sendOnce
@@ -132,10 +148,15 @@ describe("validateRecommendRequest", () => {
 // walk route metricsの挙動をまとめて検証する。
 describe("walk route metrics", () => {
   it("距離と時間の計算結果をまとめて確認する", () => {
+    // targetを解決する。
     const target = resolveEffectiveTargetMinutes(30, 0);
+    // segmentを作成する。
     const segment = buildSegmentRange(60);
+    // longerを作成する。
     const longer = buildDistanceRange(4, "longer");
+    // shorterを作成する。
     const shorter = buildDistanceRange(4, "shorter");
+    // metricsを作成する。
     const metrics = buildWalkRouteMetrics({
       maxMinutes: 0,
       targetMinutes: 60,
@@ -163,8 +184,11 @@ describe("walk route metrics", () => {
 // prefecture helpersの挙動をまとめて検証する。
 describe("prefecture helpers", () => {
   it("都道府県情報の整形結果をまとめて確認する", () => {
+    // 一覧を正規化する。
     const list = normalizePrefectureList([" 東京都 ", ""]);
+    // hintを作成する。
     const hint = buildPrefectureHint(list);
+    // regionを作成する。
     const region = buildSearchRegion("東京都新宿区", true, 150);
     expect({ list, hint, region }).toEqual({
       list: ["東京都"],
@@ -177,6 +201,7 @@ describe("prefecture helpers", () => {
 // buildDistanceHintの挙動をまとめて検証する。
 describe("buildDistanceHint", () => {
   it("距離ヒントの結果をまとめて確認する", () => {
+    // hintを作成する。
     const hint = buildDistanceHint(2, 4);
     expect({ hint }).toEqual({
       hint: "総距離の目安: 2〜4km",
