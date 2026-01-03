@@ -3,8 +3,18 @@
  * @file
  */
 const isCI = Boolean(process.env["CI"]);
+const reporterOptions = {
+  reportDir: "reports/cypress",
+  reportFilename: "index",
+  overwrite: true,
+  html: true,
+  json: true,
+  quiet: true,
+};
 
 module.exports = {
+  reporter: "mochawesome",
+  reporterOptions,
   e2e: {
     baseUrl: "http://localhost:3000",
     specPattern: "cypress/e2e/**/*.cy.js",

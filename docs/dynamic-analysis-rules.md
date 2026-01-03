@@ -7,6 +7,7 @@
 - Cypress: `node server.js` を起動してから `npm run test:cypress`
 - Vitest: `npm run test:vitest`
 - 一括実行: `npm run test:all`（必要に応じてCypress用のサーバーを自動起動）
+- HTMLレポート生成: `npm run test:report`（`reports/test-report.html` を出力）
 
 ## 共通品質ルール
 - CIでは `CI=1` を前提に、`.only` の混入を禁止し、必要なリトライを有効化する。
@@ -14,6 +15,7 @@
 - 外部API（Google Maps/OpenAI）に依存するテストは、UIの存在確認に留めるかモックで切り離す。
 - 固定待機は避け、DOMの状態やリクエスト完了に合わせて待機する。
 - セレクタは `id` / role / `data-testid` など安定したものを使う。
+- HTMLレポートは `reports/test-report.html` に集約し、詳細は `reports/playwright/index.html` と `reports/cypress/index.html` を参照する。
 
 ## Playwright ルール
 - 配置: `tests/playwright/**/*.spec.js`
@@ -21,6 +23,7 @@
 - `webServer`: `node server.js` を起動（CIは新規起動、ローカルは再利用可）
 - `retries`: CI で2回、ローカルで0回
 - 失敗時の `trace` / `screenshot` / `video` を保存し、CIではHTMLレポートを出力する。
+- HTMLレポート: `reports/playwright/index.html`
 
 ## Cypress ルール
 - 配置: `cypress/e2e/**/*.cy.js`
@@ -28,6 +31,7 @@
 - `retries`: runMode 2回 / openMode 0回
 - `defaultCommandTimeout`: 8秒、`pageLoadTimeout`: 60秒
 - 失敗時のスクリーンショットを必ず保存し、CIでは動画も保存する。
+- HTMLレポート: `reports/cypress/index.html`
 
 ## Vitest ルール
 - 配置: `tests/unit/**/*.test.js`

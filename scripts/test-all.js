@@ -228,6 +228,14 @@ async function runAll() {
     process.stderr.write(`[test-all] ${message}\n`);
   } finally {
     stopServer(serverChild, serverStarted);
+    const reportCode = await runCommand(
+      "report",
+      npmCommand,
+      ["run", "test:report"]
+    );
+    if (exitCode === 0 && reportCode !== 0) {
+      exitCode = reportCode;
+    }
   }
 
   return exitCode;

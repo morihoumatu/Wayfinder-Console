@@ -16,8 +16,16 @@ const config = defineConfig({
   retries: isCI ? 2 : 0,
   ...(isCI ? { workers: 1 } : {}),
   reporter: isCI
-    ? [["dot"], ["html", { outputFolder: "reports/playwright", open: "never" }]]
-    : "list",
+    ? [
+        ["dot"],
+        ["html", { outputFolder: "reports/playwright", open: "never" }],
+        ["json", { outputFile: "reports/playwright-report.json" }],
+      ]
+    : [
+        ["list"],
+        ["html", { outputFolder: "reports/playwright", open: "never" }],
+        ["json", { outputFile: "reports/playwright-report.json" }],
+      ],
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",

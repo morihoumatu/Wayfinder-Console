@@ -9,12 +9,13 @@
     "lint:css": "stylelint \"**/*.css\" --max-warnings 0",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"**/reports/**,**/node_modules/**\"",
     "lint:types": "tsc -p tsconfig.json",
-    "test:vitest": "vitest run",
+    "test:vitest": "vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest-report.json",
     "test:vitest:watch": "vitest",
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
     "test:cypress": "cypress run",
     "test:cypress:open": "cypress open",
+    "test:report": "node scripts/test-report.js",
     "test:all": "node scripts/test-all.js"
   },
   "devDependencies": {
@@ -24,6 +25,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-jsdoc": "^61.5.0",
     "htmlhint": "^1.1.4",
+    "mochawesome": "^7.1.4",
     "stylelint": "^16.9.0",
     "stylelint-config-standard": "^36.0.0",
     "stylelint-order": "^6.0.4",
