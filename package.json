@@ -21,7 +21,8 @@
     "test:report": "node scripts/test-report.js",
     "test:gate": "node scripts/test-gate.js",
     "test:all": "node scripts/test-all.js",
-    "test:all:report": "npm run test:all"
+    "test:all:report": "npm run test:all",
+    "quality:all": "node scripts/quality-all.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

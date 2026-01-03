@@ -13,6 +13,7 @@
 - 一括+レポート: `npm run test:all:report`（`test:all` と同等の明示用）
 - HTMLレポート生成: `npm run test:report`（`reports/test-report.html` を出力）
 - 品質ゲート: `npm run test:gate`
+- 静的解析と同時実行: `npm run quality:all`
 
 ## 共通品質ルール
 - CIでは `CI=1` を前提に、`.only` の混入を禁止し、必要なリトライを有効化する。

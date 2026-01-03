@@ -8,6 +8,7 @@
 - HTMLHint: `npm run lint:html`（`htmlhint "**/*.html" --ignore "**/reports/**,**/node_modules/**"`）
 - TypeScript: `npm run lint:types`（`tsc -p tsconfig.json`）
 - 集約: `npm run lint`（`scripts/lint-report.js` で各ツールを実行し、`reports/lint-report.html` にレポート出力）
+- 動的検証と同時実行: `npm run quality:all`
 
 補足:
 - ESLint/Stylelint は `--max-warnings 0` のため警告も失敗扱い。
