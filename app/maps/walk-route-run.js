@@ -5,11 +5,12 @@
 /* exported applyWalkRouteDestination, runWalkRouteSearch */
 /* global applyWalkRouteOriginFromStops: writable, buildWalkRouteRegionInfo: writable, calculateRoutes: writable */
 /* global clearRecommendResult: writable, desiredWalkTargetMinutes: writable, fetchWalkRouteRecommendation: writable */
-/* global getStopLabel: writable, resolveWalkRouteLocations: writable, resolveWalkRouteOriginOverride: writable */
+/* global findNearestStationToLocation: writable, getStopLabel: writable */
+/* global resolveWalkRouteLocations: writable, resolveWalkRouteOriginOverride: writable */
 /* global resolveWalkRouteOriginStatus: writable, setDestination: writable, setRecommendHint: writable */
 /* global setRecommendLoading: writable, showRecommendResult: writable, updateRouteHint: writable */
 /* global updateRouteLabels: writable, updateRouteLinks: writable, walkRoutePreferredMode: writable */
-/* global walkRouteTargetMinutes: writable, walkingWaypoints: writable */
+/* global walkRouteRailStations: writable, walkRouteTargetMinutes: writable, walkingWaypoints: writable */
 /**
  * 散歩ルートの目的地と経由地を更新する。
  * @param {any} options 更新オプション。
@@ -63,6 +64,100 @@ function resetWalkRoutePreferredMode() {
 }
 
 /**
+ * 散歩ルート検索の開始ヒントを取得する。
+ * @param {boolean} auto 再検索フラグ。
+ * @returns {string} ヒント文言。
+ */
+function getWalkRouteSearchStartHint(auto) {
+  return auto ? "時間調整のため再検索中..." : "散歩ルートを作成中...";
+}
+
+/**
+ * 散歩ルート検索の完了ヒントを取得する。
+ * @param {boolean} auto 再検索フラグ。
+ * @returns {string} ヒント文言。
+ */
+function getWalkRouteSearchSuccessHint(auto) {
+  return auto ? "散歩ルートを調整しました。" : "おすすめの散歩ルートを表示しました。";
+}
+
+/**
+ * 配列の件数を取得する。
+ * @param {any} value 対象配列。
+ * @returns {number} 件数。
+ */
+function resolveListCount(value) {
+  return Array.isArray(value) ? value.length : 0;
+}
+
+/**
+ * 目標分数を決定する。
+ * @param {number | null | undefined} desired 目標分数。
+ * @param {number | null | undefined} requested 目標分数。
+ * @returns {number | null} 目標分数。
+ */
+function resolveWalkRouteTargetMinutes(desired, requested) {
+  return desired || requested || null;
+}
+
+/**
+ * 散歩ルート用の在来線駅候補を取得する。
+ * @param {any} options 取得オプション。
+ * @returns {Promise<void>} 処理完了のPromise。
+ */
+async function resolveWalkRouteRailStations(
+  /**
+   * @type {{
+   *   place: any,
+   *   locationInfo: any,
+   *   regionFilter: any[],
+   *   originRegionOverride: string | null
+   * }}
+   */
+  { place, locationInfo, regionFilter, originRegionOverride }
+) {
+  walkRouteRailStations = null;
+  const endLocation = locationInfo.locations[locationInfo.locations.length - 1];
+  const regionValue = regionFilter.length ? regionFilter : originRegionOverride;
+  const endStop = Array.isArray(place?.stops)
+    ? place.stops[place.stops.length - 1]
+    : null;
+  const endStopName = getStopLabel(endStop);
+  const startStation = await findNearestStationToLocation({
+    startLocation: locationInfo.startLocation,
+    stopName: locationInfo.startStopName,
+    region: regionValue,
+  });
+  const endStation = await findNearestStationToLocation({
+    startLocation: endLocation,
+    stopName: endStopName,
+    region: regionValue,
+  });
+  if (startStation?.location && endStation?.location) {
+    walkRouteRailStations = {
+      origin: startStation,
+      destination: endStation,
+    };
+  }
+  logWalkRouteSearchState("rail stations", {
+    origin: startStation?.name || "",
+    destination: endStation?.name || "",
+    originOk: Boolean(startStation?.location),
+    destinationOk: Boolean(endStation?.location),
+    stored: Boolean(walkRouteRailStations),
+  });
+}
+
+/**
+ * 散歩ルート検索の進捗ログを出力する。
+ * @param {string} label ログラベル。
+ * @param {any} details 詳細情報。
+ */
+function logWalkRouteSearchState(label, details) {
+  console.warn(`[walk_multi] ${label}`, details);
+}
+
+/**
  * 散歩ルート検索を実行する。
  * @param {{
  *   query?: any,
@@ -94,22 +189,44 @@ async function runWalkRouteSearch(
     auto,
   }
 ) {
+  logWalkRouteSearchState("search start", {
+    query,
+    requestTargetMinutes,
+    desiredTargetMinutes,
+    adjustment,
+    actualMinutes,
+    auto,
+  });
   setRecommendLoading(true);
-  setRecommendHint(auto ? "時間調整のため再検索中..." : "散歩ルートを作成中...");
+  setRecommendHint(getWalkRouteSearchStartHint(Boolean(auto)));
   clearRecommendResult();
   resetWalkRoutePreferredMode();
 
   try {
     const regionInfo = buildWalkRouteRegionInfo(Boolean(auto));
+    logWalkRouteSearchState("region", {
+      label: regionInfo.regionLabel,
+      prompt: regionInfo.regionForPrompt,
+      anchor: regionInfo.regionAnchor,
+      prefectureCount: resolveListCount(regionInfo.regionFilter),
+    });
     const originStatus = await resolveWalkRouteOriginStatus(
       regionInfo.regionContext
     );
+    logWalkRouteSearchState("origin status", {
+      originMissing: originStatus.originMissing,
+      originMismatch: originStatus.originMismatch,
+    });
     const originOverrides = await resolveWalkRouteOriginOverride({
       originMissing: originStatus.originMissing,
       originMismatch: originStatus.originMismatch,
       regionForPrompt: regionInfo.regionForPrompt,
       regionAnchor: regionInfo.regionAnchor,
       regionLabel: regionInfo.regionLabel,
+    });
+    logWalkRouteSearchState("origin override", {
+      hasOverride: Boolean(originOverrides.originOverride),
+      regionOverride: originOverrides.originRegionOverride,
     });
     const place = await fetchWalkRouteRecommendation({
       query,
@@ -120,10 +237,30 @@ async function runWalkRouteSearch(
       originRegionOverride: originOverrides.originRegionOverride,
       regionContext: regionInfo.regionContext,
     });
+    logWalkRouteSearchState("recommendation", {
+      name: place?.name,
+      area: place?.area,
+      stopCount: resolveListCount(place?.stops),
+      targetMinutes: place?.target_minutes,
+    });
     showRecommendResult(place);
 
     const locationInfo = await resolveWalkRouteLocations(place);
-    const targetMinutes = desiredTargetMinutes || requestTargetMinutes || null;
+    logWalkRouteSearchState("geocode", {
+      stopCount: resolveListCount(place?.stops),
+      locationCount: locationInfo.locations.length,
+      startStopName: locationInfo.startStopName,
+    });
+    await resolveWalkRouteRailStations({
+      place,
+      locationInfo,
+      regionFilter: regionInfo.regionFilter,
+      originRegionOverride: originOverrides.originRegionOverride,
+    });
+    const targetMinutes = resolveWalkRouteTargetMinutes(
+      desiredTargetMinutes,
+      requestTargetMinutes
+    );
     const originUsesStartLocation = await applyWalkRouteOriginFromStops({
       originMissing: originStatus.originMissing,
       startLocation: locationInfo.startLocation,
@@ -133,15 +270,22 @@ async function runWalkRouteSearch(
       originRegionOverride: originOverrides.originRegionOverride,
       targetMinutes,
     });
-    applyWalkRouteDestination({
+    logWalkRouteSearchState("origin selected", {
+      originUsesStartLocation,
+      targetMinutes,
+    });
+    const destinationState = applyWalkRouteDestination({
       locations: locationInfo.locations,
       originUsesStartLocation,
       place,
       desiredTargetMinutes,
     });
-    setRecommendHint(
-      auto ? "散歩ルートを調整しました。" : "おすすめの散歩ルートを表示しました。"
-    );
+    logWalkRouteSearchState("destination", {
+      waypointCount: resolveListCount(destinationState.walkingWaypoints),
+      targetMinutes: destinationState.walkRouteTargetMinutes,
+      desiredTargetMinutes: destinationState.desiredWalkTargetMinutes,
+    });
+    setRecommendHint(getWalkRouteSearchSuccessHint(Boolean(auto)));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     setRecommendHint(message || "おすすめ地点の取得に失敗しました。");

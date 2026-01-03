@@ -12,8 +12,9 @@
 /* exported REGION_GROUPS, STATION_TYPES, REGION_STATION_QUERIES, REGION_QUERY_EXCEPTIONS, MAX_STATION_QUERIES, map */
 /* exported directionsService, walkingRenderer, railRenderer, originMarker, destinationMarker, originLatLng */
 /* exported destinationLatLng, destinationName, requestId, geocoder, destinationSource, originRegion */
-/* exported walkingWaypoints, walkRouteTargetMinutes, walkRouteRetryCount, lastWalkQuery, desiredWalkTargetMinutes */
-/* exported walkRoutePreferredMode, areaAnchorCache, areaAnchorSelection */
+/* exported walkingWaypoints, walkRouteRailStations, walkRouteTargetMinutes, walkRouteRetryCount */
+/* exported lastWalkQuery, desiredWalkTargetMinutes, walkRoutePreferredMode, areaAnchorCache */
+/* exported areaAnchorSelection */
 const MAPS_API_KEY =
   /** @type {string} */ ("AIzaSyAvB1sNfAZg5Gc_1cp2CLWL_iGDFASrD9I");
 const DEFAULT_CENTER = { lat: 35.681236, lng: 139.767125 };
@@ -200,6 +201,8 @@ let destinationSource = null;
 let originRegion = null;
 /** @type {Array<any> | null} */
 let walkingWaypoints = null;
+/** @type {any | null} */
+let walkRouteRailStations = null;
 /** @type {number | null} */
 let walkRouteTargetMinutes = null;
 let walkRouteRetryCount = 0;

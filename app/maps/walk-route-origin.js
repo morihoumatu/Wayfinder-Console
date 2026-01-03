@@ -213,6 +213,16 @@ async function applyWalkRouteOriginFromStops(
     startLocation,
     targetMinutes
   );
+  console.warn("[walk_multi] origin relocation check", {
+    originMissing,
+    originTooFar: relocation.originTooFar,
+    originDistanceMeters: relocation.originDistance,
+    distanceLimitMeters: relocation.distanceLimit,
+    targetMinutes,
+    regionLabel,
+    regionFilterCount: Array.isArray(regionFilter) ? regionFilter.length : 0,
+    originRegionOverride,
+  });
   if (relocation.shouldRelocate) {
     const regionValue = regionFilter.length ? regionFilter : originRegionOverride;
     const station = await findNearestStationToLocation({

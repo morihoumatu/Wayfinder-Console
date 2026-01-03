@@ -5,8 +5,8 @@
 /* exported routeHasHighSpeedTrain, selectLocalRailRoute, evaluateRouteSelection, applyWalkRouteSuccess */
 /* exported applyRailRouteSuccess, applyWalkRouteFailure, applyRailRouteFailure, applyRouteResultState */
 /* exported incrementRouteCompletion */
-/* global destinationSource: writable, getRouteDurationFromLegs: writable, railRenderer: writable */
-/* global railValue: writable, walkingRenderer: writable, walkingValue: writable */
+/* global destinationSource: writable, formatDurationText: writable, getRouteDurationFromLegs: writable */
+/* global railRenderer: writable, railValue: writable, walkingRenderer: writable, walkingValue: writable */
 /**
  * ルートに新幹線等が含まれるか判定する。
  * @param {any} route ルート情報。
@@ -97,10 +97,21 @@ function applyRailRouteSuccess(
   /** @type {{ routeResult: any, durationText: string, durationSeconds: number | null, flags: any }} */
   { routeResult, durationText, durationSeconds, flags }
 ) {
-  railValue.textContent = durationText;
+  let adjustedText = durationText;
+  let adjustedSeconds = durationSeconds;
+  const extraSeconds = flags.railExtraSeconds;
+  if (
+    typeof durationSeconds === "number" &&
+    typeof extraSeconds === "number" &&
+    extraSeconds > 0
+  ) {
+    adjustedSeconds = durationSeconds + extraSeconds;
+    adjustedText = formatDurationText(adjustedSeconds);
+  }
+  railValue.textContent = adjustedText;
   flags.railOk = true;
-  flags.railSeconds = durationSeconds;
-  flags.railText = durationText;
+  flags.railSeconds = adjustedSeconds;
+  flags.railText = adjustedText;
   flags.railResult = routeResult;
   if (destinationSource !== "walk_multi" && railRenderer) {
     railRenderer.setDirections(routeResult);

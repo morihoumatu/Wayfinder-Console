@@ -6,6 +6,19 @@
 /* global DEFAULT_WALK_TARGET_MINUTES: writable, desiredWalkTargetMinutes: writable, getMaxMinutes: writable */
 /* global walkRouteTargetMinutes: writable */
 /**
+ * 散歩ルートの許容差を取得する。
+ * @param {number} targetMinutes 目標分数。
+ * @returns {number} 許容差（分）。
+ */
+function resolveWalkMultiTolerance(targetMinutes) {
+  let tolerance = 8;
+  if (Number.isFinite(targetMinutes) && targetMinutes > 0) {
+    tolerance = Math.max(8, Math.round(targetMinutes * 0.1));
+  }
+  return tolerance;
+}
+
+/**
  * 散歩ルートの目標分数を取得する。
  * @returns {number} 目標分数。
  */
@@ -29,7 +42,7 @@ function buildWalkMultiMetrics(flags, targetMinutes) {
     typeof flags.walkSeconds === "number" ? flags.walkSeconds / 60 : null;
   const railMinutes =
     typeof flags.railSeconds === "number" ? flags.railSeconds / 60 : null;
-  const tolerance = 0.8;
+  const tolerance = resolveWalkMultiTolerance(targetMinutes);
   const walkDiff =
     walkMinutes !== null ? Math.abs(walkMinutes - targetMinutes) : null;
   const railDiff =

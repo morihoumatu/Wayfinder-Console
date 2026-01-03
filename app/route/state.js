@@ -11,8 +11,8 @@
 /* global resolveOriginRegion: writable, setRecommendHint: writable, setRouteStatus: writable */
 /* global updateRegionControls: writable, updateRouteHint: writable, updateRouteLabels: writable */
 /* global updateRouteLinks: writable, walkRoutePreferredMode: writable, walkRouteRetryCount: writable */
-/* global walkRouteTargetMinutes: writable, walkingRenderer: writable, walkingValue: writable */
-/* global walkingWaypoints: writable */
+/* global walkRouteRailStations: writable, walkRouteTargetMinutes: writable */
+/* global walkingRenderer: writable, walkingValue: writable, walkingWaypoints: writable */
 /**
  * ルート状態のスナップショットを取得する。
  * @returns {any} 現在のルート状態。
@@ -25,6 +25,7 @@ function getRouteStateSnapshot() {
     lastWalkQuery,
     originLatLng,
     originRegion,
+    walkRouteRailStations,
     walkRoutePreferredMode,
     walkRouteRetryCount,
     walkRouteTargetMinutes,
@@ -54,6 +55,7 @@ function clearRoutes() {
  */
 function clearWalkRouteState() {
   walkingWaypoints = null;
+  walkRouteRailStations = null;
   walkRouteTargetMinutes = null;
   walkRouteRetryCount = 0;
   lastWalkQuery = "";

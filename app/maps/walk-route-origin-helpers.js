@@ -40,7 +40,13 @@ function resolveOriginDistanceMeters(startLocation) {
  * @param {boolean} originMissing 出発地不足フラグ。
  * @param {any} startLocation 散歩開始地点。
  * @param {number | null} targetMinutes 目標分数。
- * @returns {{ shouldRelocate: boolean, prefix: string, originTooFar: boolean }} 判定結果。
+ * @returns {{
+ *   shouldRelocate: boolean,
+ *   prefix: string,
+ *   originTooFar: boolean,
+ *   originDistance: number | null,
+ *   distanceLimit: number | null
+ * }} 判定結果。
  */
 function buildOriginRelocationInfo(originMissing, startLocation, targetMinutes) {
   const distanceLimit = buildOriginDistanceLimit(targetMinutes);
@@ -51,7 +57,13 @@ function buildOriginRelocationInfo(originMissing, startLocation, targetMinutes) 
     originDistance > distanceLimit;
   const shouldRelocate = originMissing || originTooFar;
   const prefix = originTooFar && !originMissing ? "出発地が遠いため、" : "";
-  return { shouldRelocate, prefix, originTooFar };
+  return {
+    shouldRelocate,
+    prefix,
+    originTooFar,
+    originDistance,
+    distanceLimit,
+  };
 }
 
 /**

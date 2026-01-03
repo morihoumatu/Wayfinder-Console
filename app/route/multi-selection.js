@@ -22,6 +22,15 @@ function setWalkRoutePreferredMode(mode) {
 }
 
 /**
+ * 散歩ルート判定のログを出力する。
+ * @param {string} label ログラベル。
+ * @param {any} details 詳細情報。
+ */
+function logWalkMultiDecision(label, details) {
+  console.warn(`[walk_multi] ${label}`, details);
+}
+
+/**
  * 散歩ルートの採用モードを選ぶ。
  * @param {any} options 判定オプション。
  * @returns {string | null} 採用モード。
@@ -80,6 +89,16 @@ function buildWalkMultiSelection(
   const selectedText = selectedMode === "rail" ? flags.railText : flags.walkText;
   const selectedLabel =
     selectedMode === "rail" ? "散歩ルート（在来線併用）" : "散歩ルート";
+  logWalkMultiDecision("selection", {
+    targetMinutes,
+    tolerance: metrics.tolerance,
+    selectedMode,
+    selectedMinutes,
+    walkMinutes: metrics.walkMinutes,
+    railMinutes: metrics.railMinutes,
+    safeWalkDiff: metrics.safeWalkDiff,
+    safeRailDiff: metrics.safeRailDiff,
+  });
   return {
     selectedMode,
     selectedMinutes,
@@ -133,6 +152,16 @@ function handleWalkMultiTiming(
   if (selectedMinutes !== null) {
     const diff = Math.abs(selectedMinutes - targetMinutes);
     const diffRounded = Math.round(diff * 10) / 10;
+    logWalkMultiDecision("timing check", {
+      selectedMode: selection.selectedMode,
+      targetMinutes,
+      selectedMinutes,
+      tolerance: selection.tolerance,
+      diff,
+      diffRounded,
+      retryCount: walkRouteRetryCount,
+      maxRetries: WALK_ROUTE_MAX_RETRIES,
+    });
     if (diff <= selection.tolerance) {
       setRouteStatus(
         `${selection.selectedLabel}: 約${selection.selectedText}（目標${targetMinutes}分）`
@@ -145,6 +174,13 @@ function handleWalkMultiTiming(
         targetMinutes,
         selectedMinutes
       );
+      logWalkMultiDecision("retry", {
+        adjustment,
+        requestTargetMinutes,
+        desiredTargetMinutes: targetMinutes,
+        actualMinutes: selectedMinutes,
+        retryCount: walkRouteRetryCount,
+      });
       setRouteStatus(
         `散歩ルートを調整中... (${walkRouteRetryCount}/${WALK_ROUTE_MAX_RETRIES})`
       );
@@ -178,6 +214,16 @@ function handleWalkMultiCompletion(
   /** @type {{ flags: any }} */ { flags }
 ) {
   let shouldFinalize = true;
+  logWalkMultiDecision("route flags", {
+    walkOk: flags.walkOk,
+    railOk: flags.railOk,
+    walkSeconds: flags.walkSeconds,
+    railSeconds: flags.railSeconds,
+    walkText: flags.walkText,
+    railText: flags.railText,
+    railRejected: flags.railRejected,
+    retryCount: walkRouteRetryCount,
+  });
   if (flags.walkOk) {
     const targetMinutes = getWalkMultiTargetMinutes();
     const selection = buildWalkMultiSelection({ flags, targetMinutes });
