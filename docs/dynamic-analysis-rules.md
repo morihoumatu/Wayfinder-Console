@@ -22,7 +22,15 @@
 ## 品質ゲート
 - `scripts/test-gate.js` で動的検証の品質基準を判定する。
 - 現在の基準は `minTotal` / `maxFailed` / `maxSkipped` をツール別に設定している。
-- 既定値: Vitest 5件 / Playwright 1件 / Cypress 1件、失敗とスキップは0件。
+- 既定値: Vitest 30件 / Playwright 3件 / Cypress 3件、失敗とスキップは0件。
+- カバレッジ判定: `reports/vitest-coverage/coverage-summary.json` を参照し、
+  line 85% / statement 85% / function 80% / branch 70% を下回らないこと。
+
+## 非機能テスト
+- Playwrightでアクセシビリティ（axe）とパフォーマンス、セキュリティヘッダーを検証する。
+- パフォーマンス目安: `domContentLoaded <= 3000ms`、`load <= 5000ms`。
+- セキュリティヘッダー: `X-Content-Type-Options` / `X-Frame-Options` /
+  `Referrer-Policy` / `Permissions-Policy` を必須とする。
 
 ## Playwright ルール
 - 配置: `tests/playwright/**/*.spec.js`
@@ -31,6 +39,7 @@
 - `retries`: CI で2回、ローカルで0回
 - 失敗時の `trace` / `screenshot` / `video` を保存し、CIではHTMLレポートを出力する。
 - HTMLレポート: `reports/playwright/index.html`
+- 外部依存を避けるため、Google Maps APIはテスト内でスタブ化する。
 
 ## Cypress ルール
 - 配置: `cypress/e2e/**/*.cy.js`
@@ -39,9 +48,11 @@
 - `defaultCommandTimeout`: 8秒、`pageLoadTimeout`: 60秒
 - 失敗時のスクリーンショットを必ず保存し、CIでは動画も保存する。
 - HTMLレポート: `reports/cypress/index.html`
+- 外部依存を避けるため、Google Maps APIはテスト内でスタブ化する。
 
 ## Vitest ルール
 - 配置: `tests/unit/**/*.test.js`
 - `clearMocks` / `restoreMocks` を有効化し、テスト間の状態混入を防ぐ。
 - `testTimeout`: 5秒、`hookTimeout`: 5秒
 - テストが0件の場合は失敗する（`passWithNoTests: false`）。
+- カバレッジHTML: `reports/vitest-coverage/index.html`

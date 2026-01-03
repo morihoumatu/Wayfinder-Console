@@ -4,6 +4,13 @@
  */
 const path = require("path");
 
+const SECURITY_HEADERS = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+};
+
 /**
  * ベースパスとターゲットを安全に結合する。
  * @param {string} base 基準パス。
@@ -25,6 +32,7 @@ function safeJoin(base, target) {
 function sendJson(res, status, payload) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
+    ...SECURITY_HEADERS,
   });
   res.end(JSON.stringify(payload));
 }
@@ -65,4 +73,5 @@ module.exports = {
   safeJoin,
   sendJson,
   readJson,
+  SECURITY_HEADERS,
 };

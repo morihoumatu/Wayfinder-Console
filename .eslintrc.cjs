@@ -109,6 +109,8 @@ module.exports = {
         cy: "readonly",
         describe: "readonly",
         it: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
       },
     },
     {

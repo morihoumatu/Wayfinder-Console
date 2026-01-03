@@ -9,7 +9,7 @@
     "lint:css": "stylelint \"**/*.css\" --max-warnings 0",
     "lint:html": "htmlhint \"**/*.html\" --ignore \"**/reports/**,**/node_modules/**\"",
     "lint:types": "tsc -p tsconfig.json",
-    "test:vitest": "vitest run --reporter=default --reporter=json --outputFile.json=reports/vitest-report.json",
+    "test:vitest": "vitest run --coverage --reporter=default --reporter=json --outputFile.json=reports/vitest-report.json",
     "test:vitest:watch": "vitest",
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
@@ -21,8 +21,10 @@
     "test:all:report": "npm run test:all"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
     "@playwright/test": "^1.57.0",
     "@types/node": "^20.11.30",
+    "@vitest/coverage-v8": "^4.0.16",
     "cypress": "^15.8.1",
     "eslint": "^8.57.0",
     "eslint-plugin-jsdoc": "^61.5.0",

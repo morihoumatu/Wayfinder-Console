@@ -14,6 +14,14 @@ const config = defineConfig({
     clearMocks: true,
     restoreMocks: true,
     passWithNoTests: false,
+    coverage: {
+      provider: "v8",
+      enabled: true,
+      reporter: ["text", "json-summary", "html"],
+      reportsDirectory: "reports/vitest-coverage",
+      include: ["server/**/*.js"],
+      exclude: ["server/index.js"],
+    },
   },
 });
 

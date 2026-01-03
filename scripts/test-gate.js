@@ -4,12 +4,22 @@
  */
 const fs = require("fs");
 const path = require("path");
+const {
+  COVERAGE_RULES,
+  summarizeCoverage,
+  evaluateCoverage,
+} = require("./test-gate/coverage");
 
 const ROOT_DIR = path.join(__dirname, "..");
 const REPORT_DIR = path.join(ROOT_DIR, "reports");
 const VITEST_JSON_PATH = path.join(REPORT_DIR, "vitest-report.json");
 const PLAYWRIGHT_JSON_PATH = path.join(REPORT_DIR, "playwright-report.json");
 const CYPRESS_JSON_PATH = path.join(REPORT_DIR, "cypress", "index.json");
+const COVERAGE_JSON_PATH = path.join(
+  REPORT_DIR,
+  "vitest-coverage",
+  "coverage-summary.json"
+);
 
 /**
  * @typedef {Object} ToolSummary
@@ -30,10 +40,11 @@ const CYPRESS_JSON_PATH = path.join(REPORT_DIR, "cypress", "index.json");
 
 /** @type {{ vitest: GateRule, playwright: GateRule, cypress: GateRule }} */
 const GATE_RULES = {
-  vitest: { minTotal: 5, maxFailed: 0, maxSkipped: 0 },
-  playwright: { minTotal: 1, maxFailed: 0, maxSkipped: 0 },
-  cypress: { minTotal: 1, maxFailed: 0, maxSkipped: 0 },
+  vitest: { minTotal: 30, maxFailed: 0, maxSkipped: 0 },
+  playwright: { minTotal: 3, maxFailed: 0, maxSkipped: 0 },
+  cypress: { minTotal: 3, maxFailed: 0, maxSkipped: 0 },
 };
+
 
 /**
  * ファイルパスからJSONを読み取る。
@@ -208,6 +219,7 @@ function main() {
   const vitestData = readJson(VITEST_JSON_PATH);
   const playwrightData = readJson(PLAYWRIGHT_JSON_PATH);
   const cypressData = readJson(CYPRESS_JSON_PATH);
+  const coverageData = readJson(COVERAGE_JSON_PATH);
 
   const summaries = [
     { summary: summarizeVitest(vitestData), rule: GATE_RULES.vitest, path: VITEST_JSON_PATH },
@@ -226,6 +238,15 @@ function main() {
     result.issues.forEach((issue) => {
       allIssues.push(issue);
     });
+  });
+  const coverageSummary = summarizeCoverage(coverageData);
+  const coverageResult = evaluateCoverage(
+    coverageSummary,
+    COVERAGE_RULES,
+    COVERAGE_JSON_PATH
+  );
+  coverageResult.issues.forEach((issue) => {
+    allIssues.push(issue);
   });
 
   if (allIssues.length > 0) {
