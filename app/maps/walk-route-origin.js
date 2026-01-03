@@ -5,7 +5,9 @@
 /* exported getAdjustedTargetMinutes, buildWalkRouteRegionInfo, resolveWalkRouteOriginStatus */
 /* exported resolveWalkRouteOriginOverride, fetchWalkRouteRecommendation, resolveWalkRouteLocations */
 /* exported applyWalkRouteOriginFromStops */
-/* global findNearestStationToLocation: writable, formatRegionForPrompt: writable, geocodeStops: writable */
+/* global applyOriginFromStartLocation: writable, applyOriginFromStationCandidate: writable */
+/* global buildOriginRelocationInfo: writable, findNearestStationToLocation: writable */
+/* global formatRegionForPrompt: writable, geocodeStops: writable */
 /* global getSelectedRegionContext: writable, originLatLng: writable, originRegion: writable */
 /* global requestRecommendation: writable, resolveIsOriginInRegion: writable, resolveRegionAnchor: writable */
 /* global setOrigin: writable, setOriginRegionHint: writable, updateRouteHint: writable, updateRouteLabels: writable */
@@ -191,7 +193,8 @@ async function applyWalkRouteOriginFromStops(
    *   startStopName: string,
    *   regionFilter: any[],
    *   regionLabel: string,
-   *   originRegionOverride: string | null
+   *   originRegionOverride: string | null,
+   *   targetMinutes: number | null
    * }}
    */
   {
@@ -201,10 +204,16 @@ async function applyWalkRouteOriginFromStops(
     regionFilter,
     regionLabel,
     originRegionOverride,
+    targetMinutes,
   }
 ) {
   let originUsesStartLocation = false;
-  if (originMissing) {
+  const relocation = buildOriginRelocationInfo(
+    originMissing,
+    startLocation,
+    targetMinutes
+  );
+  if (relocation.shouldRelocate) {
     const regionValue = regionFilter.length ? regionFilter : originRegionOverride;
     const station = await findNearestStationToLocation({
       startLocation,
@@ -212,20 +221,20 @@ async function applyWalkRouteOriginFromStops(
       region: regionValue,
     });
     if (station?.location) {
-      setOrigin(station.location, regionLabel || originRegionOverride, {
-        preserveWalkState: true,
+      applyOriginFromStationCandidate({
+        station,
+        regionLabel,
+        originRegionOverride,
+        prefix: relocation.prefix,
       });
-      setOriginRegionHint(
-        station.name
-          ? `${station.name}を出発地に設定しました。`
-          : "最寄り駅を出発地に設定しました。"
-      );
     } else {
-      setOrigin(startLocation, regionLabel || originRegionOverride, {
-        preserveWalkState: true,
-      });
       originUsesStartLocation = true;
-      setOriginRegionHint("最寄り駅が見つからないため最初の地点から開始します。");
+      applyOriginFromStartLocation({
+        startLocation,
+        regionLabel,
+        originRegionOverride,
+        prefix: relocation.prefix,
+      });
     }
   }
   return originUsesStartLocation;

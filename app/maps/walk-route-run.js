@@ -123,6 +123,7 @@ async function runWalkRouteSearch(
     showRecommendResult(place);
 
     const locationInfo = await resolveWalkRouteLocations(place);
+    const targetMinutes = desiredTargetMinutes || requestTargetMinutes || null;
     const originUsesStartLocation = await applyWalkRouteOriginFromStops({
       originMissing: originStatus.originMissing,
       startLocation: locationInfo.startLocation,
@@ -130,6 +131,7 @@ async function runWalkRouteSearch(
       regionFilter: regionInfo.regionFilter,
       regionLabel: regionInfo.regionLabel,
       originRegionOverride: originOverrides.originRegionOverride,
+      targetMinutes,
     });
     applyWalkRouteDestination({
       locations: locationInfo.locations,

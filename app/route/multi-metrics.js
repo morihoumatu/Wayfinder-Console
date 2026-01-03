@@ -26,14 +26,10 @@ function getWalkMultiTargetMinutes() {
  */
 function buildWalkMultiMetrics(flags, targetMinutes) {
   const walkMinutes =
-    typeof flags.walkSeconds === "number"
-      ? Math.round(flags.walkSeconds / 60)
-      : null;
+    typeof flags.walkSeconds === "number" ? flags.walkSeconds / 60 : null;
   const railMinutes =
-    typeof flags.railSeconds === "number"
-      ? Math.round(flags.railSeconds / 60)
-      : null;
-  const tolerance = Math.max(1, Math.round(targetMinutes * 0.008));
+    typeof flags.railSeconds === "number" ? flags.railSeconds / 60 : null;
+  const tolerance = 0.8;
   const walkDiff =
     walkMinutes !== null ? Math.abs(walkMinutes - targetMinutes) : null;
   const railDiff =

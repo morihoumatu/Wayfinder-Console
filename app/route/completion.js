@@ -142,6 +142,9 @@ function finalizeRouteCompletion(
   let shouldFinalize = true;
   if (destinationSource === "walk_multi") {
     shouldFinalize = handleWalkMultiCompletion({ flags });
+    if (shouldFinalize) {
+      fitBoundsIfNeeded(bounds);
+    }
   } else {
     handleStandardCompletion({ flags, bounds });
   }

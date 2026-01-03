@@ -132,6 +132,7 @@ function handleWalkMultiTiming(
   const selectedMinutes = selection.selectedMinutes;
   if (selectedMinutes !== null) {
     const diff = Math.abs(selectedMinutes - targetMinutes);
+    const diffRounded = Math.round(diff * 10) / 10;
     if (diff <= selection.tolerance) {
       setRouteStatus(
         `${selection.selectedLabel}: 約${selection.selectedText}（目標${targetMinutes}分）`
@@ -158,7 +159,7 @@ function handleWalkMultiTiming(
       shouldFinalize = false;
     } else {
       setRouteStatus(
-        `${selection.selectedLabel}: 約${selection.selectedText}（目標${targetMinutes}分から${diff}分ずれ）`
+        `${selection.selectedLabel}: 約${selection.selectedText}（目標${targetMinutes}分から${diffRounded}分ずれ）`
       );
       setRecommendHint("時間が合わない場合は再検索してください。");
     }
