@@ -167,13 +167,37 @@ window.initMap = function initMap() {
   setOverlay("", false);
 };
 
-const keyMissing = !MAPS_API_KEY || MAPS_API_KEY === "YOUR_GOOGLE_MAPS_API_KEY";
+/**
+ * サーバー設定からAPIキーを取得する。
+ * @returns {Promise<string>} APIキー。
+ */
+function resolveMapsApiKey() {
+  let resolver = Promise.resolve("");
+  if (MAPS_API_KEY) {
+    resolver = Promise.resolve(MAPS_API_KEY);
+  } else {
+    resolver = fetch("/api/config")
+      .then((response) => {
+        const payload = response.ok ? response.json() : null;
+        return payload;
+      })
+      .then((data) =>
+        data && typeof data.mapsApiKey === "string" ? data.mapsApiKey : ""
+      )
+      .catch(() => "");
+  }
+  return resolver;
+}
 
-if (keyMissing) {
-  setStatus("未設定", "missing");
-  setOverlay("APIキーを設定してください。", true);
-} else {
+setStatus("読み込み中", "loading");
+setOverlay("APIキーを読み込み中...", true);
+resolveMapsApiKey().then((apiKey) => {
+  if (!apiKey) {
+    setStatus("未設定", "missing");
+    setOverlay("APIキーを設定してください。", true);
+    return;
+  }
   setStatus("読み込み中", "loading");
   setOverlay("地図を読み込み中...", true);
-  loadGoogleMaps(MAPS_API_KEY);
-}
+  loadGoogleMaps(apiKey);
+});

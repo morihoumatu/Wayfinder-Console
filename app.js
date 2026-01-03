@@ -15,8 +15,7 @@
 /* exported walkingWaypoints, walkRouteRailStations, walkRouteTargetMinutes, walkRouteRetryCount */
 /* exported lastWalkQuery, desiredWalkTargetMinutes, walkRoutePreferredMode, areaAnchorCache */
 /* exported areaAnchorSelection */
-const MAPS_API_KEY =
-  /** @type {string} */ ("AIzaSyAvB1sNfAZg5Gc_1cp2CLWL_iGDFASrD9I");
+const MAPS_API_KEY = /** @type {string} */ ("");
 const DEFAULT_CENTER = { lat: 35.681236, lng: 139.767125 };
 const DEFAULT_ZOOM = 13;
 

@@ -131,7 +131,8 @@ Google Maps を使ったライブマップアプリ。地図上で出発地と�
 - JSON解析は `output_text`/`output[].content` を抽出して解析。
 
 ## 設定
-- Google Maps APIキー: `app.js` の `MAPS_API_KEY` を設定。
+- Google Maps APIキー: `.env` の `GOOGLE_MAPS_API_KEY`（または `MAPS_API_KEY`）を設定。
+- クライアントは `/api/config` からMaps APIキーを取得。
 - サーバ環境変数:
   - `PORT` (既定 3000)
   - `OPENAI_API_KEY`

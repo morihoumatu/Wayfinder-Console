@@ -49,18 +49,45 @@ function buildSpawnSpec(command, args) {
  */
 function pipeOutput(stream, prefix, target) {
   let buffer = "";
+  let isBrokenPipe = false;
+  /**
+   * パイプ切断エラーを無視する。
+   * @param {unknown} error エラー。
+   */
+  const handleTargetError = (error) => {
+    const maybeError =
+      error && typeof error === "object" && "code" in error
+        ? error
+        : null;
+    if (maybeError && maybeError.code === "EPIPE") {
+      isBrokenPipe = true;
+    }
+  };
+  target.on("error", handleTargetError);
   stream.setEncoding("utf8");
   stream.on("data", (chunk) => {
     buffer += chunk;
     const lines = buffer.split(/\r?\n/);
     buffer = lines.pop() || "";
     lines.forEach((line) => {
-      target.write(`${prefix} ${line}\n`);
+      if (!isBrokenPipe && target.writable && !target.destroyed) {
+        try {
+          target.write(`${prefix} ${line}\n`);
+        } catch (error) {
+          handleTargetError(error);
+        }
+      }
     });
   });
   stream.on("end", () => {
     if (buffer) {
-      target.write(`${prefix} ${buffer}\n`);
+      if (!isBrokenPipe && target.writable && !target.destroyed) {
+        try {
+          target.write(`${prefix} ${buffer}\n`);
+        } catch (error) {
+          handleTargetError(error);
+        }
+      }
     }
   });
 }
