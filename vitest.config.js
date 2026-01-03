@@ -8,6 +8,7 @@ const config = defineConfig({
   test: {
     include: ["tests/unit/**/*.test.js"],
     environment: "node",
+    globals: true,
     testTimeout: 5_000,
     hookTimeout: 5_000,
     clearMocks: true,

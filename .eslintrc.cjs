@@ -110,5 +110,18 @@ module.exports = {
         it: "readonly",
       },
     },
+    {
+      files: ["tests/unit/**/*.js"],
+      globals: {
+        afterAll: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        beforeEach: "readonly",
+        describe: "readonly",
+        expect: "readonly",
+        it: "readonly",
+        vi: "readonly",
+      },
+    },
   ],
 };

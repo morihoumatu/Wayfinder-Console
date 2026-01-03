@@ -14,11 +14,31 @@ const POLL_INTERVAL_MS = 300;
  * @returns {string} npmコマンド名。
  */
 function resolveNpmCommand() {
-  let command = "npm";
+  return "npm";
+}
+
+/**
+ * 実行コマンドをWindows向けに調整する。
+ * @param {string} command コマンド。
+ * @param {string[]} args 引数。
+ * @returns {{ command: string, args: string[], windowsHide: boolean }} 実行情報。
+ */
+function buildSpawnSpec(command, args) {
+  let resolvedCommand = command;
+  let resolvedArgs = args;
+  let windowsHide = false;
+
   if (process.platform === "win32") {
-    command = "npm.cmd";
+    resolvedCommand = "cmd.exe";
+    resolvedArgs = ["/c", command, ...args];
+    windowsHide = true;
   }
-  return command;
+
+  return {
+    command: resolvedCommand,
+    args: resolvedArgs,
+    windowsHide,
+  };
 }
 
 /**
@@ -32,9 +52,11 @@ function runCommand(label, command, args) {
   let exitCode = 1;
   return new Promise((resolve) => {
     process.stdout.write(`[test-all] ${label}\n`);
-    const child = spawn(command, args, {
+    const spawnSpec = buildSpawnSpec(command, args);
+    const child = spawn(spawnSpec.command, spawnSpec.args, {
       stdio: "inherit",
       env: process.env,
+      windowsHide: spawnSpec.windowsHide,
     });
     child.on("exit", (code) => {
       if (typeof code === "number") {

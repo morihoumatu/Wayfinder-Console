@@ -4,7 +4,6 @@
  */
 const { EventEmitter } = require("events");
 const path = require("path");
-const { describe, it, expect } = require("vitest");
 const { safeJoin, readJson } = require("../../server/http-utils");
 
 const createRequest = () => {
