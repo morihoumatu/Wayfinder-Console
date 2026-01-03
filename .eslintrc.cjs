@@ -10,6 +10,7 @@ module.exports = {
   extends: ["eslint:recommended"],
   plugins: ["jsdoc"],
   reportUnusedDisableDirectives: true,
+  ignorePatterns: ["reports/**"],
   rules: {
     "array-callback-return": "error",
     "block-scoped-var": "error",

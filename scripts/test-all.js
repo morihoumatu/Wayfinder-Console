@@ -71,6 +71,23 @@ function runCommand(label, command, args) {
 }
 
 /**
+ * 前の結果が成功なら次のステップを実行する。
+ * @param {number} currentCode 現在の終了コード。
+ * @param {() => Promise<number>} step 実行ステップ。
+ * @returns {Promise<number>} 更新後の終了コード。
+ */
+async function runStepIfOk(currentCode, step) {
+  let nextCode = currentCode;
+  if (currentCode === 0) {
+    const stepCode = await step();
+    if (stepCode !== 0) {
+      nextCode = stepCode;
+    }
+  }
+  return nextCode;
+}
+
+/**
  * サーバーが応答するか確認する。
  * @param {string} urlString 対象URL。
  * @returns {Promise<boolean>} 応答可否。
@@ -178,64 +195,86 @@ function stopServer(child, started) {
 }
 
 /**
+ * Cypressを実行する。
+ * @param {string} npmCommand npmコマンド。
+ * @returns {Promise<number>} 終了コード。
+ */
+async function runCypress(npmCommand) {
+  let exitCode = 1;
+  let serverChild = null;
+  let serverStarted = false;
+
+  try {
+    const serverResult = await ensureServer(SERVER_URL);
+    serverChild = serverResult.child;
+    serverStarted = serverResult.started;
+    exitCode = await runCommand(
+      "cypress",
+      npmCommand,
+      ["run", "test:cypress"]
+    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unexpected error.";
+    process.stderr.write(`[test-all] ${message}\n`);
+    exitCode = 1;
+  } finally {
+    stopServer(serverChild, serverStarted);
+  }
+
+  return exitCode;
+}
+
+/**
+ * レポートと品質ゲートを実行する。
+ * @param {string} npmCommand npmコマンド。
+ * @param {number} currentCode 現在の終了コード。
+ * @returns {Promise<number>} 更新後の終了コード。
+ */
+async function runReportAndGate(npmCommand, currentCode) {
+  let nextCode = currentCode;
+  const reportCode = await runCommand(
+    "report",
+    npmCommand,
+    ["run", "test:report"]
+  );
+  if (nextCode === 0 && reportCode !== 0) {
+    nextCode = reportCode;
+  }
+  const gateCode = await runCommand(
+    "gate",
+    npmCommand,
+    ["run", "test:gate"]
+  );
+  if (nextCode === 0 && gateCode !== 0) {
+    nextCode = gateCode;
+  }
+  return nextCode;
+}
+
+/**
  * 動的検証ツールを順番に実行する。
  * @returns {Promise<number>} 終了コード。
  */
 async function runAll() {
   const npmCommand = resolveNpmCommand();
   let exitCode = 0;
-  let serverChild = null;
-  let serverStarted = false;
 
   try {
-    const vitestCode = await runCommand(
-      "vitest",
-      npmCommand,
-      ["run", "test:vitest"]
+    exitCode = await runStepIfOk(exitCode, () =>
+      runCommand("vitest", npmCommand, ["run", "test:vitest"])
     );
-    if (vitestCode !== 0) {
-      exitCode = vitestCode;
-    }
-
-    if (exitCode === 0) {
-      const playwrightCode = await runCommand(
-        "playwright",
-        npmCommand,
-        ["run", "test:playwright"]
-      );
-      if (playwrightCode !== 0) {
-        exitCode = playwrightCode;
-      }
-    }
-
-    if (exitCode === 0) {
-      const serverResult = await ensureServer(SERVER_URL);
-      serverChild = serverResult.child;
-      serverStarted = serverResult.started;
-      const cypressCode = await runCommand(
-        "cypress",
-        npmCommand,
-        ["run", "test:cypress"]
-      );
-      if (cypressCode !== 0) {
-        exitCode = cypressCode;
-      }
-    }
+    exitCode = await runStepIfOk(exitCode, () =>
+      runCommand("playwright", npmCommand, ["run", "test:playwright"])
+    );
+    exitCode = await runStepIfOk(exitCode, () => runCypress(npmCommand));
   } catch (error) {
     exitCode = 1;
     const message =
       error instanceof Error ? error.message : "Unexpected error.";
     process.stderr.write(`[test-all] ${message}\n`);
   } finally {
-    stopServer(serverChild, serverStarted);
-    const reportCode = await runCommand(
-      "report",
-      npmCommand,
-      ["run", "test:report"]
-    );
-    if (exitCode === 0 && reportCode !== 0) {
-      exitCode = reportCode;
-    }
+    exitCode = await runReportAndGate(npmCommand, exitCode);
   }
 
   return exitCode;

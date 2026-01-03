@@ -1,5 +1,6 @@
 module.exports = {
   extends: ["stylelint-config-standard"],
+  ignoreFiles: ["reports/**"],
   plugins: [
     "stylelint-order",
     "./stylelint-rules/file-purpose-comment",

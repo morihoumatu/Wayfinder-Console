@@ -16,6 +16,7 @@
     "test:cypress": "cypress run",
     "test:cypress:open": "cypress open",
     "test:report": "node scripts/test-report.js",
+    "test:gate": "node scripts/test-gate.js",
     "test:all": "node scripts/test-all.js",
     "test:all:report": "npm run test:all"
   },

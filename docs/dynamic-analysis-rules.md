@@ -6,9 +6,10 @@
 - Playwright: `npm run test:playwright`（初回のみ `npx playwright install`）
 - Cypress: `node server.js` を起動してから `npm run test:cypress`
 - Vitest: `npm run test:vitest`
-- 一括実行: `npm run test:all`（必要に応じてCypress用のサーバーを自動起動）
+- 一括実行: `npm run test:all`（必要に応じてCypress用のサーバーを自動起動、レポートと品質ゲートも実行）
 - 一括+レポート: `npm run test:all:report`（`test:all` と同等の明示用）
 - HTMLレポート生成: `npm run test:report`（`reports/test-report.html` を出力）
+- 品質ゲート: `npm run test:gate`
 
 ## 共通品質ルール
 - CIでは `CI=1` を前提に、`.only` の混入を禁止し、必要なリトライを有効化する。
@@ -17,6 +18,11 @@
 - 固定待機は避け、DOMの状態やリクエスト完了に合わせて待機する。
 - セレクタは `id` / role / `data-testid` など安定したものを使う。
 - HTMLレポートは `reports/test-report.html` に集約し、詳細は `reports/playwright/index.html` と `reports/cypress/index.html` を参照する。
+
+## 品質ゲート
+- `scripts/test-gate.js` で動的検証の品質基準を判定する。
+- 現在の基準は `minTotal` / `maxFailed` / `maxSkipped` をツール別に設定している。
+- 既定値: Vitest 5件 / Playwright 1件 / Cypress 1件、失敗とスキップは0件。
 
 ## Playwright ルール
 - 配置: `tests/playwright/**/*.spec.js`
