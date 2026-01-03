@@ -109,6 +109,12 @@ module.exports = {
       },
     },
     {
+      files: ["**/*.test.js"],
+      rules: {
+        "test-describe-constraints": "error",
+      },
+    },
+    {
       files: ["tests/playwright/**/*.js"],
       env: {
         browser: true,
