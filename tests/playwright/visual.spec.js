@@ -21,6 +21,7 @@ test.beforeEach(async ({ page }) => {
   await mockGoogleMaps(page);
 });
 
+// トップページのビジュアル崩れを検知する。
 test("トップページのビジュアルが崩れていない", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => window.__mapsTest?.map);

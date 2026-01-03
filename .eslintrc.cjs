@@ -103,6 +103,12 @@ module.exports = {
       },
     },
     {
+      files: ["**/*.spec.js"],
+      rules: {
+        "spec-test-constraints": "error",
+      },
+    },
+    {
       files: ["tests/playwright/**/*.js"],
       env: {
         browser: true,

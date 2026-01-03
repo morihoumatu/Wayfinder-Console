@@ -22,6 +22,7 @@ test.beforeEach(async ({ page }) => {
   await mockGoogleMaps(page);
 });
 
+// アクセシビリティ重大違反が発生していないことを確認する。
 test("アクセシビリティ重大違反がない", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   const results = await new AxeBuilder({ page }).analyze();
@@ -31,6 +32,7 @@ test("アクセシビリティ重大違反がない", async ({ page }) => {
   expect(severe).toEqual([]);
 });
 
+// ページ読み込み時間が許容範囲に収まることを確認する。
 test("ページの読み込み時間が許容範囲", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   const timing = await page.evaluate(() => {
@@ -43,20 +45,43 @@ test("ページの読み込み時間が許容範囲", async ({ page }) => {
       : null;
     return result;
   });
-  expect(timing).not.toBeNull();
-  expect(timing.domContentLoaded).toBeLessThan(3000);
-  expect(timing.load).toBeLessThan(5000);
+  const hasTiming = Boolean(timing);
+  const domContentLoadedOk =
+    hasTiming && timing.domContentLoaded < 3000;
+  const loadOk = hasTiming && timing.load < 5000;
+  expect({ hasTiming, domContentLoadedOk, loadOk }).toEqual({
+    hasTiming: true,
+    domContentLoadedOk: true,
+    loadOk: true,
+  });
 });
 
+// セキュリティヘッダーが付与されることを確認する。
 test("セキュリティヘッダーが付与される", async ({ page }) => {
   const response = await page.goto("/", { waitUntil: "domcontentloaded" });
   const headers = response.headers();
-  expect(headers["x-content-type-options"]).toBe("nosniff");
-  expect(headers["x-frame-options"]).toBe("DENY");
-  expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
-  expect(headers["permissions-policy"]).toContain("geolocation=()");
-  expect(headers["content-security-policy"]).toContain("default-src 'self'");
-  expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
-  expect(headers["cross-origin-opener-policy"]).toBe("same-origin");
-  expect(headers["cross-origin-resource-policy"]).toBe("same-origin");
+  const contentSecurity = headers["content-security-policy"] || "";
+  const checks = {
+    contentTypeOptions: headers["x-content-type-options"] === "nosniff",
+    frameOptions: headers["x-frame-options"] === "DENY",
+    referrerPolicy:
+      headers["referrer-policy"] === "strict-origin-when-cross-origin",
+    permissionsPolicy: headers["permissions-policy"]?.includes("geolocation=()"),
+    contentSecurityPolicy: contentSecurity.includes("default-src 'self'"),
+    frameAncestors: contentSecurity.includes("frame-ancestors 'none'"),
+    crossOriginOpener:
+      headers["cross-origin-opener-policy"] === "same-origin",
+    crossOriginResource:
+      headers["cross-origin-resource-policy"] === "same-origin",
+  };
+  expect(checks).toEqual({
+    contentTypeOptions: true,
+    frameOptions: true,
+    referrerPolicy: true,
+    permissionsPolicy: true,
+    contentSecurityPolicy: true,
+    frameAncestors: true,
+    crossOriginOpener: true,
+    crossOriginResource: true,
+  });
 });
