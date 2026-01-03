@@ -16,7 +16,8 @@
     "test:cypress": "cypress run",
     "test:cypress:open": "cypress open",
     "test:report": "node scripts/test-report.js",
-    "test:all": "node scripts/test-all.js"
+    "test:all": "node scripts/test-all.js",
+    "test:all:report": "npm run test:all"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

@@ -7,6 +7,7 @@
 - Cypress: `node server.js` を起動してから `npm run test:cypress`
 - Vitest: `npm run test:vitest`
 - 一括実行: `npm run test:all`（必要に応じてCypress用のサーバーを自動起動）
+- 一括+レポート: `npm run test:all:report`（`test:all` と同等の明示用）
 - HTMLレポート生成: `npm run test:report`（`reports/test-report.html` を出力）
 
 ## 共通品質ルール
