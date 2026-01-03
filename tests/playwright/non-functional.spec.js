@@ -23,7 +23,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("アクセシビリティ重大違反がない", async ({ page }) => {
-  await page.goto("/", { waitUntil: "load" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   const results = await new AxeBuilder({ page }).analyze();
   const severe = results.violations.filter((violation) =>
     ["critical", "serious"].includes(violation.impact)
@@ -32,7 +32,7 @@ test("アクセシビリティ重大違反がない", async ({ page }) => {
 });
 
 test("ページの読み込み時間が許容範囲", async ({ page }) => {
-  await page.goto("/", { waitUntil: "load" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   const timing = await page.evaluate(() => {
     const [entry] = performance.getEntriesByType("navigation");
     const result = entry
@@ -49,10 +49,14 @@ test("ページの読み込み時間が許容範囲", async ({ page }) => {
 });
 
 test("セキュリティヘッダーが付与される", async ({ page }) => {
-  const response = await page.goto("/", { waitUntil: "load" });
+  const response = await page.goto("/", { waitUntil: "domcontentloaded" });
   const headers = response.headers();
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["x-frame-options"]).toBe("DENY");
   expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
   expect(headers["permissions-policy"]).toContain("geolocation=()");
+  expect(headers["content-security-policy"]).toContain("default-src 'self'");
+  expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(headers["cross-origin-opener-policy"]).toBe("same-origin");
+  expect(headers["cross-origin-resource-policy"]).toBe("same-origin");
 });

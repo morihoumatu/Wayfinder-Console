@@ -5,6 +5,8 @@
 const {
   extractOutputText,
   parseJsonFromText,
+  findJsonInText,
+  isEscapedChar,
   findMatchingBracket,
 } = require("../../server/json-utils");
 
@@ -27,6 +29,16 @@ describe("extractOutputText", () => {
     });
     expect(result).toBe("first\nsecond");
   });
+
+  it("contentが配列でない要素は無視する", () => {
+    const result = extractOutputText({
+      output: [
+        { content: "skip" },
+        { content: [{ type: "output_text", text: "ok" }] },
+      ],
+    });
+    expect(result).toBe("ok");
+  });
 });
 
 describe("parseJsonFromText", () => {
@@ -44,6 +56,16 @@ describe("parseJsonFromText", () => {
     const result = parseJsonFromText("note: {\"a\":\"b\"} end");
     expect(result).toEqual({ a: "b" });
   });
+
+  it("フェンス内が不正なら本文中のJSONを解析する", () => {
+    const result = parseJsonFromText("```json\n{invalid}\n```\nthen {\"ok\":true}");
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("JSONが無い場合はnullを返す", () => {
+    const result = parseJsonFromText("no json here");
+    expect(result).toBeNull();
+  });
 });
 
 describe("findMatchingBracket", () => {
@@ -59,5 +81,31 @@ describe("findMatchingBracket", () => {
     const start = text.indexOf("{");
     const end = findMatchingBracket(text, start);
     expect(text.slice(start, end + 1)).toBe("{ \"a\": \"{ }\" }");
+  });
+
+  it("エスケープ済みの引用符を考慮する", () => {
+    const text = "{ \"a\": \"value with \\\" quote\" } trailing";
+    const start = text.indexOf("{");
+    const end = findMatchingBracket(text, start);
+    expect(end).toBe(text.indexOf("}", start));
+  });
+
+  it("閉じ括弧が無い場合は-1を返す", () => {
+    const text = "{ \"a\": 1";
+    const start = text.indexOf("{");
+    const end = findMatchingBracket(text, start);
+    expect(end).toBe(-1);
+  });
+});
+
+describe("findJsonInText/isEscapedChar", () => {
+  it("不正な断片を飛ばして有効なJSONを取得する", () => {
+    const result = findJsonInText("{invalid} then {\"ok\":true}");
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("エスケープ判定を行う", () => {
+    expect(isEscapedChar("\\\"", 0)).toBe(true);
+    expect(isEscapedChar("\\\"", 1)).toBe(false);
   });
 });

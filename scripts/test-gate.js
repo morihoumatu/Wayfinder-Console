@@ -17,6 +17,9 @@ const {
   summarizeVitest,
   summarizePlaywright,
   summarizeCypress,
+  summarizeLighthouse,
+  summarizeLoadTest,
+  summarizeSecurity,
   evaluateGate,
 } = require("./test-gate/summary");
 
@@ -25,6 +28,9 @@ const REPORT_DIR = path.join(ROOT_DIR, "reports");
 const VITEST_JSON_PATH = path.join(REPORT_DIR, "vitest-report.json");
 const PLAYWRIGHT_JSON_PATH = path.join(REPORT_DIR, "playwright-report.json");
 const CYPRESS_JSON_PATH = path.join(REPORT_DIR, "cypress", "index.json");
+const LIGHTHOUSE_JSON_PATH = path.join(REPORT_DIR, "lighthouse-report.json");
+const LOAD_JSON_PATH = path.join(REPORT_DIR, "load-test-report.json");
+const SECURITY_JSON_PATH = path.join(REPORT_DIR, "security-report.json");
 const GATE_JSON_PATH = path.join(REPORT_DIR, "test-gate.json");
 const COVERAGE_JSON_PATH = path.join(
   REPORT_DIR,
@@ -49,11 +55,22 @@ const COVERAGE_JSON_PATH = path.join(
  * @property {number} maxSkipped 許容スキップ数。
  */
 
-/** @type {{ vitest: GateRule, playwright: GateRule, cypress: GateRule }} */
+/** @type {{
+ *   vitest: GateRule,
+ *   playwright: GateRule,
+ *   cypress: GateRule,
+ *   lighthouse: GateRule,
+ *   load: GateRule,
+ *   security: GateRule
+ * }}
+ */
 const GATE_RULES = {
-  vitest: { minTotal: 30, maxFailed: 0, maxSkipped: 0 },
-  playwright: { minTotal: 3, maxFailed: 0, maxSkipped: 0 },
+  vitest: { minTotal: 60, maxFailed: 0, maxSkipped: 0 },
+  playwright: { minTotal: 40, maxFailed: 0, maxSkipped: 0 },
   cypress: { minTotal: 3, maxFailed: 0, maxSkipped: 0 },
+  lighthouse: { minTotal: 4, maxFailed: 0, maxSkipped: 0 },
+  load: { minTotal: 3, maxFailed: 0, maxSkipped: 0 },
+  security: { minTotal: 7, maxFailed: 0, maxSkipped: 0 },
 };
 
 
@@ -116,6 +133,9 @@ function main() {
   const vitestData = readJson(VITEST_JSON_PATH);
   const playwrightData = readJson(PLAYWRIGHT_JSON_PATH);
   const cypressData = readJson(CYPRESS_JSON_PATH);
+  const lighthouseData = readJson(LIGHTHOUSE_JSON_PATH);
+  const loadData = readJson(LOAD_JSON_PATH);
+  const securityData = readJson(SECURITY_JSON_PATH);
   const coverageData = readJson(COVERAGE_JSON_PATH);
 
   const summaries = [
@@ -133,6 +153,21 @@ function main() {
       summary: summarizeCypress(cypressData),
       rule: GATE_RULES.cypress,
       path: CYPRESS_JSON_PATH,
+    },
+    {
+      summary: summarizeLighthouse(lighthouseData),
+      rule: GATE_RULES.lighthouse,
+      path: LIGHTHOUSE_JSON_PATH,
+    },
+    {
+      summary: summarizeLoadTest(loadData),
+      rule: GATE_RULES.load,
+      path: LOAD_JSON_PATH,
+    },
+    {
+      summary: summarizeSecurity(securityData),
+      rule: GATE_RULES.security,
+      path: SECURITY_JSON_PATH,
     },
   ];
 

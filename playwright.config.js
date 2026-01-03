@@ -2,7 +2,7 @@
  * PlaywrightのE2E設定を定義する。
  * @file
  */
-const { defineConfig } = require("@playwright/test");
+const { defineConfig, devices } = require("@playwright/test");
 
 const isCI = Boolean(process.env["CI"]);
 
@@ -32,6 +32,24 @@ const config = defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
+    {
+      name: "mobile-chrome",
+      use: { ...devices["Pixel 5"] },
+    },
+  ],
   webServer: {
     command: "node server.js",
     url: "http://localhost:3000",

@@ -20,18 +20,18 @@
 
 /** @type {CoverageRule} */
 const COVERAGE_RULES = {
-  lines: 85,
-  statements: 85,
-  functions: 80,
-  branches: 70,
+  lines: 95,
+  statements: 95,
+  functions: 95,
+  branches: 85,
 };
 
 /** @type {CoverageRule} */
 const FILE_COVERAGE_RULES = {
-  lines: 85,
-  statements: 85,
-  functions: 80,
-  branches: 70,
+  lines: 95,
+  statements: 95,
+  functions: 95,
+  branches: 85,
 };
 
 /** @type {Array<{ key: keyof CoverageRule, label: string }>} */

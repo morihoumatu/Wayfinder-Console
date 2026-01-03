@@ -103,6 +103,15 @@ module.exports = {
       },
     },
     {
+      files: ["tests/playwright/**/*.js"],
+      env: {
+        browser: true,
+      },
+      globals: {
+        google: "readonly",
+      },
+    },
+    {
       files: ["cypress/**/*.js"],
       globals: {
         Cypress: "readonly",

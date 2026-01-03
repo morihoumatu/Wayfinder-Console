@@ -6,6 +6,9 @@
 - Playwright: `npm run test:playwright`（初回のみ `npx playwright install`）
 - Cypress: `node server.js` を起動してから `npm run test:cypress`
 - Vitest: `npm run test:vitest`
+- Lighthouse: `npm run test:perf`（`reports/lighthouse-report.html` を出力）
+- Load Test: `npm run test:load`（`reports/load-test-report.json` を出力）
+- Security Check: `npm run test:security`（`reports/security-report.json` を出力）
 - 一括実行: `npm run test:all`（必要に応じてCypress用のサーバーを自動起動、レポートと品質ゲートも実行）
 - 一括+レポート: `npm run test:all:report`（`test:all` と同等の明示用）
 - HTMLレポート生成: `npm run test:report`（`reports/test-report.html` を出力）
@@ -22,16 +25,21 @@
 ## 品質ゲート
 - `scripts/test-gate.js` で動的検証の品質基準を判定する。
 - 現在の基準は `minTotal` / `maxFailed` / `maxSkipped` をツール別に設定している。
-- 既定値: Vitest 30件 / Playwright 3件 / Cypress 3件、失敗とスキップは0件。
+- 既定値: Vitest 60件 / Playwright 40件 / Cypress 3件 / Lighthouse 4件 / Load Test 3件 /
+  Security 7件、失敗とスキップは0件。
 - カバレッジ判定: `reports/vitest-coverage/coverage-summary.json` を参照し、
-  line 85% / statement 85% / function 80% / branch 70% を下回らないこと。
+  line 95% / statement 95% / function 95% / branch 85% を下回らないこと。
 - 品質ゲートの結果は `reports/test-gate.json` に保存され、`reports/test-report.html` に反映される。
 - ファイル単位のカバレッジも同じ閾値で判定し、未達の場合は品質ゲートを失敗させる。
 
 ## 非機能テスト
 - Playwrightでアクセシビリティ（axe）とパフォーマンス、セキュリティヘッダーを検証する。
 - パフォーマンス目安: `domContentLoaded <= 3000ms`、`load <= 5000ms`。
-- セキュリティヘッダー: `X-Content-Type-Options` / `X-Frame-Options` /
+- Lighthouseでパフォーマンス/アクセシビリティ/ベストプラクティス/SEOのスコアを検証する。
+- Lighthouseの閾値: performance 0.90 / accessibility 0.95 / best-practices 0.90 / seo 0.90
+- Load Testで `p95 <= 800ms` / `errorRate <= 0` / `rps >= 50` を満たす。
+- セキュリティヘッダー: `Content-Security-Policy` / `Cross-Origin-Opener-Policy` /
+  `Cross-Origin-Resource-Policy` / `X-Content-Type-Options` / `X-Frame-Options` /
   `Referrer-Policy` / `Permissions-Policy` を必須とする。
 
 ## Playwright ルール
@@ -42,10 +50,12 @@
 - 失敗時の `trace` / `screenshot` / `video` を保存し、CIではHTMLレポートを出力する。
 - HTMLレポート: `reports/playwright/index.html`
 - 外部依存を避けるため、Google Maps APIはテスト内でスタブ化する。
+- プロジェクトは Chromium / Firefox / WebKit / Mobile Chrome を対象とする。
+- `toHaveScreenshot` を使ったビジュアル回帰を含める。
 
 ## Cypress ルール
 - 配置: `cypress/e2e/**/*.cy.js`
-- サーバーは別ターミナルで起動する。
+- サーバーが起動していない場合は `test:all` が自動で起動する。
 - `retries`: runMode 2回 / openMode 0回
 - `defaultCommandTimeout`: 8秒、`pageLoadTimeout`: 60秒
 - 失敗時のスクリーンショットを必ず保存し、CIでは動画も保存する。

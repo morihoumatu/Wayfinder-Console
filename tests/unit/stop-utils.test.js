@@ -25,6 +25,11 @@ describe("isStopLike/cleanStopLine", () => {
 });
 
 describe("parseStopString", () => {
+  it("空文字列なら空配列になる", () => {
+    const stops = parseStopString("   ");
+    expect(stops).toEqual([]);
+  });
+
   it("矢印区切りの行を分解する", () => {
     const stops = parseStopString("A → B");
     expect(stops).toEqual([
@@ -36,6 +41,14 @@ describe("parseStopString", () => {
   it("改行区切りの行を分解する", () => {
     const stops = parseStopString("A\nB");
     expect(stops.length).toBe(2);
+  });
+
+  it("中点区切りの行を分解する", () => {
+    const stops = parseStopString("A・B");
+    expect(stops).toEqual([
+      { name: "A", address: "" },
+      { name: "B", address: "" },
+    ]);
   });
 });
 
@@ -75,5 +88,16 @@ describe("selectStopsFromCandidates/extractStopsFromResult", () => {
     });
     expect(fromArray).toEqual([{ name: "A", address: "Tokyo" }]);
     expect(fromString.length).toBe(2);
+  });
+
+  it("points/placesの候補も抽出する", () => {
+    const fromPoints = extractStopsFromResult({
+      points: [{ name: "X", address: "Y" }],
+    });
+    const fromPlaces = extractStopsFromResult({
+      places: "C・D",
+    });
+    expect(fromPoints).toEqual([{ name: "X", address: "Y" }]);
+    expect(fromPlaces.length).toBe(2);
   });
 });

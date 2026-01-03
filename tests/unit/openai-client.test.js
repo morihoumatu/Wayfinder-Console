@@ -72,4 +72,30 @@ describe("callOpenAI", () => {
       "OpenAI API connection failed."
     );
   });
+
+  it("不正なJSONはパースエラーになる", async () => {
+    vi.spyOn(https, "request").mockImplementation((options, callback) => {
+      const response = createResponse(200, "invalid");
+      const request = createRequest(response, false);
+      callback(response);
+      return request;
+    });
+
+    await expect(callOpenAI({ input: "hello" })).rejects.toThrow(
+      "OpenAI response parse error."
+    );
+  });
+
+  it("エラーメッセージが無い場合は既定文言になる", async () => {
+    vi.spyOn(https, "request").mockImplementation((options, callback) => {
+      const response = createResponse(500, JSON.stringify({ error: {} }));
+      const request = createRequest(response, false);
+      callback(response);
+      return request;
+    });
+
+    await expect(callOpenAI({ input: "hello" })).rejects.toThrow(
+      "OpenAI API request failed."
+    );
+  });
 });

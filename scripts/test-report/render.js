@@ -41,7 +41,13 @@ function formatDuration(durationMs) {
  * HTMLレポートを描画する。
  * @param {ToolSummary[]} tools ツールの集計情報。
  * @param {string} generatedAt 生成日時(ISO)。
- * @param {{ playwright: string, cypress: string }} links レポートリンク。
+ * @param {{
+ *   playwright: string,
+ *   cypress: string,
+ *   lighthouse?: string,
+ *   load?: string,
+ *   security?: string
+ * }} links レポートリンク。
  * @param {any | null} gate 品質ゲートの結果。
  * @returns {string} HTML文字列。
  */
@@ -73,6 +79,23 @@ function renderReport(tools, generatedAt, links, gate) {
     .join("");
 
   const gateSection = renderGateSection(gate);
+  /** @type {Array<{ label: string, href: string }>} */
+  const linkItems = [
+    { label: "Playwright HTML", href: links.playwright },
+    { label: "Cypress HTML", href: links.cypress },
+  ];
+  if (links.lighthouse) {
+    linkItems.push({ label: "Lighthouse HTML", href: links.lighthouse });
+  }
+  if (links.load) {
+    linkItems.push({ label: "Load JSON", href: links.load });
+  }
+  if (links.security) {
+    linkItems.push({ label: "Security JSON", href: links.security });
+  }
+  const linkHtml = linkItems
+    .map((link) => `${escapeHtml(link.label)}: <a href="${link.href}">open</a>`)
+    .join(" | ");
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -237,8 +260,7 @@ function renderReport(tools, generatedAt, links, gate) {
       </tbody>
     </table>
     <div class="links">
-      Playwright HTML: <a href="${links.playwright}">open</a> |
-      Cypress HTML: <a href="${links.cypress}">open</a>
+      ${linkHtml}
     </div>
   </body>
 </html>
