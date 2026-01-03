@@ -233,14 +233,6 @@ async function runCypress(npmCommand) {
  */
 async function runReportAndGate(npmCommand, currentCode) {
   let nextCode = currentCode;
-  const reportCode = await runCommand(
-    "report",
-    npmCommand,
-    ["run", "test:report"]
-  );
-  if (nextCode === 0 && reportCode !== 0) {
-    nextCode = reportCode;
-  }
   const gateCode = await runCommand(
     "gate",
     npmCommand,
@@ -248,6 +240,14 @@ async function runReportAndGate(npmCommand, currentCode) {
   );
   if (nextCode === 0 && gateCode !== 0) {
     nextCode = gateCode;
+  }
+  const reportCode = await runCommand(
+    "report",
+    npmCommand,
+    ["run", "test:report"]
+  );
+  if (nextCode === 0 && reportCode !== 0) {
+    nextCode = reportCode;
   }
   return nextCode;
 }

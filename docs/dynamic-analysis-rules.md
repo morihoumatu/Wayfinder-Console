@@ -25,6 +25,7 @@
 - 既定値: Vitest 30件 / Playwright 3件 / Cypress 3件、失敗とスキップは0件。
 - カバレッジ判定: `reports/vitest-coverage/coverage-summary.json` を参照し、
   line 85% / statement 85% / function 80% / branch 70% を下回らないこと。
+- 品質ゲートの結果は `reports/test-gate.json` に保存され、`reports/test-report.html` に反映される。
 
 ## 非機能テスト
 - Playwrightでアクセシビリティ（axe）とパフォーマンス、セキュリティヘッダーを検証する。

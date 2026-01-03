@@ -9,12 +9,20 @@ const {
   summarizeCoverage,
   evaluateCoverage,
 } = require("./test-gate/coverage");
+const {
+  readJson,
+  summarizeVitest,
+  summarizePlaywright,
+  summarizeCypress,
+  evaluateGate,
+} = require("./test-gate/summary");
 
 const ROOT_DIR = path.join(__dirname, "..");
 const REPORT_DIR = path.join(ROOT_DIR, "reports");
 const VITEST_JSON_PATH = path.join(REPORT_DIR, "vitest-report.json");
 const PLAYWRIGHT_JSON_PATH = path.join(REPORT_DIR, "playwright-report.json");
 const CYPRESS_JSON_PATH = path.join(REPORT_DIR, "cypress", "index.json");
+const GATE_JSON_PATH = path.join(REPORT_DIR, "test-gate.json");
 const COVERAGE_JSON_PATH = path.join(
   REPORT_DIR,
   "vitest-coverage",
@@ -47,169 +55,52 @@ const GATE_RULES = {
 
 
 /**
- * ファイルパスからJSONを読み取る。
- * @param {string} filePath ファイルパス。
- * @returns {any | null} 解析結果またはnull。
+ * 品質ゲートのレポートデータを作成する。
+ * @param {any} options レポート作成オプション。
+ * @returns {any} レポートデータ。
  */
-function readJson(filePath) {
-  let result = null;
-  if (fs.existsSync(filePath)) {
-    try {
-      const content = fs.readFileSync(filePath, "utf8");
-      result = JSON.parse(content);
-    } catch (error) {
-      result = null;
-    }
-  }
-  return result;
-}
-
-/**
- * 値を数値に正規化する。
- * @param {unknown} value 入力値。
- * @returns {number} 正規化後の数値。
- */
-function toNumber(value) {
-  let result = 0;
-  if (typeof value === "number" && Number.isFinite(value)) {
-    result = value;
-  }
-  return result;
-}
-
-/**
- * Vitestの集計を作成する。
- * @param {any | null} data VitestのJSONデータ。
- * @returns {ToolSummary} 集計結果。
- */
-function summarizeVitest(data) {
-  /** @type {ToolSummary} */
-  let summary = {
-    name: "Vitest",
-    status: "missing",
-    passed: 0,
-    failed: 0,
-    skipped: 0,
-    total: 0,
+function buildGateReport(
+  /**
+   * @type {{
+   *   summaries: Array<{ summary: ToolSummary, rule: GateRule, path: string }>,
+   *   allIssues: string[],
+   *   coverageSummary: { lines: number, statements: number, functions: number, branches: number } | null,
+   *   coverageResult: { ok: boolean, issues: string[] }
+   * }}
+   */
+  { summaries, allIssues, coverageSummary, coverageResult }
+) {
+  const tools = summaries.map((entry) => ({
+    name: entry.summary.name,
+    status: entry.summary.status,
+    passed: entry.summary.passed,
+    failed: entry.summary.failed,
+    skipped: entry.summary.skipped,
+    total: entry.summary.total,
+    rule: entry.rule,
+    reportPath: entry.path,
+  }));
+  const coverageStatus = coverageSummary
+    ? coverageResult.ok
+      ? "pass"
+      : "fail"
+    : "missing";
+  const coverage = {
+    status: coverageStatus,
+    summary: coverageSummary,
+    rules: COVERAGE_RULES,
+    reportPath: COVERAGE_JSON_PATH,
+    issues: coverageResult.issues,
   };
-  if (data) {
-    const passed = toNumber(data.numPassedTests);
-    const failed = toNumber(data.numFailedTests);
-    const skipped = toNumber(data.numPendingTests) + toNumber(data.numTodoTests);
-    const total = toNumber(data.numTotalTests);
-    const status = failed > 0 || data.success === false ? "fail" : "pass";
-    summary = {
-      name: "Vitest",
-      status,
-      passed,
-      failed,
-      skipped,
-      total,
-    };
-  }
-  return summary;
-}
-
-/**
- * Playwrightの集計を作成する。
- * @param {any | null} data PlaywrightのJSONデータ。
- * @returns {ToolSummary} 集計結果。
- */
-function summarizePlaywright(data) {
-  /** @type {ToolSummary} */
-  let summary = {
-    name: "Playwright",
-    status: "missing",
-    passed: 0,
-    failed: 0,
-    skipped: 0,
-    total: 0,
+  const status = allIssues.length > 0 ? "fail" : "pass";
+  const report = {
+    generatedAt: new Date().toISOString(),
+    status,
+    issues: allIssues,
+    tools,
+    coverage,
   };
-  if (data && data.stats) {
-    const passed = toNumber(data.stats.expected);
-    const failed = toNumber(data.stats.unexpected) + toNumber(data.stats.flaky);
-    const skipped = toNumber(data.stats.skipped);
-    const total = passed + failed + skipped;
-    const status = failed > 0 ? "fail" : total > 0 ? "pass" : "missing";
-    summary = {
-      name: "Playwright",
-      status,
-      passed,
-      failed,
-      skipped,
-      total,
-    };
-  }
-  return summary;
-}
-
-/**
- * Cypressの集計を作成する。
- * @param {any | null} data CypressのJSONデータ。
- * @returns {ToolSummary} 集計結果。
- */
-function summarizeCypress(data) {
-  const stats = data && data.stats ? data.stats : null;
-  /** @type {ToolSummary} */
-  let summary = {
-    name: "Cypress",
-    status: "missing",
-    passed: 0,
-    failed: 0,
-    skipped: 0,
-    total: 0,
-  };
-  if (stats) {
-    const passed = toNumber(stats.passes);
-    const failed = toNumber(stats.failures);
-    const skipped = toNumber(stats.pending);
-    const total = toNumber(stats.tests);
-    const status = failed > 0 ? "fail" : total > 0 ? "pass" : "missing";
-    summary = {
-      name: "Cypress",
-      status,
-      passed,
-      failed,
-      skipped,
-      total,
-    };
-  }
-  return summary;
-}
-
-/**
- * 品質ゲートを評価する。
- * @param {ToolSummary} summary 集計結果。
- * @param {GateRule} rule ゲート条件。
- * @param {string} reportPath レポートパス。
- * @returns {{ ok: boolean, issues: string[] }} 評価結果。
- */
-function evaluateGate(summary, rule, reportPath) {
-  const issues = [];
-  if (summary.status === "missing") {
-    issues.push(`${summary.name}: レポートが見つかりません (${reportPath})`);
-  }
-  if (summary.failed > rule.maxFailed) {
-    issues.push(
-      `${summary.name}: 失敗数 ${summary.failed} が上限 ${rule.maxFailed} を超えています`
-    );
-  }
-  if (summary.skipped > rule.maxSkipped) {
-    issues.push(
-      `${summary.name}: スキップ数 ${summary.skipped} が上限 ${rule.maxSkipped} を超えています`
-    );
-  }
-  if (summary.total < rule.minTotal) {
-    issues.push(
-      `${summary.name}: テスト数 ${summary.total} が下限 ${rule.minTotal} 未満です`
-    );
-  }
-  let ok = true;
-  if (issues.length > 0) {
-    ok = false;
-  }
-  const result = { ok, issues };
-  return result;
+  return report;
 }
 
 /**
@@ -222,13 +113,21 @@ function main() {
   const coverageData = readJson(COVERAGE_JSON_PATH);
 
   const summaries = [
-    { summary: summarizeVitest(vitestData), rule: GATE_RULES.vitest, path: VITEST_JSON_PATH },
+    {
+      summary: summarizeVitest(vitestData),
+      rule: GATE_RULES.vitest,
+      path: VITEST_JSON_PATH,
+    },
     {
       summary: summarizePlaywright(playwrightData),
       rule: GATE_RULES.playwright,
       path: PLAYWRIGHT_JSON_PATH,
     },
-    { summary: summarizeCypress(cypressData), rule: GATE_RULES.cypress, path: CYPRESS_JSON_PATH },
+    {
+      summary: summarizeCypress(cypressData),
+      rule: GATE_RULES.cypress,
+      path: CYPRESS_JSON_PATH,
+    },
   ];
 
   /** @type {string[]} */
@@ -248,6 +147,14 @@ function main() {
   coverageResult.issues.forEach((issue) => {
     allIssues.push(issue);
   });
+  const gateReport = buildGateReport({
+    summaries,
+    allIssues,
+    coverageSummary,
+    coverageResult,
+  });
+  fs.mkdirSync(REPORT_DIR, { recursive: true });
+  fs.writeFileSync(GATE_JSON_PATH, JSON.stringify(gateReport, null, 2), "utf8");
 
   if (allIssues.length > 0) {
     process.stderr.write("[test-gate] 品質ゲートに失敗しました。\n");

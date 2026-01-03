@@ -2,6 +2,8 @@
  * 動的検証レポートのHTMLを描画する。
  * @file 動的検証レポートのHTMLを描画する。
  */
+const { escapeHtml } = require("./utils");
+const { renderGateSection } = require("./gate");
 
 /**
  * @typedef {Object} ToolSummary
@@ -36,27 +38,14 @@ function formatDuration(durationMs) {
 }
 
 /**
- * HTML用に文字列をエスケープする。
- * @param {string} value 入力文字列。
- * @returns {string} エスケープ後の文字列。
- */
-function escapeHtml(value) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-/**
  * HTMLレポートを描画する。
  * @param {ToolSummary[]} tools ツールの集計情報。
  * @param {string} generatedAt 生成日時(ISO)。
  * @param {{ playwright: string, cypress: string }} links レポートリンク。
+ * @param {any | null} gate 品質ゲートの結果。
  * @returns {string} HTML文字列。
  */
-function renderReport(tools, generatedAt, links) {
+function renderReport(tools, generatedAt, links, gate) {
   const rows = tools
     .map((tool) => {
       const statusLabel =
@@ -83,6 +72,7 @@ function renderReport(tools, generatedAt, links) {
     })
     .join("");
 
+  const gateSection = renderGateSection(gate);
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -143,6 +133,66 @@ function renderReport(tools, generatedAt, links) {
       tr.missing .status {
         color: #b45309;
       }
+      .gate {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: #fff;
+        border-radius: 12px;
+      }
+      .gate h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+      .gate h3 {
+        margin: 16px 0 8px;
+        font-size: 14px;
+      }
+      .gate-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+      .gate-status.pass {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .gate-status.fail {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .gate-status.missing {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .gate-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      .gate-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #f9fafb;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .gate-table th,
+      .gate-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+      .gate-table thead {
+        background: #111827;
+        color: #fff;
+      }
+      .gate-issues {
+        padding-left: 18px;
+        margin: 8px 0 0;
+        font-size: 13px;
+      }
       .links {
         margin-top: 16px;
         font-size: 13px;
@@ -158,6 +208,7 @@ function renderReport(tools, generatedAt, links) {
       <h1>Dynamic Test Report</h1>
       <div class="meta">Generated: ${escapeHtml(generatedAt)}</div>
     </header>
+    ${gateSection}
     <table>
       <thead>
         <tr>

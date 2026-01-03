@@ -13,6 +13,7 @@ const OUTPUT_PATH = path.join(REPORT_DIR, "test-report.html");
 const VITEST_JSON_PATH = path.join(REPORT_DIR, "vitest-report.json");
 const PLAYWRIGHT_JSON_PATH = path.join(REPORT_DIR, "playwright-report.json");
 const CYPRESS_JSON_PATH = path.join(REPORT_DIR, "cypress", "index.json");
+const GATE_JSON_PATH = path.join(REPORT_DIR, "test-gate.json");
 
 const PLAYWRIGHT_HTML_LINK = "playwright/index.html";
 const CYPRESS_HTML_LINK = "cypress/index.html";
@@ -193,6 +194,7 @@ function main() {
   const vitestData = readJson(VITEST_JSON_PATH);
   const playwrightData = readJson(PLAYWRIGHT_JSON_PATH);
   const cypressData = readJson(CYPRESS_JSON_PATH);
+  const gateData = readJson(GATE_JSON_PATH);
 
   const tools = [
     summarizeVitest(vitestData),
@@ -200,10 +202,15 @@ function main() {
     summarizeCypress(cypressData),
   ];
 
-  const reportHtml = renderReport(tools, new Date().toISOString(), {
-    playwright: PLAYWRIGHT_HTML_LINK,
-    cypress: CYPRESS_HTML_LINK,
-  });
+  const reportHtml = renderReport(
+    tools,
+    new Date().toISOString(),
+    {
+      playwright: PLAYWRIGHT_HTML_LINK,
+      cypress: CYPRESS_HTML_LINK,
+    },
+    gateData
+  );
   fs.mkdirSync(REPORT_DIR, { recursive: true });
   fs.writeFileSync(OUTPUT_PATH, reportHtml, "utf8");
   const relativePath = path.relative(ROOT_DIR, OUTPUT_PATH);
