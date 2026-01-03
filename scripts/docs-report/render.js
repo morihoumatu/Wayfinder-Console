@@ -5,6 +5,7 @@
 "use strict";
 
 const { escapeHtml } = require("./utils");
+const { renderCssSection } = require("./render-css");
 
 const STYLE = `
 :root {
@@ -97,6 +98,11 @@ h1 {
 .tag-title {
   font-weight: 700;
   color: #0f172a;
+}
+.doc-code {
+  font-family: "Consolas", "Courier New", monospace;
+  color: #0f172a;
+  font-size: 0.9rem;
 }
 .subdirs {
   margin-top: 16px;
@@ -209,6 +215,7 @@ function renderDirSection(dirNode) {
  */
 function renderHtml(reportData) {
   const dirSections = reportData.roots.map(renderDirSection).join("");
+  const cssSections = renderCssSection(reportData.cssFiles);
   const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -225,6 +232,7 @@ ${STYLE}
       <div>Generated: ${escapeHtml(reportData.generatedAt)}</div>
     </header>
     ${dirSections}
+    ${cssSections}
   </body>
 </html>`;
   return html;

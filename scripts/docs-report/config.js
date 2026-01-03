@@ -12,6 +12,9 @@ const OUTPUT_PATH = path.join(OUTPUT_DIR, "docs-report.html");
 const ROOTS = ["app", "server", "scripts"];
 const ABOUT_FILENAME = "ABOUT.md";
 const JS_EXTENSION = ".js";
+const CSS_EXTENSION = ".css";
+const CSS_ROOTS = ["styles"];
+const CSS_FILES = ["styles.css"];
 const IGNORE_DIRS = new Set(["node_modules", ".git", "reports"]);
 
 module.exports = {
@@ -21,5 +24,8 @@ module.exports = {
   ROOTS,
   ABOUT_FILENAME,
   JS_EXTENSION,
+  CSS_EXTENSION,
+  CSS_ROOTS,
+  CSS_FILES,
   IGNORE_DIRS,
 };

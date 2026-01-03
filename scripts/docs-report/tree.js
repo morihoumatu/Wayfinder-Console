@@ -12,9 +12,13 @@ const {
   ROOTS,
   ABOUT_FILENAME,
   JS_EXTENSION,
+  CSS_EXTENSION,
+  CSS_ROOTS,
+  CSS_FILES,
 } = require("./config");
 const { readText, readDirectory, shouldIgnoreDir } = require("./utils");
 const { buildFileDoc } = require("./parser");
+const { buildCssFileDoc } = require("./css-parser");
 
 /**
  * ABOUT.mdの先頭見出しを除去して整形する。
@@ -116,12 +120,78 @@ function buildDirNode(dirPath) {
 }
 
 /**
+ * CSSファイルを再帰的に収集する。
+ * @param {string} dirPath ディレクトリパス。
+ * @param {any[]} files 収集先配列。
+ */
+function collectCssFilesFromDir(dirPath, files) {
+  const entries = readDirectory(dirPath);
+  entries.forEach((entry) => {
+    if (entry.isDirectory()) {
+      if (!shouldIgnoreDir(entry.name)) {
+        collectCssFilesFromDir(path.join(dirPath, entry.name), files);
+      }
+    } else if (entry.isFile() && entry.name.endsWith(CSS_EXTENSION)) {
+      files.push(buildCssFileDoc(path.join(dirPath, entry.name)));
+    }
+  });
+}
+
+/**
+ * CSSルート配下のファイルを収集する。
+ * @param {string[]} roots ルート配列。
+ * @param {any[]} files 収集先配列。
+ */
+function collectCssFilesFromRoots(roots, files) {
+  roots.forEach((rootName) => {
+    const rootPath = path.join(ROOT_DIR, rootName);
+    if (fs.existsSync(rootPath)) {
+      const stat = fs.statSync(rootPath);
+      if (stat.isDirectory()) {
+        collectCssFilesFromDir(rootPath, files);
+      }
+    }
+  });
+}
+
+/**
+ * 直指定CSSファイルを収集する。
+ * @param {string[]} fileNames ファイル名配列。
+ * @param {any[]} files 収集先配列。
+ */
+function collectCssFilesFromList(fileNames, files) {
+  fileNames.forEach((fileName) => {
+    const filePath = path.join(ROOT_DIR, fileName);
+    if (fs.existsSync(filePath)) {
+      const stat = fs.statSync(filePath);
+      if (stat.isFile() && filePath.endsWith(CSS_EXTENSION)) {
+        files.push(buildCssFileDoc(filePath));
+      }
+    }
+  });
+}
+
+/**
+ * CSSファイルの一覧を構築する。
+ * @returns {any[]} CSSファイル情報。
+ */
+function buildCssFileList() {
+  /** @type {any[]} */
+  const files = [];
+  collectCssFilesFromList(CSS_FILES, files);
+  collectCssFilesFromRoots(CSS_ROOTS, files);
+  files.sort((a, b) => a.path.localeCompare(b.path));
+  return files;
+}
+
+/**
  * 描画用のレポートデータを作成する。
  * @returns {any} レポートデータ。
  */
 function buildReportData() {
   /** @type {any[]} */
   const roots = [];
+  const cssFiles = buildCssFileList();
   ROOTS.forEach((rootName) => {
     const rootPath = path.join(ROOT_DIR, rootName);
     const node = buildDirNode(rootPath);
@@ -132,6 +202,7 @@ function buildReportData() {
   const reportData = {
     generatedAt: new Date().toISOString(),
     roots,
+    cssFiles,
   };
   return reportData;
 }
