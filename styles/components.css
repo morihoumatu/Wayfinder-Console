@@ -1,0 +1,161 @@
+/* 目的: UIコンポーネントのスタイルをまとめる。 */
+.recommend-result { /* おすすめ結果カードの見た目を設定する。 */
+  background: #fffdf8; /* 背景を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  border-radius: 16px; /* 角丸を設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 6px; /* 要素間の間隔を設定する。 */
+  padding: 12px 14px; /* 内側余白を設定する。 */
+}
+
+.recommend-sources { /* おすすめ出典の余白を設定する。 */
+  margin-top: 4px; /* 上余白を設定する。 */
+}
+
+.recommend-stops { /* おすすめ停留所の余白を設定する。 */
+  margin-top: 4px; /* 上余白を設定する。 */
+}
+
+.stop-list { /* 停留所リストの整列を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 6px; /* 要素間の間隔を設定する。 */
+  margin: 6px 0 0; /* 外側余白を設定する。 */
+  padding-left: 18px; /* 左内側余白を設定する。 */
+}
+
+.map-link { /* 地図リンクの表示スタイルを設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  color: var(--accent-3); /* 文字色を設定する。 */
+  display: inline-flex; /* 表示方式を設定する。 */
+  font-size: 0.9rem; /* 文字サイズを設定する。 */
+  font-weight: 600; /* 文字の太さを設定する。 */
+  gap: 6px; /* 要素間の間隔を設定する。 */
+  text-decoration: none; /* 文字装飾を設定する。 */
+}
+
+.map-link:hover { /* 地図リンクのホバーを設定する。 */
+  text-decoration: underline; /* 文字装飾を設定する。 */
+}
+
+.source-list { /* 出典リストの整列を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 6px; /* 要素間の間隔を設定する。 */
+  margin: 6px 0 0; /* 外側余白を設定する。 */
+  padding-left: 18px; /* 左内側余白を設定する。 */
+}
+
+.source-list a { /* 出典リンクの色を設定する。 */
+  color: var(--accent-3); /* 文字色を設定する。 */
+  text-decoration: none; /* 文字装飾を設定する。 */
+}
+
+.source-list a:hover { /* 出典リンクのホバーを設定する。 */
+  text-decoration: underline; /* 文字装飾を設定する。 */
+}
+
+.route-times { /* ルート時間カードのグリッドを設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 12px; /* 要素間の間隔を設定する。 */
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* グリッドの列幅を設定する。 */
+}
+
+.route-links { /* ルートリンク群の並びを設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-wrap: wrap; /* 折り返しを設定する。 */
+  gap: 12px; /* 要素間の間隔を設定する。 */
+  margin-top: 8px; /* 上余白を設定する。 */
+}
+
+.segment-list { /* 区間リストの整列を設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 12px; /* 要素間の間隔を設定する。 */
+  list-style: decimal; /* リストのマーカーを設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+  padding-left: 0; /* 左内側余白を設定する。 */
+}
+
+.segment-item { /* 区間カードの見た目を設定する。 */
+  background: #fffdf8; /* 背景を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  border-radius: 16px; /* 角丸を設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 8px; /* 要素間の間隔を設定する。 */
+  list-style-position: inside; /* リストマーカーの位置を設定する。 */
+  padding: 12px 14px; /* 内側余白を設定する。 */
+}
+
+.segment-header { /* 区間見出しの余白を設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 4px; /* 要素間の間隔を設定する。 */
+}
+
+.segment-title { /* 区間タイトルの強調を設定する。 */
+  font-weight: 600; /* 文字の太さを設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+}
+
+.segment-meta { /* 区間メタ情報の文字装飾を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  font-size: 0.85rem; /* 文字サイズを設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+}
+
+.segment-links { /* 区間リンクの並びを設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-wrap: wrap; /* 折り返しを設定する。 */
+  gap: 10px; /* 要素間の間隔を設定する。 */
+}
+
+.time-card { /* 時間カードの見た目を設定する。 */
+  background: #fffdf8; /* 背景を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  border-radius: 16px; /* 角丸を設定する。 */
+  padding: 12px 14px; /* 内側余白を設定する。 */
+}
+
+.map-shell { /* 地図コンテナの枠と影を設定する。 */
+  animation: float-in 0.9s ease forwards; /* アニメーションを設定する。 */
+  animation-delay: 0.22s; /* アニメーションの開始遅延を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  border-radius: 26px; /* 角丸を設定する。 */
+  box-shadow: var(--shadow); /* 影を設定する。 */
+  min-height: 420px; /* 最小高さを設定する。 */
+  opacity: 0; /* 不透明度を設定する。 */
+  overflow: hidden; /* はみ出しを制御する。 */
+  position: relative; /* 配置方法を設定する。 */
+  transform: translateY(14px); /* 変形を設定する。 */
+}
+
+.map { /* 地図表示領域のサイズを設定する。 */
+  height: 100%; /* 高さを設定する。 */
+  min-height: 420px; /* 最小高さを設定する。 */
+  width: 100%; /* 幅を設定する。 */
+}
+
+.map-overlay { /* 地図オーバーレイの表示を設定する。 */
+  background: rgb(255 248 239 / 90%); /* 背景を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  display: grid; /* 表示方式を設定する。 */
+  font-size: 0.85rem; /* 文字サイズを設定する。 */
+  inset: 0; /* 上下左右の配置を設定する。 */
+  letter-spacing: 0.12em; /* 文字間隔を設定する。 */
+  opacity: 0; /* 不透明度を設定する。 */
+  place-items: center; /* 配置の揃えを設定する。 */
+  pointer-events: none; /* ポインター操作の可否を設定する。 */
+  position: absolute; /* 配置方法を設定する。 */
+  text-transform: uppercase; /* 文字の変換を設定する。 */
+  transition: opacity 0.25s ease; /* トランジションを設定する。 */
+}
+
+.map-overlay.visible { /* 地図オーバーレイの表示状態を設定する。 */
+  opacity: 1; /* 不透明度を設定する。 */
+  pointer-events: auto; /* ポインター操作の可否を設定する。 */
+}
+
+.footer { /* フッターの文字装飾を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  font-size: 0.85rem; /* 文字サイズを設定する。 */
+  text-align: center; /* 文字揃えを設定する。 */
+}

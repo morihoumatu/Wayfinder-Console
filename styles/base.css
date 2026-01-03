@@ -1,0 +1,164 @@
+/* 目的: ベースとなるスタイルと共通変数をまとめる。 */
+:root { /* テーマ用のCSS変数を定義する。 */
+  --bg-1: #f7f1e7; /* 背景グラデーションの基調色1を定義する。 */
+  --bg-2: #e1eef7; /* 背景グラデーションの基調色2を定義する。 */
+  --ink: #1f1a17; /* 本文の基本文字色を定義する。 */
+  --muted: #4f4641; /* 補助テキストの色を定義する。 */
+  --card: #fff8ef; /* カード背景色を定義する。 */
+  --accent: #ef8354; /* アクセント色を定義する。 */
+  --accent-2: #2f6f5b; /* アクセント色2を定義する。 */
+  --accent-3: #1f6feb; /* アクセント色3を定義する。 */
+  --line: rgb(31 26 23 / 15%); /* 罫線の色を定義する。 */
+  --shadow: 0 35px 70px -45px rgb(20 17 15 / 60%); /* 影のトーンを定義する。 */
+}
+
+*,
+*::before,
+*::after { /* 全要素と疑似要素のボックスモデルを統一する。 */
+  box-sizing: border-box; /* ボックスサイズの計算方法を統一する。 */
+}
+
+body { /* ページ全体の背景と基本タイポグラフィを設定する。 */
+  background: radial-gradient(circle at 15% 15%, #fff4db 0%, transparent 50%),
+    radial-gradient(circle at 90% 20%, #d8f1ff 0%, transparent 48%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2)); /* 背景を設定する。 */
+
+  color: var(--ink); /* 文字色を設定する。 */
+  font-family: "Space Grotesk", system-ui, sans-serif; /* フォントファミリーを設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+  min-height: 100vh; /* 最小高さを設定する。 */
+  overflow-x: hidden; /* 横方向のはみ出しを制御する。 */
+  position: relative; /* 配置方法を設定する。 */
+}
+
+body::before,
+body::after { /* 背景装飾の共通スタイルを設定する。 */
+  animation: drift 18s ease-in-out infinite; /* アニメーションを設定する。 */
+  background: radial-gradient(circle, rgb(239 131 84 / 25%), transparent 70%); /* 背景を設定する。 */
+  border-radius: 999px; /* 角丸を設定する。 */
+  content: ""; /* 疑似要素の内容を設定する。 */
+  filter: blur(4px); /* フィルター効果を設定する。 */
+  height: 420px; /* 高さを設定する。 */
+  position: absolute; /* 配置方法を設定する。 */
+  width: 420px; /* 幅を設定する。 */
+  z-index: 0; /* 重なり順を設定する。 */
+}
+
+body::before { /* 背景装飾(右上)の位置を設定する。 */
+  right: -120px; /* 右位置を設定する。 */
+  top: -140px; /* 上位置を設定する。 */
+}
+
+body::after { /* 背景装飾(左下)の位置を設定する。 */
+  animation-delay: 6s; /* アニメーションの開始遅延を設定する。 */
+  background: radial-gradient(circle, rgb(47 111 91 / 20%), transparent 70%); /* 背景を設定する。 */
+  bottom: -160px; /* 下位置を設定する。 */
+  left: -120px; /* 左位置を設定する。 */
+}
+
+.page { /* ページ全体のコンテナを整える。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-direction: column; /* フレックスの方向を設定する。 */
+  gap: 36px; /* 要素間の間隔を設定する。 */
+  margin: 0 auto; /* 外側余白を設定する。 */
+  max-width: 1200px; /* 最大幅を設定する。 */
+  padding: 48px 28px 40px; /* 内側余白を設定する。 */
+  position: relative; /* 配置方法を設定する。 */
+  z-index: 1; /* 重なり順を設定する。 */
+}
+
+.hero { /* ヒーローセクションの配置を設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  animation: float-in 0.9s ease forwards; /* アニメーションを設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-wrap: wrap; /* 折り返しを設定する。 */
+  gap: 32px; /* 要素間の間隔を設定する。 */
+  justify-content: space-between; /* 主軸の整列を設定する。 */
+  opacity: 0; /* 不透明度を設定する。 */
+  transform: translateY(14px); /* 変形を設定する。 */
+}
+
+.hero-copy { /* ヒーローテキストの幅を調整する。 */
+  max-width: 560px; /* 最大幅を設定する。 */
+}
+
+.eyebrow { /* 小見出しラベルの見た目を設定する。 */
+  color: var(--accent-2); /* 文字色を設定する。 */
+  font-size: 12px; /* 文字サイズを設定する。 */
+  font-weight: 600; /* 文字の太さを設定する。 */
+  letter-spacing: 0.2em; /* 文字間隔を設定する。 */
+  margin: 0 0 12px; /* 外側余白を設定する。 */
+  text-transform: uppercase; /* 文字の変換を設定する。 */
+}
+
+h1 { /* メイン見出しの書体とサイズを設定する。 */
+  font-family: Fraunces, serif; /* フォントファミリーを設定する。 */
+  font-size: clamp(2.5rem, 2.1rem + 1.6vw, 3.4rem); /* 文字サイズを設定する。 */
+  margin: 0 0 12px; /* 外側余白を設定する。 */
+}
+
+.subhead { /* サブ見出しの色と行間を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  font-size: 1.05rem; /* 文字サイズを設定する。 */
+  line-height: 1.6; /* 行間を設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+}
+
+.hero-card { /* ヒーローカードの見た目を整える。 */
+  background: var(--card); /* 背景を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  border-radius: 20px; /* 角丸を設定する。 */
+  box-shadow: var(--shadow); /* 影を設定する。 */
+  min-width: 260px; /* 最小幅を設定する。 */
+  padding: 20px 24px; /* 内側余白を設定する。 */
+}
+
+.status { /* ステータス行のレイアウトを設定する。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  gap: 12px; /* 要素間の間隔を設定する。 */
+  margin-bottom: 12px; /* 下余白を設定する。 */
+}
+
+.dot { /* ステータスドットの見た目を設定する。 */
+  background: var(--accent); /* 背景を設定する。 */
+  border-radius: 50%; /* 角丸を設定する。 */
+  box-shadow: 0 0 0 6px rgb(239 131 84 / 15%); /* 影を設定する。 */
+  height: 12px; /* 高さを設定する。 */
+  width: 12px; /* 幅を設定する。 */
+}
+
+.status[data-state="loading"] .dot { /* ロード中ドットの色を設定する。 */
+  background: var(--accent-3); /* 背景を設定する。 */
+  box-shadow: 0 0 0 6px rgb(31 111 235 / 15%); /* 影を設定する。 */
+}
+
+.status[data-state="ready"] .dot { /* 準備完了ドットの色を設定する。 */
+  background: var(--accent-2); /* 背景を設定する。 */
+  box-shadow: 0 0 0 6px rgb(47 111 91 / 15%); /* 影を設定する。 */
+}
+
+.status[data-state="error"] .dot { /* エラードットの色を設定する。 */
+  background: #e11d48; /* 背景を設定する。 */
+  box-shadow: 0 0 0 6px rgb(225 29 72 / 15%); /* 影を設定する。 */
+}
+
+.label { /* ラベル文字の装飾を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  font-size: 0.8rem; /* 文字サイズを設定する。 */
+  letter-spacing: 0.14em; /* 文字間隔を設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+  text-transform: uppercase; /* 文字の変換を設定する。 */
+}
+
+.value { /* 値表示の強調を設定する。 */
+  font-size: 1.1rem; /* 文字サイズを設定する。 */
+  font-weight: 600; /* 文字の太さを設定する。 */
+  margin: 4px 0 0; /* 外側余白を設定する。 */
+}
+
+.hint { /* 補足文の見た目を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  font-size: 0.9rem; /* 文字サイズを設定する。 */
+  margin: 0; /* 外側余白を設定する。 */
+}

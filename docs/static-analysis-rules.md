@@ -75,6 +75,7 @@
 - `order/properties-alphabetical-order`: プロパティをアルファベット順に並べる
 - `selector-max-compound-selectors: 4`: 複合セレクタの上限 4
 - `selector-max-id: 0`: `#id` セレクタを禁止
+- `project/file-purpose-comment`: CSSファイルの先頭に用途コメントを必須化
 - `project/inline-comment`: 各ブロック行と各宣言行の右側にインラインコメントを必須化
 - `project/large-file: { maxLines: 300, maxRules: 40, maxSelectors: 120, maxDeclarations: 300 }`:
   CSSファイルの肥大化を検知し、分割を促す
