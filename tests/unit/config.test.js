@@ -60,6 +60,7 @@ const writeEnvFile = (content) => {
   fs.writeFileSync(envPath, content, "utf8");
 };
 
+// configの読み込み条件をまとめて検証する。
 describe("config", () => {
   const snapshot = snapshotEnv();
   const envSnapshot = snapshotEnvFile();
@@ -69,29 +70,23 @@ describe("config", () => {
     restoreEnvFile(envSnapshot);
   });
 
-  it("デフォルト設定を読み込む", () => {
+  it("設定の読み込み結果をまとめて確認する", () => {
+    restoreEnv(snapshot);
+    restoreEnvFile(envSnapshot);
     delete process.env.OPENAI_API_URL;
     delete process.env.OPENAI_MODEL;
     delete process.env.OPENAI_WEB_SEARCH_TOOL;
-    const config = loadConfig();
-    expect(config.OPENAI_API_URL).toBe("https://api.openai.com/v1/responses");
-    expect(config.OPENAI_MODEL).toBe("gpt-4o-mini");
-    expect(config.WEB_SEARCH_TOOL).toBe("web_search");
-  });
+    const defaultConfig = loadConfig();
 
-  it("環境変数で上書きする", () => {
+    restoreEnv(snapshot);
+    restoreEnvFile(envSnapshot);
     process.env.PORT = "4000";
     process.env.OPENAI_API_URL = "https://example.test";
     process.env.OPENAI_MODEL = "test-model";
     process.env.OPENAI_WEB_SEARCH_TOOL = "off";
-    const config = loadConfig();
-    expect(config.PORT).toBe(4000);
-    expect(config.OPENAI_API_URL).toBe("https://example.test");
-    expect(config.OPENAI_MODEL).toBe("test-model");
-    expect(config.WEB_SEARCH_TOOL).toBe("off");
-  });
+    const overrideConfig = loadConfig();
 
-  it("ローカルの.envを読み込む", () => {
+    restoreEnv(snapshot);
     process.env.NODE_ENV = "test";
     process.env.OPENAI_MODEL = "preset-model";
     delete process.env.OPENAI_API_KEY;
@@ -111,20 +106,59 @@ describe("config", () => {
         "INVALID_LINE",
       ].join("\n")
     );
-    const config = loadConfig();
-    expect(config.OPENAI_API_KEY).toBe("env-openai");
-    expect(config.OPENAI_API_URL).toBe("https://env.example");
-    expect(config.OPENAI_MODEL).toBe("preset-model");
-    expect(config.WEB_SEARCH_TOOL).toBe("web_search_preview");
-    expect(config.MAPS_API_KEY).toBe("env-maps");
-  });
+    const envConfig = loadConfig();
 
-  it("productionでは.envを読み込まない", () => {
+    restoreEnv(snapshot);
     process.env.NODE_ENV = "production";
     delete process.env.GOOGLE_MAPS_API_KEY;
     delete process.env.MAPS_API_KEY;
     writeEnvFile("GOOGLE_MAPS_API_KEY=env-maps");
-    const config = loadConfig();
-    expect(config.MAPS_API_KEY).toBe(undefined);
+    const productionConfig = loadConfig();
+
+    expect({
+      defaults: {
+        apiUrl: defaultConfig.OPENAI_API_URL,
+        model: defaultConfig.OPENAI_MODEL,
+        tool: defaultConfig.WEB_SEARCH_TOOL,
+      },
+      override: {
+        port: overrideConfig.PORT,
+        apiUrl: overrideConfig.OPENAI_API_URL,
+        model: overrideConfig.OPENAI_MODEL,
+        tool: overrideConfig.WEB_SEARCH_TOOL,
+      },
+      env: {
+        apiKey: envConfig.OPENAI_API_KEY,
+        apiUrl: envConfig.OPENAI_API_URL,
+        model: envConfig.OPENAI_MODEL,
+        tool: envConfig.WEB_SEARCH_TOOL,
+        mapsKey: envConfig.MAPS_API_KEY,
+      },
+      production: {
+        mapsKey: productionConfig.MAPS_API_KEY,
+      },
+    }).toEqual({
+      defaults: {
+        apiUrl: "https://api.openai.com/v1/responses",
+        model: "gpt-4o-mini",
+        tool: "web_search",
+      },
+      override: {
+        port: 4000,
+        apiUrl: "https://example.test",
+        model: "test-model",
+        tool: "off",
+      },
+      env: {
+        apiKey: "env-openai",
+        apiUrl: "https://env.example",
+        model: "preset-model",
+        tool: "web_search_preview",
+        mapsKey: "env-maps",
+      },
+      production: {
+        mapsKey: undefined,
+      },
+    });
   });
 });

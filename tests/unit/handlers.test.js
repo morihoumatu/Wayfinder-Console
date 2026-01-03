@@ -20,33 +20,28 @@ const createSender = () => {
   return { calls, sendOnce };
 };
 
+// handleRecommendResultの結果をまとめて検証する。
 describe("handleRecommendResult", () => {
-  it("解析失敗時にエラーを返す", () => {
-    const { calls, sendOnce } = createSender();
+  it("入力パターンごとの応答をまとめて確認する", () => {
+    const invalid = createSender();
     handleRecommendResult({
       outputText: "invalid",
       isWalkRoute: false,
       originRegion: "",
       effectiveTargetMinutes: 60,
-      sendOnce,
+      sendOnce: invalid.sendOnce,
     });
-    expect(calls[0].status).toBe(500);
-  });
 
-  it("OpenAIエラーを返す", () => {
-    const { calls, sendOnce } = createSender();
+    const errorCase = createSender();
     handleRecommendResult({
       outputText: "{\"error\":\"oops\"}",
       isWalkRoute: false,
       originRegion: "",
       effectiveTargetMinutes: 60,
-      sendOnce,
+      sendOnce: errorCase.sendOnce,
     });
-    expect(calls[0].body.error).toBe("oops");
-  });
 
-  it("散歩ルート結果を返す", () => {
-    const { calls, sendOnce } = createSender();
+    const walkCase = createSender();
     const outputText = JSON.stringify({
       route_name: "散歩ルート",
       area: "",
@@ -63,29 +58,42 @@ describe("handleRecommendResult", () => {
       isWalkRoute: true,
       originRegion: "東京都",
       effectiveTargetMinutes: 45,
-      sendOnce,
+      sendOnce: walkCase.sendOnce,
     });
-    expect(calls[0].status).toBe(200);
-    expect(calls[0].body.place.route_type).toBe("walk_multi");
-    expect(calls[0].body.place.area).toBe("東京都");
+
+    expect({
+      invalidStatus: invalid.calls[0].status,
+      errorMessage: errorCase.calls[0].body.error,
+      walk: {
+        status: walkCase.calls[0].status,
+        routeType: walkCase.calls[0].body.place.route_type,
+        area: walkCase.calls[0].body.place.area,
+      },
+    }).toEqual({
+      invalidStatus: 500,
+      errorMessage: "oops",
+      walk: {
+        status: 200,
+        routeType: "walk_multi",
+        area: "東京都",
+      },
+    });
   });
 });
 
+// handleWalkRouteResultとhandleSpotResultの結果をまとめて検証する。
 describe("handleWalkRouteResult/handleSpotResult", () => {
-  it("散歩ルートの立ち寄りが不足する場合はエラー", () => {
-    const { calls, sendOnce } = createSender();
+  it("散歩ルートとスポットの応答をまとめて確認する", () => {
+    const insufficient = createSender();
     handleWalkRouteResult({
       result: { route_name: "walk", stops: [{ name: "A", address: "X" }] },
       originRegion: "東京都",
       effectiveTargetMinutes: 60,
       outputText: "{}",
-      sendOnce,
+      sendOnce: insufficient.sendOnce,
     });
-    expect(calls[0].status).toBe(500);
-  });
 
-  it("散歩ルート結果を送信する(指定時間を採用)", () => {
-    const { calls, sendOnce } = createSender();
+    const byTarget = createSender();
     handleWalkRouteResult({
       result: {
         route_name: "Walk",
@@ -101,16 +109,10 @@ describe("handleWalkRouteResult/handleSpotResult", () => {
       originRegion: "東京都",
       effectiveTargetMinutes: 30,
       outputText: "{}",
-      sendOnce,
+      sendOnce: byTarget.sendOnce,
     });
-    expect(calls[0].status).toBe(200);
-    expect(calls[0].body.place.name).toBe("Walk");
-    expect(calls[0].body.place.target_minutes).toBe(40);
-    expect(calls[0].body.place.sources.length).toBe(1);
-  });
 
-  it("散歩ルート結果の目標時間をフォールバックする", () => {
-    const { calls, sendOnce } = createSender();
+    const fallback = createSender();
     handleWalkRouteResult({
       result: {
         reason: "Fallback",
@@ -124,16 +126,10 @@ describe("handleWalkRouteResult/handleSpotResult", () => {
       originRegion: "東京都",
       effectiveTargetMinutes: 55,
       outputText: "{}",
-      sendOnce,
+      sendOnce: fallback.sendOnce,
     });
-    expect(calls[0].body.place.name).toBe("おすすめ散歩ルート");
-    expect(calls[0].body.place.area).toBe("東京都");
-    expect(calls[0].body.place.target_minutes).toBe(55);
-    expect(calls[0].body.place.sources).toEqual([]);
-  });
 
-  it("スポット結果を送信する", () => {
-    const { calls, sendOnce } = createSender();
+    const spot = createSender();
     handleSpotResult(
       {
         place_name: "Cafe",
@@ -141,14 +137,10 @@ describe("handleWalkRouteResult/handleSpotResult", () => {
         reason: "Good",
         source_urls: [],
       },
-      sendOnce
+      spot.sendOnce
     );
-    expect(calls[0].status).toBe(200);
-    expect(calls[0].body.place.name).toBe("Cafe");
-  });
 
-  it("スポット結果の参照が配列以外なら空配列になる", () => {
-    const { calls, sendOnce } = createSender();
+    const spotFallback = createSender();
     handleSpotResult(
       {
         place_name: "Spot",
@@ -156,41 +148,85 @@ describe("handleWalkRouteResult/handleSpotResult", () => {
         reason: "Info",
         source_urls: "none",
       },
-      sendOnce
+      spotFallback.sendOnce
     );
-    expect(calls[0].body.place.sources).toEqual([]);
+
+    expect({
+      insufficientStatus: insufficient.calls[0].status,
+      byTarget: {
+        status: byTarget.calls[0].status,
+        name: byTarget.calls[0].body.place.name,
+        minutes: byTarget.calls[0].body.place.target_minutes,
+        sources: byTarget.calls[0].body.place.sources.length,
+      },
+      fallback: {
+        name: fallback.calls[0].body.place.name,
+        area: fallback.calls[0].body.place.area,
+        minutes: fallback.calls[0].body.place.target_minutes,
+        sources: fallback.calls[0].body.place.sources,
+      },
+      spot: {
+        status: spot.calls[0].status,
+        name: spot.calls[0].body.place.name,
+      },
+      spotFallback: {
+        sources: spotFallback.calls[0].body.place.sources,
+      },
+    }).toEqual({
+      insufficientStatus: 500,
+      byTarget: {
+        status: 200,
+        name: "Walk",
+        minutes: 40,
+        sources: 1,
+      },
+      fallback: {
+        name: "おすすめ散歩ルート",
+        area: "東京都",
+        minutes: 55,
+        sources: [],
+      },
+      spot: {
+        status: 200,
+        name: "Cafe",
+      },
+      spotFallback: {
+        sources: [],
+      },
+    });
   });
 });
 
+// handleRecommendPayloadの入力検証と応答をまとめて検証する。
 describe("handleRecommendPayload", () => {
   afterEach(() => {
     callOpenAISpy.mockReset();
   });
 
-  it("入力が不正ならAPIを呼ばない", async () => {
-    const { calls, sendOnce } = createSender();
+  it("入力検証とレスポンスをまとめて確認する", async () => {
+    callOpenAISpy.mockReset();
+    const invalid = createSender();
     await handleRecommendPayload(
       { query: "", origin: { lat: 1, lng: 2 } },
-      sendOnce
+      invalid.sendOnce
     );
-    expect(calls[0].status).toBe(400);
-    expect(callOpenAISpy).not.toHaveBeenCalled();
-  });
+    const invalidResult = {
+      status: invalid.calls[0].status,
+      callCount: callOpenAISpy.mock.calls.length,
+    };
 
-  it("正常レスポンスを返す", async () => {
+    callOpenAISpy.mockReset();
     callOpenAISpy.mockResolvedValue({
       output_text:
         "{\"place_name\":\"Spot\",\"place_address\":\"Tokyo\",\"reason\":\"Ok\",\"source_urls\":[]}",
     });
-    const { calls, sendOnce } = createSender();
+    const normal = createSender();
     await handleRecommendPayload(
       { query: "cafe", origin: { lat: 1, lng: 2 } },
-      sendOnce
+      normal.sendOnce
     );
-    expect(calls[0].status).toBe(200);
-  });
 
-  it("散歩ルートのレスポンスを返す", async () => {
+    callOpenAISpy.mockReset();
     callOpenAISpy.mockResolvedValue({
       output_text: JSON.stringify({
         route_name: "Walk",
@@ -204,11 +240,20 @@ describe("handleRecommendPayload", () => {
         source_urls: [],
       }),
     });
-    const { calls, sendOnce } = createSender();
+    const walk = createSender();
     await handleRecommendPayload(
       { query: "", mode: "walk_route", origin: { lat: 1, lng: 2 } },
-      sendOnce
+      walk.sendOnce
     );
-    expect(calls[0].body.place.route_type).toBe("walk_multi");
+
+    expect({
+      invalid: invalidResult,
+      normalStatus: normal.calls[0].status,
+      walkRouteType: walk.calls[0].body.place.route_type,
+    }).toEqual({
+      invalid: { status: 400, callCount: 0 },
+      normalStatus: 200,
+      walkRouteType: "walk_multi",
+    });
   });
 });

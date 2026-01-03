@@ -29,25 +29,24 @@ const createRequest = (response, shouldError) => {
   return request;
 };
 
+// callOpenAIの挙動をまとめて検証する。
 describe("callOpenAI", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("正常レスポンスを返す", async () => {
-    vi.spyOn(https, "request").mockImplementation((options, callback) => {
+  it("レスポンスとエラー処理をまとめて確認する", async () => {
+    const requestSpy = vi.spyOn(https, "request");
+
+    requestSpy.mockImplementation((options, callback) => {
       const response = createResponse(200, JSON.stringify({ ok: true }));
       const request = createRequest(response, false);
       callback(response);
       return request;
     });
+    const success = await callOpenAI({ input: "hello" });
 
-    const result = await callOpenAI({ input: "hello" });
-    expect(result).toEqual({ ok: true });
-  });
-
-  it("APIエラーはメッセージを返す", async () => {
-    vi.spyOn(https, "request").mockImplementation((options, callback) => {
+    requestSpy.mockImplementation((options, callback) => {
       const response = createResponse(
         400,
         JSON.stringify({ error: { message: "bad request" } })
@@ -56,46 +55,52 @@ describe("callOpenAI", () => {
       callback(response);
       return request;
     });
+    const apiError = await callOpenAI({ input: "hello" })
+      .then(() => null)
+      .catch((error) => error.message);
 
-    await expect(callOpenAI({ input: "hello" })).rejects.toThrow("bad request");
-  });
-
-  it("接続エラーは例外になる", async () => {
-    vi.spyOn(https, "request").mockImplementation((options, callback) => {
+    requestSpy.mockImplementation((options, callback) => {
       const response = createResponse(200, JSON.stringify({ ok: true }));
       const request = createRequest(response, true);
       callback(response);
       return request;
     });
+    const connectionError = await callOpenAI({ input: "hello" })
+      .then(() => null)
+      .catch((error) => error.message);
 
-    await expect(callOpenAI({ input: "hello" })).rejects.toThrow(
-      "OpenAI API connection failed."
-    );
-  });
-
-  it("不正なJSONはパースエラーになる", async () => {
-    vi.spyOn(https, "request").mockImplementation((options, callback) => {
+    requestSpy.mockImplementation((options, callback) => {
       const response = createResponse(200, "invalid");
       const request = createRequest(response, false);
       callback(response);
       return request;
     });
+    const parseError = await callOpenAI({ input: "hello" })
+      .then(() => null)
+      .catch((error) => error.message);
 
-    await expect(callOpenAI({ input: "hello" })).rejects.toThrow(
-      "OpenAI response parse error."
-    );
-  });
-
-  it("エラーメッセージが無い場合は既定文言になる", async () => {
-    vi.spyOn(https, "request").mockImplementation((options, callback) => {
+    requestSpy.mockImplementation((options, callback) => {
       const response = createResponse(500, JSON.stringify({ error: {} }));
       const request = createRequest(response, false);
       callback(response);
       return request;
     });
+    const fallbackError = await callOpenAI({ input: "hello" })
+      .then(() => null)
+      .catch((error) => error.message);
 
-    await expect(callOpenAI({ input: "hello" })).rejects.toThrow(
-      "OpenAI API request failed."
-    );
+    expect({
+      success,
+      apiError,
+      connectionError,
+      parseError,
+      fallbackError,
+    }).toEqual({
+      success: { ok: true },
+      apiError: "bad request",
+      connectionError: "OpenAI API connection failed.",
+      parseError: "OpenAI response parse error.",
+      fallbackError: "OpenAI API request failed.",
+    });
   });
 });

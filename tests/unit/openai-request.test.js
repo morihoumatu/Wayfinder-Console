@@ -18,6 +18,7 @@ const resetEnv = (snapshot) => {
   process.env.OPENAI_MODEL = snapshot.OPENAI_MODEL;
 };
 
+// resolveToolsConfigの挙動をまとめて検証する。
 describe("resolveToolsConfig", () => {
   const snapshot = {
     OPENAI_WEB_SEARCH_TOOL: process.env.OPENAI_WEB_SEARCH_TOOL,
@@ -28,19 +29,25 @@ describe("resolveToolsConfig", () => {
     resetEnv(snapshot);
   });
 
-  it("ツール設定が有効な場合は配列を返す", () => {
+  it("ツール設定の有効/無効をまとめて確認する", () => {
+    resetEnv(snapshot);
     process.env.OPENAI_WEB_SEARCH_TOOL = "web_search";
-    const { resolveToolsConfig } = loadRequest();
-    expect(resolveToolsConfig()).toEqual([{ type: "web_search" }]);
-  });
+    const { resolveToolsConfig: resolveEnabled } = loadRequest();
+    const enabled = resolveEnabled();
 
-  it("ツールがoffならundefinedを返す", () => {
+    resetEnv(snapshot);
     process.env.OPENAI_WEB_SEARCH_TOOL = "off";
-    const { resolveToolsConfig } = loadRequest();
-    expect(resolveToolsConfig()).toBe(undefined);
+    const { resolveToolsConfig: resolveDisabled } = loadRequest();
+    const disabled = resolveDisabled();
+
+    expect({ enabled, disabled }).toEqual({
+      enabled: [{ type: "web_search" }],
+      disabled: undefined,
+    });
   });
 });
 
+// buildOpenAIRequestPayloadの挙動をまとめて検証する。
 describe("buildOpenAIRequestPayload", () => {
   const snapshot = {
     OPENAI_WEB_SEARCH_TOOL: process.env.OPENAI_WEB_SEARCH_TOOL,
@@ -51,12 +58,18 @@ describe("buildOpenAIRequestPayload", () => {
     resetEnv(snapshot);
   });
 
-  it("ツール未使用時はJSON形式指定を追加する", () => {
+  it("ツール未使用時のpayloadをまとめて確認する", () => {
+    resetEnv(snapshot);
     process.env.OPENAI_WEB_SEARCH_TOOL = "off";
     process.env.OPENAI_MODEL = "test-model";
     const { buildOpenAIRequestPayload } = loadRequest();
     const payload = buildOpenAIRequestPayload("system", "user");
-    expect(payload.model).toBe("test-model");
-    expect(payload.text?.format?.type).toBe("json_object");
+    expect({
+      model: payload.model,
+      format: payload.text?.format?.type,
+    }).toEqual({
+      model: "test-model",
+      format: "json_object",
+    });
   });
 });

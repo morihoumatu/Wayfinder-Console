@@ -11,42 +11,56 @@ const {
   buildSpotUserContent,
 } = require("../../server/prompts");
 
+// フォーマット補助関数の挙動をまとめて検証する。
 describe("format helpers", () => {
-  it("出発地ラベルの有無で表示を切り替える", () => {
-    expect(formatOriginLine("東京駅", { lat: 1, lng: 2 })).toBe(
-      "出発地: 東京駅 (座標: 1, 2)"
-    );
-    expect(formatOriginLine("", { lat: 1, lng: 2 })).toBe("出発地: 1, 2");
-  });
-
-  it("調整指示のラベルを生成する", () => {
-    expect(formatAdjustmentLabel("longer")).toBe("調整指示: 前回より長め");
-    expect(formatAdjustmentLabel("shorter")).toBe("調整指示: 前回より短め");
-    expect(formatAdjustmentLabel("")).toBe("");
+  it("表示用文字列の結果をまとめて確認する", () => {
+    const originWithLabel = formatOriginLine("東京駅", { lat: 1, lng: 2 });
+    const originWithoutLabel = formatOriginLine("", { lat: 1, lng: 2 });
+    const adjustmentLonger = formatAdjustmentLabel("longer");
+    const adjustmentShorter = formatAdjustmentLabel("shorter");
+    const adjustmentEmpty = formatAdjustmentLabel("");
+    expect({
+      originWithLabel,
+      originWithoutLabel,
+      adjustmentLonger,
+      adjustmentShorter,
+      adjustmentEmpty,
+    }).toEqual({
+      originWithLabel: "出発地: 東京駅 (座標: 1, 2)",
+      originWithoutLabel: "出発地: 1, 2",
+      adjustmentLonger: "調整指示: 前回より長め",
+      adjustmentShorter: "調整指示: 前回より短め",
+      adjustmentEmpty: "",
+    });
   });
 });
 
+// system promptの挙動をまとめて検証する。
 describe("system prompts", () => {
-  it("散歩ルート用プロンプトに距離ヒントを含める", () => {
-    const prompt = buildWalkRouteSystemPrompt({
+  it("プロンプト生成結果をまとめて確認する", () => {
+    const walkPrompt = buildWalkRouteSystemPrompt({
       distanceMinKm: 2,
       distanceMaxKm: 4,
       desiredStops: 3,
       segmentRange: "10〜15",
     });
-    expect(prompt).toContain("総距離の目安: 2〜4km");
-    expect(prompt).toContain("立ち寄り地点は3件程度");
-  });
-
-  it("スポット用プロンプトに形式を含める", () => {
-    const prompt = buildSpotSystemPrompt();
-    expect(prompt).toContain("\"place_name\"");
+    const spotPrompt = buildSpotSystemPrompt();
+    expect({
+      walkHasDistance: walkPrompt.includes("総距離の目安: 2〜4km"),
+      walkHasStops: walkPrompt.includes("立ち寄り地点は3件程度"),
+      spotHasFormat: spotPrompt.includes("\"place_name\""),
+    }).toEqual({
+      walkHasDistance: true,
+      walkHasStops: true,
+      spotHasFormat: true,
+    });
   });
 });
 
+// user promptの挙動をまとめて検証する。
 describe("user prompts", () => {
-  it("散歩ルートのユーザー入力を生成する", () => {
-    const content = buildWalkRouteUserContent({
+  it("ユーザー入力の生成結果をまとめて確認する", () => {
+    const walkContent = buildWalkRouteUserContent({
       originLabel: "東京駅",
       origin: { lat: 1, lng: 2 },
       searchRegion: "東京都",
@@ -58,12 +72,7 @@ describe("user prompts", () => {
       hasActualMinutes: false,
       adjustment: "",
     });
-    expect(content).toContain("出発地: 東京駅");
-    expect(content).toContain("目標所要時間: 60分前後");
-  });
-
-  it("スポットのユーザー入力を生成する", () => {
-    const content = buildSpotUserContent({
+    const spotContent = buildSpotUserContent({
       origin: { lat: 1, lng: 2 },
       originRegion: "東京都",
       originAreaLabel: "関東地方",
@@ -72,7 +81,16 @@ describe("user prompts", () => {
       hasMaxMinutes: false,
       maxMinutes: 0,
     });
-    expect(content).toContain("希望: カフェ");
-    expect(content).toContain("所要時間上限: 指定なし");
+    expect({
+      walkHasOrigin: walkContent.includes("出発地: 東京駅"),
+      walkHasTarget: walkContent.includes("目標所要時間: 60分前後"),
+      spotHasQuery: spotContent.includes("希望: カフェ"),
+      spotHasLimit: spotContent.includes("所要時間上限: 指定なし"),
+    }).toEqual({
+      walkHasOrigin: true,
+      walkHasTarget: true,
+      spotHasQuery: true,
+      spotHasLimit: true,
+    });
   });
 });

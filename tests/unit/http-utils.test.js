@@ -19,70 +19,93 @@ const emitRequest = (req, chunks) => {
   req.emit("end");
 };
 
+const readErrorMessage = async (promise) => {
+  let message = null;
+  try {
+    await promise;
+  } catch (error) {
+    message = error.message;
+  }
+  return message;
+};
+
+// safeJoinの挙動をまとめて検証する。
 describe("safeJoin", () => {
-  it("base配下のパスを正規化して返す", () => {
+  it("安全なパス解決をまとめて確認する", () => {
     const base = path.resolve("root");
-    const result = safeJoin(base, "child/file.txt");
-    expect(result).toBe(path.join(base, "child", "file.txt"));
-  });
-
-  it("baseの外に出る場合はnullを返す", () => {
-    const base = path.resolve("root");
-    const result = safeJoin(base, "..");
-    expect(result).toBe(null);
+    const inside = safeJoin(base, "child/file.txt");
+    const outside = safeJoin(base, "..");
+    expect({ inside, outside }).toEqual({
+      inside: path.join(base, "child", "file.txt"),
+      outside: null,
+    });
   });
 });
 
+// readJsonの挙動をまとめて検証する。
 describe("readJson", () => {
-  it("空ボディは空オブジェクトで解決する", async () => {
-    const req = createRequest();
-    const promise = readJson(req);
-    emitRequest(req, []);
-    const result = await promise;
-    expect(result).toEqual({});
-  });
+  it("本文読み取りの結果をまとめて確認する", async () => {
+    const emptyReq = createRequest();
+    const emptyPromise = readJson(emptyReq);
+    emitRequest(emptyReq, []);
+    const emptyResult = await emptyPromise;
 
-  it("JSONを解析して返す", async () => {
-    const req = createRequest();
-    const promise = readJson(req);
-    emitRequest(req, ['{"ok":true}']);
-    const result = await promise;
-    expect(result).toEqual({ ok: true });
-  });
+    const jsonReq = createRequest();
+    const jsonPromise = readJson(jsonReq);
+    emitRequest(jsonReq, ['{"ok":true}']);
+    const jsonResult = await jsonPromise;
 
-  it("不正JSONはエラーになる", async () => {
-    const req = createRequest();
-    const promise = readJson(req);
-    emitRequest(req, ["{oops"]);
-    await expect(promise).rejects.toThrow("Invalid JSON.");
-  });
+    const invalidReq = createRequest();
+    const invalidPromise = readJson(invalidReq);
+    emitRequest(invalidReq, ["{oops"]);
+    const invalidMessage = await readErrorMessage(invalidPromise);
 
-  it("サイズ超過の本文はエラーになる", async () => {
-    const req = createRequest();
-    req.destroy = vi.fn();
-    const promise = readJson(req);
-    req.emit("data", "a".repeat(1_000_001));
-    await expect(promise).rejects.toThrow("Request body too large.");
-    expect(req.destroy).toHaveBeenCalled();
+    const largeReq = createRequest();
+    largeReq.destroy = vi.fn();
+    const largePromise = readJson(largeReq);
+    largeReq.emit("data", "a".repeat(1_000_001));
+    const largeMessage = await readErrorMessage(largePromise);
+    const destroyCalled = largeReq.destroy.mock.calls.length > 0;
+
+    expect({
+      emptyResult,
+      jsonResult,
+      invalidMessage,
+      largeMessage,
+      destroyCalled,
+    }).toEqual({
+      emptyResult: {},
+      jsonResult: { ok: true },
+      invalidMessage: "Invalid JSON.",
+      largeMessage: "Request body too large.",
+      destroyCalled: true,
+    });
   });
 });
 
+// sendJsonの挙動をまとめて検証する。
 describe("sendJson", () => {
-  it("JSONレスポンスとセキュリティヘッダーを送信する", () => {
+  it("JSONレスポンスとヘッダーをまとめて確認する", () => {
     const res = {
       writeHead: vi.fn(),
       end: vi.fn(),
     };
     const payload = { ok: true };
     sendJson(res, 201, payload);
-    expect(res.writeHead).toHaveBeenCalledWith(
-      201,
-      expect.objectContaining({
-        "Content-Type": "application/json; charset=utf-8",
-        "X-Content-Type-Options": SECURITY_HEADERS["X-Content-Type-Options"],
-        "X-Frame-Options": SECURITY_HEADERS["X-Frame-Options"],
-      })
-    );
-    expect(res.end).toHaveBeenCalledWith(JSON.stringify(payload));
+    const writeHeadArgs = res.writeHead.mock.calls[0];
+    const endArgs = res.end.mock.calls[0];
+    const expectedHeaders = {
+      "Content-Type": "application/json; charset=utf-8",
+      ...SECURITY_HEADERS,
+    };
+    expect({
+      status: writeHeadArgs[0],
+      headers: writeHeadArgs[1],
+      body: endArgs[0],
+    }).toEqual({
+      status: 201,
+      headers: expectedHeaders,
+      body: JSON.stringify(payload),
+    });
   });
 });

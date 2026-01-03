@@ -10,14 +10,11 @@ const {
   findMatchingBracket,
 } = require("../../server/json-utils");
 
+// extractOutputTextの挙動をまとめて検証する。
 describe("extractOutputText", () => {
-  it("output_textがある場合はそのまま返す", () => {
-    const result = extractOutputText({ output_text: "hello" });
-    expect(result).toBe("hello");
-  });
-
-  it("output配列からテキストを連結する", () => {
-    const result = extractOutputText({
+  it("出力テキストの抽出結果をまとめて確認する", () => {
+    const direct = extractOutputText({ output_text: "hello" });
+    const joined = extractOutputText({
       output: [
         {
           content: [
@@ -27,85 +24,89 @@ describe("extractOutputText", () => {
         },
       ],
     });
-    expect(result).toBe("first\nsecond");
-  });
-
-  it("contentが配列でない要素は無視する", () => {
-    const result = extractOutputText({
+    const filtered = extractOutputText({
       output: [
         { content: "skip" },
         { content: [{ type: "output_text", text: "ok" }] },
       ],
     });
-    expect(result).toBe("ok");
+    expect({ direct, joined, filtered }).toEqual({
+      direct: "hello",
+      joined: "first\nsecond",
+      filtered: "ok",
+    });
   });
 });
 
+// parseJsonFromTextの挙動をまとめて検証する。
 describe("parseJsonFromText", () => {
-  it("JSON文字列を解析する", () => {
-    const result = parseJsonFromText('{"ok":true}');
-    expect(result).toEqual({ ok: true });
-  });
-
-  it("フェンス付きJSONを解析する", () => {
-    const result = parseJsonFromText("```json\n{\"value\":1}\n```");
-    expect(result).toEqual({ value: 1 });
-  });
-
-  it("本文中のJSON断片を解析する", () => {
-    const result = parseJsonFromText("note: {\"a\":\"b\"} end");
-    expect(result).toEqual({ a: "b" });
-  });
-
-  it("フェンス内が不正なら本文中のJSONを解析する", () => {
-    const result = parseJsonFromText("```json\n{invalid}\n```\nthen {\"ok\":true}");
-    expect(result).toEqual({ ok: true });
-  });
-
-  it("JSONが無い場合はnullを返す", () => {
-    const result = parseJsonFromText("no json here");
-    expect(result).toBeNull();
+  it("JSON抽出の結果をまとめて確認する", () => {
+    const parsed = {
+      plain: parseJsonFromText('{"ok":true}'),
+      fenced: parseJsonFromText("```json\n{\"value\":1}\n```"),
+      inline: parseJsonFromText("note: {\"a\":\"b\"} end"),
+      fallback: parseJsonFromText("```json\n{invalid}\n```\nthen {\"ok\":true}"),
+      missing: parseJsonFromText("no json here"),
+    };
+    expect(parsed).toEqual({
+      plain: { ok: true },
+      fenced: { value: 1 },
+      inline: { a: "b" },
+      fallback: { ok: true },
+      missing: null,
+    });
   });
 });
 
+// findMatchingBracketの挙動をまとめて検証する。
 describe("findMatchingBracket", () => {
-  it("ネストした括弧の終端を見つける", () => {
-    const text = "{ \"a\": { \"b\": 1 } } trailing";
-    const start = text.indexOf("{");
-    const end = findMatchingBracket(text, start);
-    expect(end).toBe(text.indexOf("}", text.indexOf("} ") + 1));
-  });
+  it("括弧探索の結果をまとめて確認する", () => {
+    const nestedText = "{ \"a\": { \"b\": 1 } } trailing";
+    const nestedStart = nestedText.indexOf("{");
+    const nestedEnd = findMatchingBracket(nestedText, nestedStart);
+    const nestedExpected = nestedText.indexOf("}", nestedText.indexOf("} ") + 1);
 
-  it("文字列内の括弧は無視する", () => {
-    const text = "{ \"a\": \"{ }\" } after";
-    const start = text.indexOf("{");
-    const end = findMatchingBracket(text, start);
-    expect(text.slice(start, end + 1)).toBe("{ \"a\": \"{ }\" }");
-  });
+    const quotedText = "{ \"a\": \"{ }\" } after";
+    const quotedStart = quotedText.indexOf("{");
+    const quotedEnd = findMatchingBracket(quotedText, quotedStart);
+    const quotedSlice = quotedText.slice(quotedStart, quotedEnd + 1);
 
-  it("エスケープ済みの引用符を考慮する", () => {
-    const text = "{ \"a\": \"value with \\\" quote\" } trailing";
-    const start = text.indexOf("{");
-    const end = findMatchingBracket(text, start);
-    expect(end).toBe(text.indexOf("}", start));
-  });
+    const escapedText = "{ \"a\": \"value with \\\" quote\" } trailing";
+    const escapedStart = escapedText.indexOf("{");
+    const escapedEnd = findMatchingBracket(escapedText, escapedStart);
 
-  it("閉じ括弧が無い場合は-1を返す", () => {
-    const text = "{ \"a\": 1";
-    const start = text.indexOf("{");
-    const end = findMatchingBracket(text, start);
-    expect(end).toBe(-1);
+    const missingText = "{ \"a\": 1";
+    const missingStart = missingText.indexOf("{");
+    const missingEnd = findMatchingBracket(missingText, missingStart);
+
+    expect({
+      nestedEnd,
+      nestedExpected,
+      quotedSlice,
+      escapedEnd,
+      escapedExpected: escapedText.indexOf("}", escapedStart),
+      missingEnd,
+    }).toEqual({
+      nestedEnd: nestedExpected,
+      nestedExpected,
+      quotedSlice: "{ \"a\": \"{ }\" }",
+      escapedEnd: escapedText.indexOf("}", escapedStart),
+      escapedExpected: escapedText.indexOf("}", escapedStart),
+      missingEnd: -1,
+    });
   });
 });
 
+// findJsonInText/isEscapedCharの挙動をまとめて検証する。
 describe("findJsonInText/isEscapedChar", () => {
-  it("不正な断片を飛ばして有効なJSONを取得する", () => {
-    const result = findJsonInText("{invalid} then {\"ok\":true}");
-    expect(result).toEqual({ ok: true });
-  });
-
-  it("エスケープ判定を行う", () => {
-    expect(isEscapedChar("\\\"", 0)).toBe(true);
-    expect(isEscapedChar("\\\"", 1)).toBe(false);
+  it("JSON抽出とエスケープ判定をまとめて確認する", () => {
+    const parsed = findJsonInText("{invalid} then {\"ok\":true}");
+    const escapedStart = isEscapedChar("\\\"", 0);
+    const escapedNext = isEscapedChar("\\\"", 1);
+    expect({ parsed, escapedStart, escapedNext }).toEqual({
+      parsed: { ok: true },
+      escapedStart: true,
+      escapedNext: false,
+    });
   });
 });

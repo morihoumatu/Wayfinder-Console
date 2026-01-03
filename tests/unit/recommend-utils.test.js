@@ -28,36 +28,46 @@ const createSender = () => {
   return { calls, sendOnce };
 };
 
+// extractPrefectureの挙動をまとめて検証する。
 describe("extractPrefecture", () => {
-  it("都道府県名を抽出する", () => {
-    expect(extractPrefecture("東京都新宿区")).toBe("東京都");
-  });
-
-  it("抽出できない場合は入力を返す", () => {
-    expect(extractPrefecture("札幌市")).toBe("札幌市");
+  it("都道府県抽出の結果をまとめて確認する", () => {
+    const hit = extractPrefecture("東京都新宿区");
+    const fallback = extractPrefecture("札幌市");
+    expect({ hit, fallback }).toEqual({
+      hit: "東京都",
+      fallback: "札幌市",
+    });
   });
 });
 
+// normalizeText/normalizeAdjustmentの挙動をまとめて検証する。
 describe("normalizeText/normalizeAdjustment", () => {
-  it("文字列をトリムして返す", () => {
-    expect(normalizeText("  text ")).toBe("text");
-    expect(normalizeText(123)).toBe("");
-  });
-
-  it("調整指示は許可値のみ返す", () => {
-    expect(normalizeAdjustment("longer")).toBe("longer");
-    expect(normalizeAdjustment("shorter")).toBe("shorter");
-    expect(normalizeAdjustment("other")).toBe("");
+  it("文字列正規化の結果をまとめて確認する", () => {
+    const trimmed = normalizeText("  text ");
+    const nonString = normalizeText(123);
+    const adjustmentLonger = normalizeAdjustment("longer");
+    const adjustmentShorter = normalizeAdjustment("shorter");
+    const adjustmentOther = normalizeAdjustment("other");
+    expect({
+      trimmed,
+      nonString,
+      adjustmentLonger,
+      adjustmentShorter,
+      adjustmentOther,
+    }).toEqual({
+      trimmed: "text",
+      nonString: "",
+      adjustmentLonger: "longer",
+      adjustmentShorter: "shorter",
+      adjustmentOther: "",
+    });
   });
 });
 
+// normalizeStringArray/parseRecommendPayloadの挙動をまとめて検証する。
 describe("normalizeStringArray/parseRecommendPayload", () => {
-  it("配列内の文字列のみ抽出する", () => {
-    const result = normalizeStringArray(["a", 1, "b"]);
-    expect(result).toEqual(["a", "b"]);
-  });
-
-  it("入力を正規化して返す", () => {
+  it("配列とペイロード正規化の結果をまとめて確認する", () => {
+    const arrayResult = normalizeStringArray(["a", 1, "b"]);
     const payload = parseRecommendPayload({
       query: " cafe ",
       mode: "spot",
@@ -70,81 +80,106 @@ describe("normalizeStringArray/parseRecommendPayload", () => {
       originAreaLabel: "関東地方",
       originPrefectures: ["東京都", 12],
     });
-    expect(payload.query).toBe("cafe");
-    expect(payload.mode).toBe("spot");
-    expect(payload.maxMinutes).toBe(30);
-    expect(payload.targetMinutes).toBe(60);
-    expect(payload.adjustment).toBe("longer");
-    expect(payload.actualMinutes).toBe(25);
-    expect(payload.originPrefectures).toEqual(["東京都"]);
+    const payloadSummary = {
+      query: payload.query,
+      mode: payload.mode,
+      maxMinutes: payload.maxMinutes,
+      targetMinutes: payload.targetMinutes,
+      adjustment: payload.adjustment,
+      actualMinutes: payload.actualMinutes,
+      originPrefectures: payload.originPrefectures,
+    };
+    expect({ arrayResult, payload: payloadSummary }).toEqual({
+      arrayResult: ["a", "b"],
+      payload: {
+        query: "cafe",
+        mode: "spot",
+        maxMinutes: 30,
+        targetMinutes: 60,
+        adjustment: "longer",
+        actualMinutes: 25,
+        originPrefectures: ["東京都"],
+      },
+    });
   });
 });
 
+// validateRecommendRequestの挙動をまとめて検証する。
 describe("validateRecommendRequest", () => {
-  it("検索キーワードが空のときはエラー", () => {
-    const { calls, sendOnce } = createSender();
-    const result = validateRecommendRequest(
+  it("入力検証の結果をまとめて確認する", () => {
+    const emptyQuery = createSender();
+    const emptyResult = validateRecommendRequest(
       { query: "", mode: "spot", origin: { lat: 1, lng: 2 } },
-      sendOnce
+      emptyQuery.sendOnce
     );
-    expect(result).toBe(false);
-    expect(calls[0].status).toBe(400);
-  });
 
-  it("出発地が不正な場合はエラー", () => {
-    const { calls, sendOnce } = createSender();
-    const result = validateRecommendRequest(
+    const invalidOrigin = createSender();
+    const invalidResult = validateRecommendRequest(
       { query: "cafe", mode: "spot", origin: null },
-      sendOnce
+      invalidOrigin.sendOnce
     );
-    expect(result).toBe(false);
-    expect(calls[0].status).toBe(400);
+
+    expect({
+      empty: { ok: emptyResult, status: emptyQuery.calls[0].status },
+      invalid: { ok: invalidResult, status: invalidOrigin.calls[0].status },
+    }).toEqual({
+      empty: { ok: false, status: 400 },
+      invalid: { ok: false, status: 400 },
+    });
   });
 });
 
+// walk route metricsの挙動をまとめて検証する。
 describe("walk route metrics", () => {
-  it("目標時間と区間レンジを算出する", () => {
+  it("距離と時間の計算結果をまとめて確認する", () => {
     const target = resolveEffectiveTargetMinutes(30, 0);
-    expect(target.effectiveTargetMinutes).toBe(30);
     const segment = buildSegmentRange(60);
-    expect(segment.desiredStops).toBe(3);
-    expect(segment.segmentRange).toBe("11〜20");
-  });
-
-  it("距離レンジの調整を反映する", () => {
     const longer = buildDistanceRange(4, "longer");
     const shorter = buildDistanceRange(4, "shorter");
-    expect(longer.distanceMaxKm).toBeGreaterThan(shorter.distanceMaxKm);
-  });
-
-  it("散歩ルート向けの計算値をまとめる", () => {
     const metrics = buildWalkRouteMetrics({
       maxMinutes: 0,
       targetMinutes: 60,
       adjustment: "",
       actualMinutes: 0,
     });
-    expect(metrics.effectiveTargetMinutes).toBe(60);
-    expect(metrics.desiredStops).toBeGreaterThan(0);
+    expect({
+      effectiveTargetMinutes: target.effectiveTargetMinutes,
+      segmentStops: segment.desiredStops,
+      segmentRange: segment.segmentRange,
+      longerIsLonger: longer.distanceMaxKm > shorter.distanceMaxKm,
+      metricsTarget: metrics.effectiveTargetMinutes,
+      metricsHasStops: metrics.desiredStops > 0,
+    }).toEqual({
+      effectiveTargetMinutes: 30,
+      segmentStops: 3,
+      segmentRange: "11〜20",
+      longerIsLonger: true,
+      metricsTarget: 60,
+      metricsHasStops: true,
+    });
   });
 });
 
+// prefecture helpersの挙動をまとめて検証する。
 describe("prefecture helpers", () => {
-  it("都道府県リストとヒントを整形する", () => {
+  it("都道府県情報の整形結果をまとめて確認する", () => {
     const list = normalizePrefectureList([" 東京都 ", ""]);
-    expect(list).toEqual(["東京都"]);
-    expect(buildPrefectureHint(list)).toBe("対象都道府県: 東京都");
-  });
-
-  it("散歩ルート時に検索地域を都道府県へ寄せる", () => {
+    const hint = buildPrefectureHint(list);
     const region = buildSearchRegion("東京都新宿区", true, 150);
-    expect(region).toBe("東京都");
+    expect({ list, hint, region }).toEqual({
+      list: ["東京都"],
+      hint: "対象都道府県: 東京都",
+      region: "東京都",
+    });
   });
 });
 
+// buildDistanceHintの挙動をまとめて検証する。
 describe("buildDistanceHint", () => {
-  it("距離ヒントを生成する", () => {
+  it("距離ヒントの結果をまとめて確認する", () => {
     const hint = buildDistanceHint(2, 4);
-    expect(hint).toBe("総距離の目安: 2〜4km");
+    expect({ hint }).toEqual({
+      hint: "総距離の目安: 2〜4km",
+    });
   });
 });
