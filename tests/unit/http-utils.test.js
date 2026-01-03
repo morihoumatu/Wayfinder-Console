@@ -4,7 +4,7 @@
  */
 const { EventEmitter } = require("events");
 const path = require("path");
-const { safeJoin, readJson } = require("../../server/http-utils");
+const { safeJoin, readJson, sendJson, SECURITY_HEADERS } = require("../../server/http-utils");
 
 const createRequest = () => {
   const req = new EventEmitter();
@@ -55,5 +55,34 @@ describe("readJson", () => {
     const promise = readJson(req);
     emitRequest(req, ["{oops"]);
     await expect(promise).rejects.toThrow("Invalid JSON.");
+  });
+
+  it("サイズ超過の本文はエラーになる", async () => {
+    const req = createRequest();
+    req.destroy = vi.fn();
+    const promise = readJson(req);
+    req.emit("data", "a".repeat(1_000_001));
+    await expect(promise).rejects.toThrow("Request body too large.");
+    expect(req.destroy).toHaveBeenCalled();
+  });
+});
+
+describe("sendJson", () => {
+  it("JSONレスポンスとセキュリティヘッダーを送信する", () => {
+    const res = {
+      writeHead: vi.fn(),
+      end: vi.fn(),
+    };
+    const payload = { ok: true };
+    sendJson(res, 201, payload);
+    expect(res.writeHead).toHaveBeenCalledWith(
+      201,
+      expect.objectContaining({
+        "Content-Type": "application/json; charset=utf-8",
+        "X-Content-Type-Options": SECURITY_HEADERS["X-Content-Type-Options"],
+        "X-Frame-Options": SECURITY_HEADERS["X-Frame-Options"],
+      })
+    );
+    expect(res.end).toHaveBeenCalledWith(JSON.stringify(payload));
   });
 });
