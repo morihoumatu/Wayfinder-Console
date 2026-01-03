@@ -66,6 +66,7 @@ module.exports = {
     ],
     "folder-about-file": "error",
     "file-purpose-comment": "error",
+    "const-let-comment": "error",
     "god-file": [
       "error",
       { maxFunctions: 30, maxLines: 300 },
