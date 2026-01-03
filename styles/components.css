@@ -168,16 +168,12 @@
 }
 
 .map-shell { /* 地図コンテナの枠と影を設定する。 */
-  animation: float-in 0.9s ease forwards; /* アニメーションを設定する。 */
-  animation-delay: 0.22s; /* アニメーションの開始遅延を設定する。 */
   border: 1px solid var(--line); /* 枠線を設定する。 */
   border-radius: 26px; /* 角丸を設定する。 */
   box-shadow: var(--shadow-soft); /* 影を設定する。 */
   min-height: 420px; /* 最小高さを設定する。 */
-  opacity: 0; /* 不透明度を設定する。 */
   overflow: hidden; /* はみ出しを制御する。 */
   position: relative; /* 配置方法を設定する。 */
-  transform: translateY(14px); /* 変形を設定する。 */
 }
 
 .map { /* 地図表示領域のサイズを設定する。 */

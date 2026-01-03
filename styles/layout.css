@@ -80,13 +80,9 @@
 }
 
 .main { /* メイン領域のグリッドを設定する。 */
-  animation: float-in 0.9s ease forwards; /* アニメーションを設定する。 */
-  animation-delay: 0.12s; /* アニメーションの開始遅延を設定する。 */
   display: grid; /* 表示方式を設定する。 */
   gap: 28px; /* 要素間の間隔を設定する。 */
   grid-template-columns: minmax(260px, 0.36fr) minmax(0, 1fr); /* グリッドの列幅を設定する。 */
-  opacity: 0; /* 不透明度を設定する。 */
-  transform: translateY(14px); /* 変形を設定する。 */
 }
 
 .panel { /* パネルカードの外観を設定する。 */

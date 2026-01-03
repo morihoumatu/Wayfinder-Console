@@ -7,6 +7,8 @@ const http = require("http");
 const fs = require("fs");
 // pathモジュールを読み込む。
 const path = require("path");
+// zlibモジュールを読み込む。
+const zlib = require("zlib");
 
 // configから必要な値を取得する。
 const { PORT, ROOT, MAPS_API_KEY, OPENAI_API_KEY, MIME_TYPES } = require("./config");
@@ -19,6 +21,57 @@ const {
 } = require("./http-utils");
 // handlersからhandleRecommendPayloadを取得する。
 const { handleRecommendPayload } = require("./handlers");
+
+// COMPRESSIBLE_TYPESをまとめる。
+const COMPRESSIBLE_TYPES = new Set([
+  "text/html",
+  "text/css",
+  "application/javascript",
+  "application/json",
+  "image/svg+xml",
+]);
+
+/**
+ * MIMEタイプからcharsetなどを除去する。
+ * @param {string} contentType MIMEタイプ。
+ * @returns {string} ベースのMIMEタイプ。
+ */
+const stripCharset = (contentType) => {
+  // baseTypeを取得する。
+  const baseType = contentType.split(";")[0];
+  return (baseType || "").trim();
+};
+
+/**
+ * Cache-Controlを作成する。
+ * @param {string} ext 拡張子。
+ * @returns {string} Cache-Controlヘッダー。
+ */
+const buildCacheControl = (ext) =>
+  ext === ".html"
+    ? "no-cache"
+    : "public, max-age=31536000, immutable";
+
+/**
+ * 圧縮対象かどうかを判定する。
+ * @param {import("http").IncomingMessage} req リクエスト。
+ * @param {string} contentType Content-Type。
+ * @returns {boolean} 圧縮する場合true。
+ */
+const shouldCompress = (req, contentType) => {
+  // acceptEncodingを取得する。
+  const acceptEncoding = req.headers["accept-encoding"] || "";
+  // 判定結果の初期値を定義する。
+  let compress = false;
+  // canGzipを取得する。
+  const canGzip = /\bgzip\b/i.test(acceptEncoding);
+  // baseTypeを取得する。
+  const baseType = stripCharset(contentType);
+  if (canGzip) {
+    compress = COMPRESSIBLE_TYPES.has(baseType);
+  }
+  return compress;
+};
 
 /**
  * 設定情報のAPIレスポンスを返す。
@@ -73,10 +126,11 @@ const handleRecommendRequest = (req, res) => {
 
 /**
  * 静的ファイルリクエストを処理する。
+ * @param {import("http").IncomingMessage} req リクエスト。
  * @param {any} res レスポンス。
  * @param {string} requestPath リクエストパス。
  */
-const handleStaticRequest = (res, requestPath) => {
+const handleStaticRequest = (req, res, requestPath) => {
   // パスを条件で選ぶ。
   const relativePath = requestPath === "/" ? "/index.html" : requestPath;
   // パスを取得する。
@@ -101,10 +155,33 @@ const handleStaticRequest = (res, requestPath) => {
       } else {
         // extを整形する。
         const ext = path.extname(filePath).toLowerCase();
-        res.writeHead(200, {
-          "Content-Type": MIME_TYPES[ext] || "application/octet-stream",
+        // contentTypeを取得する。
+        const contentType = MIME_TYPES[ext] || "application/octet-stream";
+        // cacheControlを取得する。
+        const cacheControl = buildCacheControl(ext);
+        // headersを取得する。
+        const headers = {
+          "Content-Type": contentType,
+          "Cache-Control": cacheControl,
           ...SECURITY_HEADERS,
-        });
+        };
+        if (shouldCompress(req, contentType)) {
+          zlib.gzip(data, (zipError, compressed) => {
+            if (zipError) {
+              res.writeHead(200, headers);
+              res.end(data);
+              return;
+            }
+            res.writeHead(200, {
+              ...headers,
+              "Content-Encoding": "gzip",
+              Vary: "Accept-Encoding",
+            });
+            res.end(compressed);
+          });
+          return;
+        }
+        res.writeHead(200, headers);
         res.end(data);
       }
     });
@@ -122,7 +199,7 @@ const server = http.createServer((req, res) => {
   } else if (requestPath === "/api/recommend") {
     handleRecommendRequest(req, res);
   } else {
-    handleStaticRequest(res, requestPath);
+    handleStaticRequest(req, res, requestPath);
   }
 });
 

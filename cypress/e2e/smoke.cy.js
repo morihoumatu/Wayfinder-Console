@@ -27,7 +27,7 @@ describe("トップページ", () => {
   });
 
   it("主要なUIが表示される", () => {
-    cy.contains("ライブマップコンソール");
+    cy.contains("地域起点のルート設計を、プロダクト品質で。");
     cy.get("#map").should("be.visible");
     cy.get("#recommendForm").should("be.visible");
     cy.get("#keyStatus").should("have.text", "準備完了");

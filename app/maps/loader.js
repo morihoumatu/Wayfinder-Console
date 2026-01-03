@@ -12,6 +12,8 @@
 /* global resetRoute: writable, setDestination: writable, setOrigin: writable, setOverlay: writable */
 /* global setStatus: writable, updateLimitHint: writable, updateRegionControls: writable, updateRouteHint: writable */
 /* global updateRouteLabels: writable, walkingRenderer: writable */
+// regionListenersBoundの初期値を定義する。
+let regionListenersBound = false;
 /**
  * Google Maps APIスクリプトを読み込む。
  * @param {string} apiKey APIキー。
@@ -27,7 +29,9 @@ function loadGoogleMaps(apiKey) {
 
   // DOM要素を生成する。
   const script = document.createElement("script");
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`;
+  script.src =
+    `https://maps.googleapis.com/maps/api/js?key=${apiKey}` +
+    "&callback=initMap&loading=async";
   script.async = true;
   script.defer = true;
   script.onerror = () => {
@@ -73,6 +77,45 @@ function initializeMapServices() {
 }
 
 /**
+ * 地域選択のイベントを登録する。
+ */
+function bindRegionControls() {
+  if (regionListenersBound) {
+    return;
+  }
+  regionListenersBound = true;
+  if (originAreaSelect) {
+    originAreaSelect.addEventListener("change", () => {
+      if (originAreaSelect.value && originRegionSelect) {
+        originRegionSelect.value = "";
+      }
+      if (originAreaSelect.value !== areaAnchorSelection) {
+        areaAnchorSelection = "";
+        if (areaAnchorCache !== "") {
+          areaAnchorCache = "";
+        }
+      }
+      updateRegionControls();
+    });
+  }
+  if (originRegionSelect) {
+    originRegionSelect.addEventListener("change", () => {
+      if (originRegionSelect.value && originAreaSelect) {
+        originAreaSelect.value = "";
+      }
+      if (originAreaSelect?.value !== areaAnchorSelection) {
+        areaAnchorSelection = "";
+        if (areaAnchorCache !== "") {
+          areaAnchorCache = "";
+        }
+      }
+      updateRegionControls();
+    });
+  }
+  updateRegionControls();
+}
+
+/**
  * Google Mapsの初期化処理を行う。
  */
 window.initMap = function initMap() {
@@ -108,35 +151,6 @@ window.initMap = function initMap() {
 
   updateRouteLabels();
   updateRouteHint();
-  updateRegionControls();
-  if (originAreaSelect) {
-    originAreaSelect.addEventListener("change", () => {
-      if (originAreaSelect.value && originRegionSelect) {
-        originRegionSelect.value = "";
-      }
-      if (originAreaSelect.value !== areaAnchorSelection) {
-        areaAnchorSelection = "";
-        if (areaAnchorCache !== "") {
-          areaAnchorCache = "";
-        }
-      }
-      updateRegionControls();
-    });
-  }
-  if (originRegionSelect) {
-    originRegionSelect.addEventListener("change", () => {
-      if (originRegionSelect.value && originAreaSelect) {
-        originAreaSelect.value = "";
-      }
-      if (originAreaSelect?.value !== areaAnchorSelection) {
-        areaAnchorSelection = "";
-        if (areaAnchorCache !== "") {
-          areaAnchorCache = "";
-        }
-      }
-      updateRegionControls();
-    });
-  }
   resetButton.addEventListener("click", () => {
     resetRoute();
   });
@@ -195,6 +209,7 @@ function resolveMapsApiKey() {
 
 setStatus("読み込み中", "loading");
 setOverlay("APIキーを読み込み中...", true);
+bindRegionControls();
 resolveMapsApiKey().then((apiKey) => {
   if (!apiKey) {
     setStatus("未設定", "missing");
@@ -203,5 +218,17 @@ resolveMapsApiKey().then((apiKey) => {
   }
   setStatus("読み込み中", "loading");
   setOverlay("地図を読み込み中...", true);
-  loadGoogleMaps(apiKey);
+  // idleCallbackを用意する。
+  const idleCallback =
+    typeof window.requestIdleCallback === "function"
+      ? window.requestIdleCallback
+      : null;
+  /**
+   * 遅延実行のスケジューラを定義する。
+   * @type {(callback: () => void) => void}
+   */
+  const schedule = idleCallback
+    ? (callback) => idleCallback(callback, { timeout: 1200 })
+    : (callback) => window.setTimeout(callback, 200);
+  schedule(() => loadGoogleMaps(apiKey));
 });

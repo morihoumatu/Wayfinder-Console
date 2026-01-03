@@ -80,7 +80,6 @@ body::after { /* 背景装飾(左下)の位置を設定する。 */
 
 .hero { /* ヒーローセクションの配置を設定する。 */
   align-items: flex-start; /* 交差軸の整列を設定する。 */
-  animation: float-in 0.9s ease forwards; /* アニメーションを設定する。 */
   background: var(--glass); /* 背景を設定する。 */
   border: 1px solid var(--line); /* 枠線を設定する。 */
   border-radius: 28px; /* 角丸を設定する。 */
@@ -89,9 +88,7 @@ body::after { /* 背景装飾(左下)の位置を設定する。 */
   flex-wrap: wrap; /* 折り返しを設定する。 */
   gap: 32px; /* 要素間の間隔を設定する。 */
   justify-content: space-between; /* 主軸の整列を設定する。 */
-  opacity: 0; /* 不透明度を設定する。 */
   padding: 28px 32px; /* 内側余白を設定する。 */
-  transform: translateY(14px); /* 変形を設定する。 */
 }
 
 .hero-copy { /* ヒーローテキストの幅を調整する。 */
