@@ -8,8 +8,9 @@
 /* global destinationLatLng: writable, destinationSource: writable, keyStatus: writable, originAreaSelect: writable */
 /* global originLabel: writable, originLatLng: writable, originRegionButton: writable, originRegionHint: writable */
 /* global originRegionSelect: writable, overlay: writable, railRouteLink: writable, routeHint: writable */
-/* global routeLinks: writable, routeStatus: writable, statusCard: writable, walkRoutePreferredMode: writable */
-/* global walkingRouteLink: writable, walkingWaypoints: writable */
+/* global getRouteModeSelection: writable, routeLinks: writable, routeStatus: writable */
+/* global statusCard: writable, walkRoutePreferredMode: writable, walkingRouteLink: writable */
+/* global walkingWaypoints: writable */
 /**
  * 状態ラベルと状態表示を更新する。
  * @param {string} label 表示ラベル。
@@ -107,35 +108,68 @@ function setRouteStatus(message) {
 }
 
 /**
- * ルートリンクを更新する。
+ * ルートリンクを初期状態に戻す。
  */
-function updateRouteLinks() {
-  if (!originLatLng || !destinationLatLng) {
-    routeLinks.hidden = true;
-    walkingRouteLink.hidden = true;
-    railRouteLink.hidden = true;
-    walkingRouteLink.href = "#";
-    railRouteLink.href = "#";
-    return;
-  }
+function resetRouteLinkState() {
+  routeLinks.hidden = true;
+  walkingRouteLink.hidden = true;
+  railRouteLink.hidden = true;
+  walkingRouteLink.href = "#";
+  railRouteLink.href = "#";
+}
 
-  // waypointPointsを条件で選ぶ。
-  const waypointPoints = Array.isArray(walkingWaypoints)
+/**
+ * 徒歩経路の経由地を取得する。
+ * @returns {any[]} 経由地配列。
+ */
+function resolveWaypointPoints() {
+  return Array.isArray(walkingWaypoints)
     ? walkingWaypoints.map((waypoint) => waypoint.location).filter(Boolean)
     : [];
+}
 
-  walkingRouteLink.href = buildDirectionsLink({
-    origin: originLatLng,
-    destination: destinationLatLng,
-    travelMode: "walking",
-    waypoints: waypointPoints,
-  });
-  walkingRouteLink.hidden = false;
+/**
+ * 徒歩リンクの表示を更新する。
+ * @param {any[]} waypointPoints 経由地配列。
+ * @param {boolean} walkEnabled 徒歩モードの有効フラグ。
+ * @returns {boolean} 表示状態。
+ */
+function applyWalkingRouteLink(waypointPoints, walkEnabled) {
+  // isVisibleの初期値を定義する。
+  let isVisible = false;
+  if (!walkEnabled) {
+    walkingRouteLink.hidden = true;
+    walkingRouteLink.href = "#";
+  } else {
+    walkingRouteLink.href = buildDirectionsLink({
+      origin: originLatLng,
+      destination: destinationLatLng,
+      travelMode: "walking",
+      waypoints: waypointPoints,
+    });
+    walkingRouteLink.hidden = false;
+    isVisible = true;
+  }
+  return isVisible;
+}
 
+/**
+ * 在来線リンクの表示を更新する。
+ * @param {any[]} waypointPoints 経由地配列。
+ * @param {boolean} railEnabled 在来線モードの有効フラグ。
+ * @returns {boolean} 表示状態。
+ */
+function applyRailRouteLink(waypointPoints, railEnabled) {
+  // isVisibleの初期値を定義する。
+  let isVisible = false;
   // showRailLinkを条件で選ぶ。
   const showRailLink =
-    destinationSource !== "walk_multi" || walkRoutePreferredMode === "rail";
-  if (showRailLink) {
+    railEnabled &&
+    (destinationSource !== "walk_multi" || walkRoutePreferredMode === "rail");
+  if (!showRailLink) {
+    railRouteLink.hidden = true;
+    railRouteLink.href = "#";
+  } else {
     // railWaypointsを条件で選ぶ。
     const railWaypoints =
       destinationSource === "walk_multi" ? waypointPoints : null;
@@ -147,9 +181,31 @@ function updateRouteLinks() {
       waypoints: railWaypoints,
     });
     railRouteLink.hidden = false;
-  } else {
-    railRouteLink.hidden = true;
+    isVisible = true;
+  }
+  return isVisible;
+}
+
+/**
+ * ルートリンクを更新する。
+ */
+function updateRouteLinks() {
+  // selectionを取得する。
+  const selection = getRouteModeSelection();
+  // walkEnabledを取得する。
+  const walkEnabled = selection.walkEnabled;
+  // railEnabledを取得する。
+  const railEnabled = selection.railEnabled;
+  if (!originLatLng || !destinationLatLng || (!walkEnabled && !railEnabled)) {
+    resetRouteLinkState();
+    return;
   }
 
-  routeLinks.hidden = false;
+  // waypointPointsを条件で選ぶ。
+  const waypointPoints = resolveWaypointPoints();
+  // hasWalkingLinkを取得する。
+  const hasWalkingLink = applyWalkingRouteLink(waypointPoints, walkEnabled);
+  // hasRailLinkを取得する。
+  const hasRailLink = applyRailRouteLink(waypointPoints, railEnabled);
+  routeLinks.hidden = !(hasWalkingLink || hasRailLink);
 }

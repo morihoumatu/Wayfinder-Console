@@ -4,14 +4,16 @@
  */
 /* exported loadGoogleMaps, keyMissing */
 /* global DEFAULT_CENTER: writable, DEFAULT_ZOOM: writable, MAPS_API_KEY: writable, areaAnchorCache: writable */
-/* global areaAnchorSelection: writable, calculateRoutes: writable, destinationLatLng: writable */
+/* global areaAnchorSelection: writable, calculateRoutes: writable, clearRoutes: writable */
+/* global destinationLatLng: writable, getRouteModeSelection: writable */
 /* global directionsService: writable, geocoder: writable, handleOriginRegionStart: writable */
 /* global handleRecommendSubmit: writable, map: writable, mapElement: writable, maxTimeInput: writable */
 /* global originAreaSelect: writable, originLatLng: writable, originRegionButton: writable */
-/* global originRegionSelect: writable, railRenderer: writable, recommendForm: writable, resetButton: writable */
-/* global resetRoute: writable, setDestination: writable, setOrigin: writable, setOverlay: writable */
+/* global originRegionSelect: writable, railModeToggle: writable, railRenderer: writable */
+/* global recommendForm: writable, resetButton: writable, resetRoute: writable */
+/* global setDestination: writable, setOrigin: writable, setOverlay: writable */
 /* global setStatus: writable, updateLimitHint: writable, updateRegionControls: writable, updateRouteHint: writable */
-/* global updateRouteLabels: writable, walkingRenderer: writable */
+/* global updateRouteLabels: writable, walkingModeToggle: writable, walkingRenderer: writable */
 // regionListenersBoundの初期値を定義する。
 let regionListenersBound = false;
 /**
@@ -160,6 +162,23 @@ window.initMap = function initMap() {
   recommendForm.addEventListener("submit", handleRecommendSubmit);
   maxTimeInput.addEventListener("input", updateLimitHint);
   updateLimitHint();
+  // handleRouteModeChangeを定義する。
+  const handleRouteModeChange = () => {
+    // selectionを取得する。
+    const selection = getRouteModeSelection();
+    if (originLatLng && destinationLatLng && selection.hasSelection) {
+      calculateRoutes();
+    } else {
+      clearRoutes();
+    }
+  };
+  if (walkingModeToggle) {
+    walkingModeToggle.addEventListener("change", handleRouteModeChange);
+  }
+  if (railModeToggle) {
+    railModeToggle.addEventListener("change", handleRouteModeChange);
+  }
+  handleRouteModeChange();
 
   map.addListener("click", (/** @type {any} */ event) => {
     if (!originLatLng) {

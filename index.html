@@ -262,6 +262,29 @@
           </div>
           <div class="route-section">
             <h3>所要時間</h3>
+            <div class="route-mode">
+              <p class="meta-label">検索対象</p>
+              <div class="mode-group" role="group" aria-label="検索対象">
+                <label class="mode-option">
+                  <input
+                    class="mode-checkbox"
+                    id="walkingMode"
+                    type="checkbox"
+                    checked
+                  />
+                  <span>徒歩</span>
+                </label>
+                <label class="mode-option">
+                  <input
+                    class="mode-checkbox"
+                    id="railMode"
+                    type="checkbox"
+                    checked
+                  />
+                  <span>在来線</span>
+                </label>
+              </div>
+            </div>
             <div class="route-times">
               <div class="time-card">
                 <p class="meta-label">徒歩</p>
@@ -333,6 +356,7 @@
     <script src="app/route/multi-metrics.js"></script>
     <script src="app/route/multi-selection.js"></script>
     <script src="app/route/completion.js"></script>
+    <script src="app/route/requests-helpers.js"></script>
     <script src="app/route/requests.js"></script>
     <script src="app/maps/loader.js"></script>
   </body>

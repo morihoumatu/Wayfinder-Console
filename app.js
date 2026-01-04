@@ -8,6 +8,7 @@
 /* exported maxTimeInput, limitHint, recommendHint, recommendResult, recommendTitle, recommendAddress */
 /* exported recommendReason, recommendMapLink, recommendStopsSection, recommendStops, recommendSources */
 /* exported recommendButton, recommendButtonLabel, originAreaSelect, originRegionSelect, originRegionButton */
+/* exported walkingModeToggle, railModeToggle, getRouteModeSelection */
 /* exported originRegionHint, DEFAULT_WALK_TARGET_MINUTES, WALK_ROUTE_MAX_RETRIES, DEFAULT_ORIGIN_REGION_HINT */
 /* exported REGION_GROUPS, STATION_TYPES, REGION_STATION_QUERIES, REGION_QUERY_EXCEPTIONS, MAX_STATION_QUERIES, map */
 /* exported directionsService, walkingRenderer, railRenderer, originMarker, destinationMarker, originLatLng */
@@ -61,6 +62,14 @@ const routeHint = /** @type {HTMLParagraphElement} */ (
 // DOM要素を取得する。
 const routeStatus = /** @type {HTMLParagraphElement} */ (
   document.getElementById("routeStatus")
+);
+// DOM要素を取得する。
+const walkingModeToggle = /** @type {HTMLInputElement} */ (
+  document.getElementById("walkingMode")
+);
+// DOM要素を取得する。
+const railModeToggle = /** @type {HTMLInputElement} */ (
+  document.getElementById("railMode")
 );
 // DOM要素を取得する。
 const routeLinks = /** @type {HTMLDivElement} */ (
@@ -160,6 +169,22 @@ const originRegionButton = /** @type {HTMLButtonElement} */ (
 const originRegionHint = /** @type {HTMLParagraphElement} */ (
   document.getElementById("originRegionHint")
 );
+
+/**
+ * ルート検索対象のチェック状態を取得する。
+ * @returns {{ walkEnabled: boolean, railEnabled: boolean, hasSelection: boolean }} 選択状態。
+ */
+function getRouteModeSelection() {
+  // walkEnabledを取得する。
+  const walkEnabled = walkingModeToggle ? walkingModeToggle.checked : true;
+  // railEnabledを取得する。
+  const railEnabled = railModeToggle ? railModeToggle.checked : true;
+  return {
+    walkEnabled,
+    railEnabled,
+    hasSelection: walkEnabled || railEnabled,
+  };
+}
 
 // DEFAULT_WALK_TARGET_MINUTESの定数を定義する。
 const DEFAULT_WALK_TARGET_MINUTES = 60;

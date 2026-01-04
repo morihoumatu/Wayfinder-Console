@@ -3,16 +3,45 @@
  * @file ルート状態の管理をまとめる。
  */
 /* exported clearRoutes, clearWalkRouteState, clearDestination, resetRoute, setOrigin, setDestination */
+/* exported updateRouteModeCards */
 /* exported getRouteStateSnapshot */
 /* global clearRecommendResult: writable, clearRouteBreakdown: writable, desiredWalkTargetMinutes: writable */
 /* global destinationLatLng: writable, destinationMarker: writable, destinationName: writable */
 /* global destinationSource: writable, lastWalkQuery: writable, map: writable, originLatLng: writable */
 /* global originMarker: writable, originRegion: writable, railRenderer: writable, railValue: writable */
-/* global resolveOriginRegion: writable, setRecommendHint: writable, setRouteStatus: writable */
+/* global getRouteModeSelection: writable, resolveOriginRegion: writable */
+/* global setRecommendHint: writable, setRouteStatus: writable */
 /* global updateRegionControls: writable, updateRouteHint: writable, updateRouteLabels: writable */
 /* global updateRouteLinks: writable, walkRoutePreferredMode: writable, walkRouteRetryCount: writable */
 /* global walkRouteRailStations: writable, walkRouteTargetMinutes: writable */
 /* global walkingRenderer: writable, walkingValue: writable, walkingWaypoints: writable */
+/**
+ * 時間カードの状態を切り替える。
+ * @param {HTMLElement | null} target 対象要素。
+ * @param {boolean} enabled 表示フラグ。
+ */
+function toggleRouteCardState(target, enabled) {
+  // cardを取得する。
+  const card = target ? target.closest(".time-card") : null;
+  if (!(card instanceof HTMLElement)) {
+    return;
+  }
+  if (enabled) {
+    card.removeAttribute("data-disabled");
+  } else {
+    card.dataset["disabled"] = "true";
+  }
+}
+
+/**
+ * ルートモードのカード状態を更新する。
+ */
+function updateRouteModeCards() {
+  // selectionを取得する。
+  const selection = getRouteModeSelection();
+  toggleRouteCardState(walkingValue, selection.walkEnabled);
+  toggleRouteCardState(railValue, selection.railEnabled);
+}
 /**
  * ルート状態のスナップショットを取得する。
  * @returns {any} 現在のルート状態。
@@ -43,9 +72,16 @@ function clearRoutes() {
   if (railRenderer) {
     railRenderer.set("directions", null);
   }
-  walkingValue.textContent = "未計算";
-  railValue.textContent = "未計算";
-  setRouteStatus("地点を選ぶと自動計算します。");
+  // selectionを取得する。
+  const selection = getRouteModeSelection();
+  walkingValue.textContent = selection.walkEnabled ? "未計算" : "対象外";
+  railValue.textContent = selection.railEnabled ? "未計算" : "対象外";
+  setRouteStatus(
+    selection.hasSelection
+      ? "地点を選ぶと自動計算します。"
+      : "徒歩または在来線を選択してください。"
+  );
+  updateRouteModeCards();
   clearRouteBreakdown();
   updateRouteLinks();
 }
@@ -82,9 +118,17 @@ function clearDestination(message) {
   if (railRenderer) {
     railRenderer.set("directions", null);
   }
-  walkingValue.textContent = "未計算";
-  railValue.textContent = "未計算";
-  setRouteStatus(message || "地点を選ぶと自動計算します。");
+  // selectionを取得する。
+  const selection = getRouteModeSelection();
+  walkingValue.textContent = selection.walkEnabled ? "未計算" : "対象外";
+  railValue.textContent = selection.railEnabled ? "未計算" : "対象外";
+  setRouteStatus(
+    message ||
+      (selection.hasSelection
+        ? "地点を選ぶと自動計算します。"
+        : "徒歩または在来線を選択してください。")
+  );
+  updateRouteModeCards();
   clearRouteBreakdown();
   updateRouteLinks();
   updateRouteLabels();

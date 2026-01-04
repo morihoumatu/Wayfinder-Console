@@ -15,21 +15,67 @@
  * @param {any} flags 進捗フラグ。
  * @returns {string} 状態文言。
  */
-function getStandardRouteStatusMessage(flags) {
-  // メッセージの初期値を定義する。
+function buildDualModeStatusMessage(flags) {
+  // messageの初期値を定義する。
   let message = "";
-  if (flags.railRejected === "high_speed") {
-    message = flags.walkOk
-      ? "新幹線が含まれるため在来線ルートを除外しました。徒歩のみ表示しています。"
-      : "新幹線が含まれるため在来線ルートを除外しました。";
-  } else if (flags.walkOk && flags.railOk) {
+  if (flags.walkOk && flags.railOk) {
     message = "徒歩と在来線の所要時間を表示中です。";
   } else if (!flags.walkOk && !flags.railOk) {
     message = "経路が見つかりませんでした。";
-  } else if (!flags.walkOk) {
-    message = "徒歩経路が見つかりませんでした。";
   } else {
-    message = "在来線経路が見つかりませんでした。";
+    message = !flags.walkOk
+      ? "徒歩経路が見つかりませんでした。"
+      : "在来線経路が見つかりませんでした。";
+  }
+  return message;
+}
+
+/**
+ * 片方のみ選択時の状態文言を取得する。
+ * @param {any} flags 進捗フラグ。
+ * @param {string} mode 選択モード。
+ * @returns {string} 状態文言。
+ */
+function buildSingleModeStatusMessage(flags, mode) {
+  // messageの初期値を定義する。
+  let message = "";
+  if (mode === "walk") {
+    message = flags.walkOk
+      ? "徒歩の所要時間を表示中です。"
+      : "徒歩経路が見つかりませんでした。";
+  } else {
+    message = flags.railOk
+      ? "在来線の所要時間を表示中です。"
+      : "在来線経路が見つかりませんでした。";
+  }
+  return message;
+}
+
+/**
+ * 通常ルートの状態文言を取得する。
+ * @param {any} flags 進捗フラグ。
+ * @returns {string} 状態文言。
+ */
+function getStandardRouteStatusMessage(flags) {
+  // メッセージの初期値を定義する。
+  let message = "";
+  // walkRequestedを取得する。
+  const walkRequested = flags.includeWalk !== false;
+  // railRequestedを取得する。
+  const railRequested = flags.includeTransit !== false;
+  if (!walkRequested && !railRequested) {
+    message = "徒歩または在来線を選択してください。";
+  } else if (flags.railRejected === "high_speed") {
+    message =
+      walkRequested && flags.walkOk
+        ? "新幹線が含まれるため在来線ルートを除外しました。徒歩のみ表示しています。"
+        : "新幹線が含まれるため在来線ルートを除外しました。";
+  } else if (walkRequested && railRequested) {
+    message = buildDualModeStatusMessage(flags);
+  } else {
+    // modeを条件で選ぶ。
+    const mode = walkRequested ? "walk" : "rail";
+    message = buildSingleModeStatusMessage(flags, mode);
   }
   return message;
 }
@@ -193,7 +239,12 @@ function handleRouteResult(options) {
  * @param {boolean} includeTransit 乗換ルート有無。
  * @returns {any} フラグオブジェクト。
  */
-function buildRouteFlags(includeTransit) {
+function buildRouteFlags(
+  /** @type {{ includeWalk: boolean, includeTransit: boolean }} */
+  { includeWalk, includeTransit }
+) {
+  // expectedを取得する。
+  const expected = [includeWalk, includeTransit].filter(Boolean).length;
   return {
     walkOk: false,
     railOk: false,
@@ -205,6 +256,8 @@ function buildRouteFlags(includeTransit) {
     railText: null,
     walkResult: null,
     railResult: null,
-    expected: includeTransit ? 2 : 1,
+    includeWalk,
+    includeTransit,
+    expected,
   };
 }

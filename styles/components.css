@@ -113,6 +113,48 @@
   grid-template-columns: repeat(2, minmax(0, 1fr)); /* グリッドの列幅を設定する。 */
 }
 
+.route-mode { /* 経路モードの選択行を整える。 */
+  display: grid; /* 表示方式を設定する。 */
+  gap: 8px; /* 要素間の間隔を設定する。 */
+}
+
+.mode-group { /* チェックボックス群の並びを設定する。 */
+  display: flex; /* 表示方式を設定する。 */
+  flex-wrap: wrap; /* 折り返しを設定する。 */
+  gap: 10px; /* 要素間の間隔を設定する。 */
+}
+
+.mode-option { /* チェックボックスの見た目を整える。 */
+  align-items: center; /* 交差軸の整列を設定する。 */
+  background: #fff; /* 背景を設定する。 */
+  border: 1px solid var(--line); /* 枠線を設定する。 */
+  border-radius: 999px; /* 角丸を設定する。 */
+  color: var(--muted); /* 文字色を設定する。 */
+  cursor: pointer; /* カーソルを設定する。 */
+  display: inline-flex; /* 表示方式を設定する。 */
+  font-size: 0.85rem; /* 文字サイズを設定する。 */
+  font-weight: 600; /* 文字の太さを設定する。 */
+  gap: 8px; /* 要素間の間隔を設定する。 */
+  padding: 6px 12px; /* 内側余白を設定する。 */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease; /* トランジションを設定する。 */
+}
+
+.mode-option input { /* チェックボックスの色を整える。 */
+  accent-color: var(--accent-2); /* アクセント色を設定する。 */
+  height: 16px; /* 高さを設定する。 */
+  width: 16px; /* 幅を設定する。 */
+}
+
+.mode-option input:checked + span { /* チェック時の文字色を設定する。 */
+  color: var(--accent-2); /* 文字色を設定する。 */
+}
+
+.mode-option:focus-within { /* フォーカス時のアウトラインを設定する。 */
+  border-color: rgb(47 111 91 / 60%); /* 枠線色を設定する。 */
+  box-shadow: 0 0 0 3px rgb(47 111 91 / 18%); /* 影を設定する。 */
+  color: var(--accent-2); /* 文字色を設定する。 */
+}
+
 .route-links { /* ルートリンク群の並びを設定する。 */
   display: flex; /* 表示方式を設定する。 */
   flex-wrap: wrap; /* 折り返しを設定する。 */
@@ -165,6 +207,15 @@
   border: 1px solid var(--line); /* 枠線を設定する。 */
   border-radius: 16px; /* 角丸を設定する。 */
   padding: 12px 14px; /* 内側余白を設定する。 */
+}
+
+.time-card[data-disabled="true"] { /* 無効状態の時間カードを弱める。 */
+  border-style: dashed; /* 枠線のスタイルを設定する。 */
+  opacity: 0.65; /* 不透明度を設定する。 */
+}
+
+.time-card[data-disabled="true"] .meta-value { /* 無効時の値の色を調整する。 */
+  color: var(--muted); /* 文字色を設定する。 */
 }
 
 .map-shell { /* 地図コンテナの枠と影を設定する。 */
